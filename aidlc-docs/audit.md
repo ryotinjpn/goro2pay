@@ -209,3 +209,11 @@ aidlc-state.md を更新し、Application Design ステージを [x] に変更�
 **Context**: Application Design ステージ完了、ユーザ承認ゲートへ
 
 ---
+
+## Application Design — Terraform モジュール名の簡潔化
+**Timestamp**: 2026-05-07T08:05:00Z
+**User Input**: "infraディレクトリはいか dynamodb_tables/は dynamodbでいい amplify_hostiはamplifyでいい"
+**AI Response**: application-design.md の Terraform モジュール構成案を修正。`dynamodb_tables/` → `dynamodb/`、`amplify_hosting/` → `amplify/` に変更。infra/ ディレクトリ構成自体は維持。
+**Context**: Application Design 成果物の命名規則修正
+
+---

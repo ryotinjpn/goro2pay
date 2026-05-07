@@ -241,8 +241,8 @@ infra/                                   # Terraform
     api_lambda/
     scheduler_lambda/
     cognito/
-    dynamodb_tables/
-    amplify_hosting/
+    dynamodb/
+    amplify/
     api_gateway/
     bedrock_iam/
   envs/
