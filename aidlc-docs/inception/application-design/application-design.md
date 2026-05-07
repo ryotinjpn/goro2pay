@@ -239,7 +239,7 @@ web/                                     # Next.js App Router (Amplify Hosting ã
 infra/                                   # Terraform
   modules/
     lambda_api/
-    scheduler_lambda/
+    lambda_scheduler/
     cognito/
     dynamodb/
     amplify/

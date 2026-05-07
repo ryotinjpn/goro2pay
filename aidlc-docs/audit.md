@@ -235,3 +235,11 @@ aidlc-state.md を更新し、Application Design ステージを [x] に変更�
 **Context**: Application Design 成果物の命名規則修正（継続）
 
 ---
+
+## Application Design — scheduler_lambda モジュール名の対称化
+**Timestamp**: 2026-05-07T08:10:00Z
+**User Input**: "scheduler_lambda/は lambda_schedulerで"
+**AI Response**: application-design.md の Terraform 構成案で `scheduler_lambda/` を `lambda_scheduler/` にリネーム。lambda_api と対称な命名規則に統一。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---
