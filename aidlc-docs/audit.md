@@ -217,3 +217,11 @@ aidlc-state.md を更新し、Application Design ステージを [x] に変更�
 **Context**: Application Design 成果物の命名規則修正
 
 ---
+
+## Application Design — bedrock モジュール名の簡潔化
+**Timestamp**: 2026-05-07T08:07:00Z
+**User Input**: "bedrock_iamは bedrockでいい"
+**AI Response**: application-design.md の Terraform モジュール構成案で `bedrock_iam/` を `bedrock/` にリネーム。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---

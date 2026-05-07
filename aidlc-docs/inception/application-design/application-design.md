@@ -244,7 +244,7 @@ infra/                                   # Terraform
     dynamodb/
     amplify/
     api_gateway/
-    bedrock_iam/
+    bedrock/
   envs/
     dev/
     prod/                                # 将来用
