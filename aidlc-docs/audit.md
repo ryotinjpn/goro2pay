@@ -186,3 +186,73 @@ story-generation-plan.md の全チェックリストを [x] に更新。aidlc-st
 **Context**: Application Design Part 1 完了、承認ゲート経由で Part 2 Generation へ
 
 ---
+
+## Application Design — Plan 承認
+**Timestamp**: 2026-05-07T07:45:00Z
+**User Input**: "次実施して"（Plan 承認と Part 2 Generation 実施の指示）
+**AI Response**: PR #6 マージ済みを確認、Plan を承認済みと解釈。Part 2 Generation を実施。
+**Context**: Application Design Plan 承認、Generation フェーズへ
+
+---
+
+## Application Design — Generation (Part 2) 完了
+**Timestamp**: 2026-05-07T08:00:00Z
+**User Input**: (N/A - Plan 承認済み)
+**AI Response**: 5 分冊の Application Design 成果物を生成:
+- components.md: 3 層構成（Presentation/Application/Infra）のコンポーネント定義・責務・利用ストーリー紐付け
+- component-methods.md: Go interface 形式の全サービス/アダプタ/リポジトリのメソッドシグネチャ、React カスタムフック、エラー定義
+- services.md: 6 サービスの処理フロー擬似コード、5 シナリオの Mermaid シーケンス図、同期/オーケストレーション方針
+- component-dependency.md: 全体 Mermaid 依存図、依存マトリクス、シナリオ別データフロー、Unit 境界の示唆
+- application-design.md: 上記を集約、技術スタック確定、DynamoDB 論理モデル、API リファレンス、Go パッケージ構成案、Unit 分解入力、審査観点対応
+
+aidlc-state.md を更新し、Application Design ステージを [x] に変更。
+**Context**: Application Design ステージ完了、ユーザ承認ゲートへ
+
+---
+
+## Application Design — Terraform モジュール名の簡潔化
+**Timestamp**: 2026-05-07T08:05:00Z
+**User Input**: "infraディレクトリはいか dynamodb_tables/は dynamodbでいい amplify_hostiはamplifyでいい"
+**AI Response**: application-design.md の Terraform モジュール構成案を修正。`dynamodb_tables/` → `dynamodb/`、`amplify_hosting/` → `amplify/` に変更。infra/ ディレクトリ構成自体は維持。
+**Context**: Application Design 成果物の命名規則修正
+
+---
+
+## Application Design — bedrock モジュール名の簡潔化
+**Timestamp**: 2026-05-07T08:07:00Z
+**User Input**: "bedrock_iamは bedrockでいい"
+**AI Response**: application-design.md の Terraform モジュール構成案で `bedrock_iam/` を `bedrock/` にリネーム。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---
+
+## Application Design — envs と api_lambda モジュール名の修正
+**Timestamp**: 2026-05-07T08:08:00Z
+**User Inputs**:
+- "prod/は prd" → application-design.md の envs ディレクトリを `prod/` → `prd/` に変更
+- "api_lambdaはlambda_apiに" → `api_lambda/` → `lambda_api/` に変更（scheduler_lambda/ は明示指示がないため維持）
+**AI Response**: 上記 2 件を application-design.md に反映。scheduler_lambda の命名は対称化（lambda_scheduler）の可否をユーザに確認する旨チャットで補足。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---
+
+## Application Design — scheduler_lambda モジュール名の対称化
+**Timestamp**: 2026-05-07T08:10:00Z
+**User Input**: "scheduler_lambda/は lambda_schedulerで"
+**AI Response**: application-design.md の Terraform 構成案で `scheduler_lambda/` を `lambda_scheduler/` にリネーム。lambda_api と対称な命名規則に統一。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---
+
+## Application Design — アーキテクチャ詳細図の追加
+**Timestamp**: 2026-05-07T08:20:00Z
+**User Inputs**:
+- "フロントのアーキテクチャ図はどうなってる？" → フロント側が簡略化されていることを指摘
+- "不足している図追加して" → §1.1 フロントエンドに 3 図（階層構造・画面遷移・State Flow）を追加
+- "バックエンドのアーキテクチャ図" → §1.2 バックエンドに 3 図（ApiLambda 階層・US-1-01 詳細シーケンス・データアクセス権限マトリクス）を追加
+- "infraのkアーキテクチャ図" → §1.3 インフラに 3 図（AWS リソース配置・Terraform モジュール構成・デプロイフロー）を追加
+
+**AI Response**: component-dependency.md に計 9 図（フロント/バックエンド/インフラ × 3 図）を追加。既存の §1 全体図・§2 マトリクス・§3 データフロー等は維持。
+**Context**: Application Design 成果物の可視化強化、審査観点「ドキュメント品質」への対応
+
+---
