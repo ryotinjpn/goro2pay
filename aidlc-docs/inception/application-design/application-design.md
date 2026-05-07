@@ -238,7 +238,7 @@ web/                                     # Next.js App Router (Amplify Hosting �
 
 infra/                                   # Terraform
   modules/
-    api_lambda/
+    lambda_api/
     scheduler_lambda/
     cognito/
     dynamodb/
@@ -247,7 +247,7 @@ infra/                                   # Terraform
     bedrock/
   envs/
     dev/
-    prod/                                # 将来用
+    prd/                                 # 将来用
 ```
 
 この構成は Construction フェーズの Code Generation で確定。**Terraform モジュール構造**はプロジェクトの `terraform-plugin:terraform-module-design` 規約に従う。

@@ -225,3 +225,13 @@ aidlc-state.md を更新し、Application Design ステージを [x] に変更�
 **Context**: Application Design 成果物の命名規則修正（継続）
 
 ---
+
+## Application Design — envs と api_lambda モジュール名の修正
+**Timestamp**: 2026-05-07T08:08:00Z
+**User Inputs**:
+- "prod/は prd" → application-design.md の envs ディレクトリを `prod/` → `prd/` に変更
+- "api_lambdaはlambda_apiに" → `api_lambda/` → `lambda_api/` に変更（scheduler_lambda/ は明示指示がないため維持）
+**AI Response**: 上記 2 件を application-design.md に反映。scheduler_lambda の命名は対称化（lambda_scheduler）の可否をユーザに確認する旨チャットで補足。
+**Context**: Application Design 成果物の命名規則修正（継続）
+
+---
