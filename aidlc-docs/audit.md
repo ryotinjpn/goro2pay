@@ -144,3 +144,11 @@ story-generation-plan.md の全チェックリストを [x] に更新。aidlc-st
 **Context**: Workflow Planning ステージ完了、ユーザ承認ゲートへ
 
 ---
+
+## Workflow Planning — 言語未定の指摘
+**Timestamp**: 2026-05-07T07:25:00Z
+**User Input**: "Lambda バックエンドは灘決まってないのであとで聞いて"
+**AI Response**: execution-plan.md 内の「Lambda バックエンド（TypeScript 想定）」の記述を「言語未定、Application Design で決定」に修正。Application Design ステージの開始時に Lambda 実装言語および PWA フロントフレームワークをユーザに確認することを計画に組み込む。
+**Context**: Workflow Planning 成果物の補正
+
+---

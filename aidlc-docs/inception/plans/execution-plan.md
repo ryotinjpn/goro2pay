@@ -32,7 +32,7 @@
 
 ### 2.2 Application Layer Impact
 
-- **Code**: PWA フロント（React 系想定）、Lambda バックエンド（TypeScript 想定）、アダプタ層（`DeliveryAdapter` + `MockDeliveryAdapter`）、Bedrock 呼び出しラッパ、ウォレットサービス、サジェストサービス、メトリクスサービス
+- **Code**: PWA フロント（フレームワーク未定、Application Design で決定）、Lambda バックエンド（**言語未定、Application Design で決定**）、アダプタ層（`DeliveryAdapter` + `MockDeliveryAdapter`）、Bedrock 呼び出しラッパ、ウォレットサービス、サジェストサービス、メトリクスサービス
 - **Dependencies**: Cognito SDK、DynamoDB SDK、Bedrock SDK、JSON スキーマバリデーション、fast-check（PBT）
 - **Configuration**: 環境変数（モデル ID、テーブル名、Cognito User Pool ID 等）、Terraform パラメータシート
 - **Testing**: ユニット（通常 + PBT）、統合テスト、受入テスト（Gherkin → Jest/Vitest 等）
