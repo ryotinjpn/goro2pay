@@ -243,3 +243,16 @@ aidlc-state.md を更新し、Application Design ステージを [x] に変更�
 **Context**: Application Design 成果物の命名規則修正（継続）
 
 ---
+
+## Application Design — アーキテクチャ詳細図の追加
+**Timestamp**: 2026-05-07T08:20:00Z
+**User Inputs**:
+- "フロントのアーキテクチャ図はどうなってる？" → フロント側が簡略化されていることを指摘
+- "不足している図追加して" → §1.1 フロントエンドに 3 図（階層構造・画面遷移・State Flow）を追加
+- "バックエンドのアーキテクチャ図" → §1.2 バックエンドに 3 図（ApiLambda 階層・US-1-01 詳細シーケンス・データアクセス権限マトリクス）を追加
+- "infraのkアーキテクチャ図" → §1.3 インフラに 3 図（AWS リソース配置・Terraform モジュール構成・デプロイフロー）を追加
+
+**AI Response**: component-dependency.md に計 9 図（フロント/バックエンド/インフラ × 3 図）を追加。既存の §1 全体図・§2 マトリクス・§3 データフロー等は維持。
+**Context**: Application Design 成果物の可視化強化、審査観点「ドキュメント品質」への対応
+
+---
