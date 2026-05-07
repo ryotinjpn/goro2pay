@@ -29,14 +29,21 @@
 ### 🔵 INCEPTION PHASE
 - [x] Workspace Detection (2026-05-07)
 - [x] Requirements Analysis (2026-05-07, 要件書: aidlc-docs/inception/requirements/requirements.md)
-- [x] User Stories (2026-05-07, personas.md + stories.md 生成済み、23 ストーリー / 1 ペルソナ / Epic-Based / Gherkin 受入基準) — ユーザー承認待ち
-- [ ] Workflow Planning
-- [ ] Application Design
-- [ ] Units Generation
+- [x] User Stories (2026-05-07, personas.md + stories.md 生成済み、23 ストーリー / 1 ペルソナ / Epic-Based / Gherkin 受入基準)
+- [x] Workflow Planning (2026-05-07, execution-plan.md 生成済み) — ユーザー承認待ち
+- [ ] Application Design - **EXECUTE**
+- [ ] Units Generation - **EXECUTE**
 
-### 🟢 CONSTRUCTION PHASE
-- [ ] Construction (per-unit)
-- [ ] Build and Test
+### 🟢 CONSTRUCTION PHASE (per-unit ループ + 最終 Build)
+- [ ] Functional Design (per-unit) - **EXECUTE**
+- [ ] NFR Requirements (per-unit) - **EXECUTE**
+- [ ] NFR Design (per-unit) - **EXECUTE**
+- [ ] Infrastructure Design (per-unit) - **EXECUTE**
+- [ ] Code Generation (per-unit) - **EXECUTE**
+- [ ] Build and Test - **EXECUTE**
+
+### 🟡 OPERATIONS PHASE
+- [ ] Operations - **PLACEHOLDER**
 
 ## Key Decisions (要件分析より)
 - **Business Intent**: 「人をダメにする」を最優先価値として定義、ダメ化UXを独自NFRとして設定
