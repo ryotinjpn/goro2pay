@@ -28,8 +28,8 @@
 ## Stage Progress
 ### 🔵 INCEPTION PHASE
 - [x] Workspace Detection (2026-05-07)
-- [x] Requirements Analysis (2026-05-07, 要件書: aidlc-docs/inception/requirements/requirements.md) — ユーザー承認待ち
-- [ ] User Stories
+- [x] Requirements Analysis (2026-05-07, 要件書: aidlc-docs/inception/requirements/requirements.md)
+- [x] User Stories (2026-05-07, personas.md + stories.md 生成済み、23 ストーリー / 1 ペルソナ / Epic-Based / Gherkin 受入基準) — ユーザー承認待ち
 - [ ] Workflow Planning
 - [ ] Application Design
 - [ ] Units Generation
