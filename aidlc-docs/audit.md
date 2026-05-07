@@ -152,3 +152,37 @@ story-generation-plan.md の全チェックリストを [x] に更新。aidlc-st
 **Context**: Workflow Planning 成果物の補正
 
 ---
+
+## Workflow Planning — 承認
+**Timestamp**: 2026-05-07T07:30:00Z
+**User Input**: "次へ"
+**AI Response**: Workflow Planning 成果物（execution-plan.md）をユーザが承認したと解釈し、PR #5 マージ完了を確認、Application Design ステージへ進行。
+**Context**: Workflow Planning ステージ完了、次は Application Design
+
+---
+
+## Application Design — Plan 作成
+**Timestamp**: 2026-05-07T07:31:00Z
+**User Input**: (N/A)
+**AI Response**: aidlc-docs/inception/plans/application-design-plan.md を作成。未決定事項として以下 8 問を埋め込み: Q-A: Lambda 実装言語、Q-B: PWA フレームワーク、Q-C: 状態管理、Q-D: API 通信プロトコル、Q-E: Unit 粒度、Q-F: アダプタ層実装パターン、Q-G: Bedrock エラーハンドリング、Q-H: 認証保護範囲。ユーザ回答を待機。
+**Context**: ⛔ GATE: Application Design Plan のユーザ回答を待機中
+
+---
+
+## Application Design — Plan 回答完了
+**Timestamp**: 2026-05-07T07:50:00Z
+**User Inputs** (対話ヒアリング、Q-A〜Q-H + Q-B-ext):
+- Q-A: "フレームワークは何を使う想定ですか？" → フレームワーク説明 → "他の言語は？ lamda web adapter使うと" → LWA 前提で言語別フレームワーク提示 → "GoのGin + LWAこれで" → Go + Gin + Lambda Web Adapter
+- Q-B: "bでどうぞ" → Next.js (App Router)。さらに "S3ではなくamoleyにしてapp Routerでいい" → AWS Amplify Hosting + Next.js App Router フル機能
+- Q-B-ext: "パターン 1:で" → API はすべて Lambda + Gin に集約、Next.js は UI 専用
+- Q-C: "jotaiがいいです" → Jotai + TanStack Query 併用
+- Q-D: "A" → REST (JSON over HTTPS)
+- Q-E: "bのモノリスでいい" → 単一モノリシック Lambda（API Lambda × 1 + Scheduler Lambda × 1 の計 2 Lambda）
+- Q-F: "A" → Go interface + struct + 手動注入
+- Q-G: "c" → リトライ（指数バックオフ 1 回）→ フォールバック
+- Q-H: "A" → 全 API Cognito Authorizer 必須（ヘルスチェック除く）
+
+**AI Response**: 全回答を application-design-plan.md に反映。矛盾なし。
+**Context**: Application Design Part 1 完了、承認ゲート経由で Part 2 Generation へ
+
+---
