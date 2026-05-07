@@ -30,8 +30,8 @@
 - [x] Workspace Detection (2026-05-07)
 - [x] Requirements Analysis (2026-05-07, 要件書: aidlc-docs/inception/requirements/requirements.md)
 - [x] User Stories (2026-05-07, personas.md + stories.md 生成済み、23 ストーリー / 1 ペルソナ / Epic-Based / Gherkin 受入基準)
-- [x] Workflow Planning (2026-05-07, execution-plan.md 生成済み) — ユーザー承認待ち
-- [ ] Application Design - **EXECUTE**
+- [x] Workflow Planning (2026-05-07, execution-plan.md 生成済み)
+- [x] Application Design (2026-05-07, components.md / component-methods.md / services.md / component-dependency.md / application-design.md の 5 分冊を生成) — ユーザー承認待ち
 - [ ] Units Generation - **EXECUTE**
 
 ### 🟢 CONSTRUCTION PHASE (per-unit ループ + 最終 Build)
