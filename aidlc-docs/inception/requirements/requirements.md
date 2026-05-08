@@ -276,7 +276,7 @@
 ### 5.1 Frontend
 - **形態**: レスポンシブ Web アプリ（PWA）
 - **想定技術**: React / Next.js 等（詳細は Construction フェーズで確定）
-- **配信**: Amazon S3 + CloudFront
+- **配信**: AWS Amplify Hosting（フロントエンドは Amplify に統一してホスト）
 - **入力手段**: ボタンのみ（音声・自由入力なし）
 
 ### 5.2 Backend
@@ -408,6 +408,6 @@
 
 本 MVP は、**「ご飯めんどくさい」ボタン押下 → Bedrock で最適プラン提案 → モックアダプタ経由で代行手配 → 仮想ウォレットから減算 → 完了表示** のエンドツーエンド動線を中核に、**行動学習による先回り提案（起動時サジェストカード）** と **ダメ化メトリクス・予算増額誘導** を組み合わせることで、idea.md のビジョンとテーマ「人をダメにする」を忠実に体現する。
 
-インフラは AWS サーバレス（Lambda + API Gateway + DynamoDB + Cognito + Bedrock + EventBridge Scheduler）、IaC は Terraform。PWA + S3 + CloudFront によるフロントエンド配信。
+インフラは AWS サーバレス（Lambda + API Gateway + DynamoDB + Cognito + Bedrock + EventBridge Scheduler）、IaC は Terraform。フロントエンド（PWA）は AWS Amplify Hosting に統一してホスト。
 
 Inception フェーズのドキュメント群は 2026-05-10 までに完成させ、審査観点「ビジネス意図の明確さ」「創造性とテーマ適合性」「Unit 分解の適切さ」「ドキュメント品質」のすべてを満たすことを目指す。

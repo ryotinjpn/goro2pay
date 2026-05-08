@@ -156,7 +156,7 @@ C) AWS Amplify Gen2 ベースのフルスタック
 D) 選定はAI-DLC側に任せる（コスト・スピード重視で推奨）
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: A — AWS サーバレス中心構成。API Gateway + Lambda + DynamoDB + Cognito + Bedrock + EventBridge Scheduler。PWA フロントエンドは S3 + CloudFront でホストする想定。
+[Answer]: A — AWS サーバレス中心構成。API Gateway + Lambda + DynamoDB + Cognito + Bedrock + EventBridge Scheduler。PWA フロントエンドは AWS Amplify Hosting に統一してホストする。
 
 ---
 

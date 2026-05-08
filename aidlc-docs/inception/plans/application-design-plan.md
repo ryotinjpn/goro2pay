@@ -44,15 +44,15 @@ X) Other (please describe after [Answer]: tag below)
 どのフレームワーク / ライブラリで PWA を作りますか？
 
 A) **React + Vite**（SPA、PWA プラグインで manifest/Service Worker 生成）
-B) **Next.js (App Router)**（SSR/SSG 対応、Vercel デプロイ慣例だが S3+CloudFront にも static export 可能）
+B) **Next.js (App Router)**（SSR/SSG 対応、AWS Amplify Hosting でフル機能デプロイ可能）
 C) **Vue 3 + Vite / Nuxt**（React より記述量少、日本で事例多い）
 D) **Svelte / SvelteKit**（バンドル最小、体感速度◎）
 X) Other (please describe after [Answer]: tag below)
 
 **推奨**: **A (React + Vite)**  
-理由: (1) 本 MVP は SSR/SEO 不要のシンプル SPA、Next.js のランタイムは過剰、(2) Vite のビルド速度は DX 良好、(3) S3 + CloudFront への静的配信と相性良い、(4) TypeScript 回答 A と揃えた場合、React エコシステムが最も成熟。
+理由: (1) 本 MVP は SSR/SEO 不要のシンプル SPA、Next.js のランタイムは過剰、(2) Vite のビルド速度は DX 良好、(3) AWS Amplify Hosting での静的配信と相性良い、(4) TypeScript 回答 A と揃えた場合、React エコシステムが最も成熟。
 
-[Answer]: B — Next.js (App Router) を採用。ホスティングは AWS Amplify Hosting を使用する（S3+CloudFront 方式は不採用）。これにより Next.js のフル機能（Server Components / Server Actions / Route Handlers を含む SSR/ISR）が利用可能。Amplify Gen2 の defineBackend 機能は使わず、Amplify は Hosting 機能のみ利用。Amplify App 自体は Terraform の `aws_amplify_app` リソースで管理する。
+[Answer]: B — Next.js (App Router) を採用。ホスティングは AWS Amplify Hosting に統一する。これにより Next.js のフル機能（Server Components / Server Actions / Route Handlers を含む SSR/ISR）が利用可能。Amplify Gen2 の defineBackend 機能は使わず、Amplify は Hosting 機能のみ利用。Amplify App 自体は Terraform の `aws_amplify_app` リソースで管理する。
 
 **Question B-ext: Next.js と Lambda + Gin の役割分担**
 

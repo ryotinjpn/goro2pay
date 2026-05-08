@@ -40,8 +40,8 @@
 ### 2.3 Infrastructure Layer Impact
 
 - **Deployment Model**: サーバレス（Lambda + API Gateway + DynamoDB オンデマンド）
-- **Networking**: API Gateway パブリックエンドポイント（VPC 利用なし）、CloudFront + S3 で PWA 配信
-- **Storage**: DynamoDB（複数テーブル）、S3（PWA 静的ホスティング）
+- **Networking**: API Gateway パブリックエンドポイント（VPC 利用なし）、AWS Amplify Hosting で PWA 配信
+- **Storage**: DynamoDB（複数テーブル）、AWS Amplify Hosting（PWA ホスティング）
 - **Scaling**: AWS マネージドサービスの自動スケール特性に依存
 - **Region**: `ap-northeast-1` 単一リージョン
 

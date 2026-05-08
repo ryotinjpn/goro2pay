@@ -48,7 +48,7 @@
 ## Key Decisions (要件分析より)
 - **Business Intent**: 「人をダメにする」を最優先価値として定義、ダメ化UXを独自NFRとして設定
 - **Project Deadline**: 2026-05-10 までに Inception フェーズ完了必須
-- **Frontend**: PWA（S3 + CloudFront 配信）
+- **Frontend**: PWA（AWS Amplify Hosting 配信）
 - **Backend**: AWS サーバレス（Lambda + API Gateway + DynamoDB + Cognito + Bedrock + EventBridge Scheduler）
 - **Auth**: Amazon Cognito User Pool（メール+パスワード）
 - **AI**: Amazon Bedrock Claude (Converse API, Lambda から直接呼び出し)
