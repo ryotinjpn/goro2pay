@@ -5,7 +5,8 @@
 **Stage**: Construction / Functional Design
 **Unit**: C — `order`
 **Depth**: Comprehensive
-**Related**: [business-logic-model.md](./business-logic-model.md), [business-rules.md](./business-rules.md), [domain-entities.md](./domain-entities.md)
+**Related**: [business-logic-model.md](./business-logic-model.md), [business-rules.md](./business-rules.md), [domain-entities.md](./domain-entities.md), 凍結契約 [unit-interfaces.md](../../interfaces/unit-interfaces.md)
+**Aligned with**: 凍結契約 §4.3（REST API 契約 / Idempotency-Key Header / エラー一覧）
 
 本ドキュメントは Unit C `order` の **Frontend コンポーネント / hooks / 状態遷移 / API 統合** を Comprehensive 深度で記述する。Next.js 14 (App Router) + Tailwind + Jotai + TanStack Query の前提（application-design.md §1.1）。
 
@@ -262,13 +263,15 @@ function useOrder() {
     },
 
     onError: (err: ApiError) => {
-      // BR-C32 / BR-C33
+      // BR-C32 / BR-C33 / BR-C39
       if (err.status === 402 && err.body.code === "INSUFFICIENT_BALANCE") {
         const balance = err.body.details?.balance ?? 0;
         router.push(`/budget-empty?balance=${balance}`);
         return;
       }
-      // 500 系 / その他
+      // 409 IDEMPOTENCY_CONFLICT は本 MVP では実質発生しない（BR-C39）
+      // フォールスルーで 500 系扱い → 自虐トーストを表示
+      // （ユーザにエラー詳細は見せない、開発時のみログ出力）
       toast.error("ちょっとうまくいかないみたい");
       if (process.env.NODE_ENV !== "production") {
         console.error("[useOrder] placeOrder failed:", err);
@@ -298,7 +301,7 @@ stateDiagram-v2
     Idle --> Pending: placeOrder() 呼出
     Pending --> Success: 201 受領
     Pending --> InsufficientBalance: 402 受領
-    Pending --> Error: 500 系受領 or ネットワーク失敗
+    Pending --> Error: 409 / 500 系受領 or ネットワーク失敗
     Pending --> Timeout: 4 秒経過
     Success --> Idle: router.push("/order/[id]/complete")
     InsufficientBalance --> Idle: router.push("/budget-empty")
@@ -314,7 +317,7 @@ stateDiagram-v2
 | Pending | true | false | — | ボタンに「考え中…」 |
 | Success | false | false | `/order/[id]/complete` | — |
 | InsufficientBalance | false | true | `/budget-empty?balance=N` | — |
-| Error | false | true | — | toast `"ちょっとうまくいかないみたい"` |
+| Error (500/409/ネットワーク) | false | true | — | toast `"ちょっとうまくいかないみたい"` |
 
 ---
 
