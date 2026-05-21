@@ -104,7 +104,7 @@ US-0-01/0-02 は MUST だが、FR-AUTH-04（ログアウト）は要件には MU
 | A | Functional Design に含める（API: `POST /auth/logout` を仕様化、UI: 設定画面 or ヘッダの簡易ログアウト） |
 | B | Functional Design に含めない（クライアント側のトークン削除のみ。API 不要、UI は最小限） |
 
-[Answer]: **A**（API + UI 仕様化）。`POST /auth/logout` を仕様化し、UI はヘッダ or 設定メニューに簡易ログアウトを配置。Cognito の `GlobalSignOut` でリフレッシュトークン取り消し。
+[Answer]: **A**（API + UI 仕様化）。`POST /api/auth/logout`（path prefix は [unit-interfaces.md](../../interfaces/unit-interfaces.md) `/api/` 規約に準拠）を仕様化し、UI はヘッダ or 設定メニューに簡易ログアウトを配置。Cognito の `GlobalSignOut` でリフレッシュトークン取り消し。
 
 ### Q-A4: JWT の Lambda 内検証戦略
 
