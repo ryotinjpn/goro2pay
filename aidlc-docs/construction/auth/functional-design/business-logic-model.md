@@ -53,7 +53,7 @@
                  ▼
        ┌──────────────────────────┐
        │  GlobalSignOut →         │
-       │  POST /auth/logout →     │
+       │  POST /api/auth/logout → │
        │  router.push("/")        │
        └──────────────────────────┘
 ```
@@ -283,7 +283,7 @@ sequenceDiagram
     Auth->>Auth: localStorage からトークン除去
     Auth-->>UI: 完了
 
-    UI->>APIGW: POST /auth/logout<br/>(監査ログ目的、任意)
+    UI->>APIGW: POST /api/auth/logout<br/>(監査ログ目的、任意)
     APIGW->>LMD: invoke
     LMD->>LMD: 構造化ログに userId, action=logout 記録
     LMD-->>APIGW: 204
@@ -295,7 +295,7 @@ sequenceDiagram
 ### 5.2 サーバ側の最小実装
 
 ```pseudo
-# POST /auth/logout
+# POST /api/auth/logout
 function handleLogout(c *gin.Context):
     userId, _ = UserIDFromContext(c)
     log.info("user logout", "userId", userId, "at", time.Now())

@@ -64,10 +64,11 @@ Q-A2 の決定（標準）に従う。
 ### R-Signup-2: 自動確認（auto-confirm）
 - Q-A1 の決定に従い、メール検証コードフローは採用しない
 - Cognito の **Pre Sign-up Lambda Trigger** を導入し、`autoConfirmUser = true` および `autoVerifyEmail = true` を設定
-- Signup レスポンスには `userConfirmed: true` が返り、その後即座に `signIn` を呼び出してセッション確立
+- Signup レスポンスには `userConfirmed: true` が返り、その後即座に Amplify Auth `signIn`（SDK 関数名）を呼び出してセッション確立。`useAuth` 公開メソッドとしては `signup()` がこの一連の処理をラップする
 
 ### R-Signup-3: 登録後の遷移
-- Signup 成功 → `signIn` 自動実行 → AuthSession 確立 → `router.push("/")`
+- Signup 成功 → Amplify `signIn` 自動実行 → AuthSession 確立 → `router.push("/")`
+- 公開フック呼出: `useAuth().signup(email, password)` 内で完結
 - `/` 側（MainScreen, Unit B/C 横断）が予算未設定なら `/budget` へ遷移する責務を持つ（Q-A10）
 
 ### R-Signup-4: 総タップ数の上限
@@ -109,7 +110,7 @@ Q-A2 の決定（標準）に従う。
 ## 5. ログアウト（Logout）
 
 ### R-Logout-1: 提供範囲（Q-A3 = A）
-- バックエンド API: `POST /auth/logout`
+- バックエンド API: `POST /api/auth/logout`（path prefix は [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3.3 / §4.3 等の `/api/` 規約に準拠）
 - フロントエンド: ヘッダ右上の「⏏︎ ログアウト」ボタン or 設定画面のメニュー項目
 
 ### R-Logout-2: 実装フロー
@@ -119,14 +120,14 @@ Q-A2 の決定（標準）に従う。
 2. クライアント: Amplify Auth.signOut({ global: true }) を呼ぶ
    → 内部で Cognito GlobalSignOut が走り、Refresh Token が無効化
 3. クライアント: ローカルストレージのトークンが Amplify によって除去
-4. クライアント: POST /auth/logout を呼ぶ（任意、サーバ側ログ記録のため）
+4. クライアント: POST /api/auth/logout を呼ぶ（任意、サーバ側ログ記録のため。`useAuth().logout()` 内で実行）
 5. クライアント: router.push("/") で Landing 表示に戻る
 ```
 
 ### R-Logout-3: API 仕様
 
 ```
-POST /auth/logout
+POST /api/auth/logout
 Authorization: Bearer <IdToken>
 Body: なし
 

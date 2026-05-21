@@ -100,26 +100,28 @@ export interface UseAuthReturn {
   status: AuthStatus;
   user: { userId: string; email: string } | null;
   isAuthenticated: boolean;
-  signUp(email: string, password: string): Promise<void>;
-  signIn(email: string, password: string): Promise<void>;
-  signOut(): Promise<void>;
+  signup(email: string, password: string): Promise<void>;
+  login(email: string, password: string): Promise<void>;
+  logout(): Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn;
 ```
+
+> **メソッド名規約**: 公開メソッド名は [unit-interfaces.md §9](../../interfaces/unit-interfaces.md) の凍結契約に合わせ `signup` / `login` / `logout` を採用する。Amplify SDK 内部関数（`Auth.signUp` / `Auth.signIn` / `Auth.signOut`）はあくまで実装ディテールとして区別する。
 
 ### 3.2 内部実装方針
 
 - `status` は内部 state、初期値 `"loading"`
 - `useEffect` で `getCurrentUser()` を呼んで現在のセッションを判定
 - Auth Hub の `signedIn` / `signedOut` / `tokenRefresh_failure` を購読し state を更新
-- `signUp` は `Auth.signUp` → `Auth.signIn` の連鎖で実装（[business-logic-model.md F-1](./business-logic-model.md)）
-- `signOut` は `Auth.signOut({ global: true })` → `apiClient.post("/auth/logout")` → `router.push("/")`
+- `signup` は内部で `Auth.signUp` → `Auth.signIn` の連鎖で実装（[business-logic-model.md F-1](./business-logic-model.md)）
+- `logout` は `Auth.signOut({ global: true })` → `apiClient.post("/api/auth/logout")` → `router.push("/")`
 - メソッドは Promise を返し、呼び出し側でエラーハンドリング可能
 
 ### 3.3 エラーハンドリング契約
 
-`signUp` / `signIn` は失敗時に `AuthErrorWithCode` 型を throw する:
+`signup` / `login` は失敗時に `AuthErrorWithCode` 型を throw する:
 
 ```ts
 export class AuthErrorWithCode extends Error {
@@ -206,7 +208,7 @@ type SignupState = {
 
 | 操作 | 呼出先 |
 |---|---|
-| 登録ボタン | `useAuth().signUp(email, password)` |
+| 登録ボタン | `useAuth().signup(email, password)` |
 
 成功時:
 1. `clearPasswordState()` を実行
@@ -256,7 +258,7 @@ type LoginState = {
 
 | 操作 | 呼出先 |
 |---|---|
-| 「ログイン」ボタン | `useAuth().signIn(email, password)` |
+| 「ログイン」ボタン | `useAuth().login(email, password)` |
 
 成功時: `clearPasswordState()` → `router.push("/")` 。
 
@@ -315,7 +317,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 ### 8.1 構造
 
 ```
-[ヘッダ右上 LogoutButton] ── クリック ──► [LogoutConfirmModal] ── 確定 ──► useAuth().signOut()
+[ヘッダ右上 LogoutButton] ── クリック ──► [LogoutConfirmModal] ── 確定 ──► useAuth().logout()
                                               │
                                               └── キャンセル ──► モーダル閉じる
 ```
@@ -412,7 +414,7 @@ export const authMessages: Record<AuthErrorCode, string> = {
      ┌────────────────┐        ┌─────────────────┐
      │ unauthenticated│        │  authenticated  │
      └────┬───────────┘        └────┬────────────┘
-          │  signIn / signUp 成功    │ signOut
+          │  login / signup 成功    │ logout
           └──────────────────────────┤
                                      │
                                      │ tokenRefresh_failure
@@ -431,7 +433,7 @@ export const authMessages: Record<AuthErrorCode, string> = {
 
 | テスト種別 | 対象 | 観点 |
 |---|---|---|
-| 単体 | `useAuth` のメソッド | signUp/signIn/signOut の各 happy path / error path |
+| 単体 | `useAuth` のメソッド | signup/login/logout の各 happy path / error path |
 | 単体 | パスワード強度判定 | R-Pwd-1 の境界値 |
 | 単体 | `apiClient` 401 interceptor | `triggerSessionExpired` が呼ばれること |
 | 統合 | `<SignupScreen>` | フォーム検証、ボタン disabled 制御、API 呼出 |
