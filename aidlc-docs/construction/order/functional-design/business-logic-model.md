@@ -5,7 +5,8 @@
 **Stage**: Construction / Functional Design
 **Unit**: C — `order` (代行手配コア)
 **Depth**: **Comprehensive**
-**Related**: [business-rules.md](./business-rules.md), [domain-entities.md](./domain-entities.md), [frontend-components.md](./frontend-components.md)
+**Related**: [business-rules.md](./business-rules.md), [domain-entities.md](./domain-entities.md), [frontend-components.md](./frontend-components.md), 凍結契約 [unit-interfaces.md](../../interfaces/unit-interfaces.md)
+**Aligned with**: 凍結契約 §4（Unit C 公開 API / REST API / DynamoDB キー設計）
 
 本ドキュメントは、Unit C `order` の **業務ロジック構造** を技術非依存（Go / DynamoDB の実装詳細抜き）で記述する。Comprehensive 深度として、ユースケースの詳細シーケンス図・状態遷移・主要 5 シナリオを網羅する。
 
@@ -52,12 +53,15 @@ PlaceOrder(userID, req):
       plan = InferPlanViaBedrock(userID, req.Category)
 
   STEP 2: Wallet 減算（冪等性付き）
-    deductResult = WalletService.Deduct(userID, plan.Amount, req.IdempotencyKey)
-    if deductResult.Err == ErrInsufficientBalance:
+    deductResult, err = WalletService.Deduct(userID, plan.Amount, req.IdempotencyKey)
+    if err == wallet.ErrInsufficientBalance:
       return Response(402, INSUFFICIENT_BALANCE)
+    if err == wallet.ErrIdempotencyConflict:                     # BR-C39, 凍結契約 §4.3
+      return Response(409, IDEMPOTENCY_CONFLICT)
     if deductResult.Idempotent:
-      # 既存 OrderHistory から復元して返す（Q-8: TTL 24h 内なら命中）
-      existingOrder = OrderHistoryRepository.GetByIdempotencyKey(userID, req.IdempotencyKey)
+      # 既存 OrderHistory から復元（BR-C15、Wallet payload 経由で OrderID 取得）
+      existingOrderID = WalletService.GetIdempotencyPayload(userID, req.IdempotencyKey).OrderID
+      existingOrder   = OrderHistoryRepository.Get(userID, existingOrderID)
       return existingOrder.AsResponse(idempotent=true)
 
   STEP 3: 外部手配（Mock）
@@ -67,16 +71,21 @@ PlaceOrder(userID, req):
       return Response(500, DELIVERY_FAILED)
 
   STEP 4: 履歴記録（best-effort）
-    err = OrderHistoryRepository.Insert(OrderRecord{
-      OrderID:        ulid.Make(),
-      UserID:         userID,
+    orderID = ulid.Make()
+    err = OrderHistoryRepository.Insert(orderRow{
+      OrderRecord: OrderRecord{
+        OrderID:   orderID,
+        UserID:    userID,
+        Category:  plan.Category,
+        StoreName: plan.StoreName,
+        MenuName:  plan.MenuName,
+        Amount:    plan.Amount,
+        OrderedAt: now,
+      },
       IdempotencyKey: req.IdempotencyKey,
-      Category:       plan.Category,
-      StoreName:      plan.StoreName,
-      MenuName:       plan.MenuName,
-      Amount:         plan.Amount,
-      OrderedAt:      now,
+      DayOfWeek:      now.In(JST).Weekday().String(),
       Source:         req.SuggestionID ? "suggest" : "button",
+      ExpiresAt:      now.Add(90*24h).Unix(),
     })
     if err:
       log.Error("order_history_insert_failed", userID, ...)   # Q-10: 200 を返す
@@ -271,8 +280,10 @@ sequenceDiagram
         API->>OS: PlaceOrder
         OS->>WS: Deduct(1200, "01HX")
         WS-->>OS: {newBalance=28800, idempotent=true}
-        Note over OS: 既存履歴から復元
-        OS->>OH: GetByIdempotencyKey(userID, "01HX")
+        Note over OS: 既存履歴を復元（BR-C15）
+        OS->>WS: GetIdempotencyPayload(userID, "01HX")
+        WS-->>OS: {orderID:"ORD-A", amount:1200, ...}
+        OS->>OH: Get(userID, "ORD-A")
         OH-->>OS: OrderRecord{orderID:"ORD-A", ...}
         OS-->>FE: 201 {orderID:"ORD-A", balance:28800, idempotent:true}
     and 連打 3
@@ -306,9 +317,9 @@ sequenceDiagram
     BA-->>OS: {store, menu, amount=1200}
 
     OS->>WS: Deduct(userID, 1200, key)
-    WS-->>OS: ErrInsufficientBalance{currentBalance=500}
+    WS-->>OS: wallet.ErrInsufficientBalance
 
-    OS-->>API: error: ErrInsufficientBalance
+    OS-->>API: error: wallet.ErrInsufficientBalance
     API-->>FE: 402 INSUFFICIENT_BALANCE {balance:500}
 
     FE->>FE: router.push("/budget-empty?balance=500")
@@ -334,11 +345,13 @@ stateDiagram-v2
 
     PlanReady --> Deducting: STEP 2 開始
     Deducting --> InsufficientBalance: balance < amount
-    Deducting --> Idempotent: 既存キー命中
+    Deducting --> IdempotencyConflict: 同 key 別 payload (BR-C39)
+    Deducting --> Idempotent: 既存キー + 同 payload 命中
     Deducting --> Deducted: 新規減算成功
 
     InsufficientBalance --> [*]: 402 応答
-    Idempotent --> Responded: 既存履歴から復元、201 返却
+    IdempotencyConflict --> [*]: 409 応答
+    Idempotent --> Responded: Wallet payload から OrderID 取得 → 既存履歴復元、201 返却
     Responded --> [*]
 
     Deducted --> Delivering: STEP 3 開始
@@ -362,6 +375,7 @@ stateDiagram-v2
 | Initiated | `event="order_initiated"` |
 | InferenceFailed | `event="bedrock_fallback"` |
 | InsufficientBalance | `event="insufficient_balance"` |
+| IdempotencyConflict | `event="idempotency_conflict"` |
 | Idempotent | `event="idempotency_hit"` |
 | DeliveryFailed | `event="delivery_failed"` (本 MVP は発生しない) |
 | RecordingFailed | `event="order_history_insert_failed"` |
