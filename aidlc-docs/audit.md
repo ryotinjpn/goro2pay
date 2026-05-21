@@ -300,3 +300,56 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: Units Generation ステージ完了、Inception フェーズ全成果物完成、ユーザ承認ゲートへ
 
 ---
+
+## Construction Phase — Unit B `budget` 開始
+**Timestamp**: 2026-05-21T00:00:00Z
+**User Input**: "Constructionを実行unitBを担当"
+**AI Response**: Unit B (`budget`) per-unit Construction ループを開始。worktree `future-unit-b` で並行実施。Inception フェーズの全成果物（unit-of-work.md / unit-of-work-story-map.md / components.md / component-methods.md / services.md）から Unit B 担当範囲（US-0-03, US-0-04 残高初期表示, US-1-02, US-1-04, US-1-05, US-1-06, US-3-05）を読み込み、`aidlc-docs/construction/budget/{functional-design,nfr-requirements,nfr-design,infrastructure-design,code}/` および `aidlc-docs/construction/plans/` ディレクトリを作成。
+**Context**: Construction フェーズ Unit B 開始、Functional Design ステージへ
+
+---
+
+## Construction — Unit B Functional Design Plan 作成
+**Timestamp**: 2026-05-21T00:05:00Z
+**User Input**: (N/A)
+**AI Response**: `aidlc-docs/construction/plans/budget-functional-design-plan.md` を作成。Q-B1 〜 Q-B12（予算範囲、SetBudget 即時反映、初回判定、冪等性キー仕様、失敗時冪等レコード、GetBalance 鮮度、残高不足判定主体、月初リセットの実行方式、リセット時予算ソース、前残高扱い、BudgetSetupScreen UI、BalanceDisplay 表示仕様）の 12 問を埋め込み。フィードバックメモリ「対話形式でのヒアリング」に従い、チャットで 1 問ずつ提示する方針。
+**Context**: ⛔ GATE: Q-B1 ヒアリング待ち
+
+---
+
+## Construction — Unit B Functional Design 対話ヒアリング完了
+**Timestamp**: 2026-05-21T00:30:00Z
+**User Inputs** (Q-B1〜Q-B12、対話形式で順次ヒアリング):
+- Q-B1: "a" → 予算範囲 1〜100,000 円（Application Design 通り）
+- Q-B2: "どう違うの？" → 案の違いを軸 1（当月残高変動）/ 軸 2（翌月リセット適用）で説明 → "なんで我慢するのがダメかになるの？" → ダメ化UX = 甘やかし + 消化促進と再整理し B 推奨に修正 → "b" → SetBudget 変更時は当月残高も差分調整
+- Q-B3: "どう違う？" → 4 ケースで比較説明 → "UX優先で開発速度が速いのはどれ？" → B 推奨 → "b" → Wallet 存否で初回判定
+- Q-B4: "推奨はどれ？" → A 推奨説明（キー形式 / TTL / DynamoDB 設計の素直さ） → "a" → `{userID}:{ulid}`、TTL 24h
+- Q-B5: 説明後 "a" → 失敗結果も payload 保存、同一キー再送に保存通り返却
+- Q-B6: 説明後 "a" → ConsistentRead + TanStack Query 30s fresh + 自動 invalidate
+- Q-B7: 説明後 "a" → Unit B 主体、ConditionExpression で race 耐性、Unit C は ErrInsufficientBalance 受信時 402
+- Q-B8: 説明後 "a" → EventBridge Scheduler `cron(0 15 L * ? *)` UTC、1 Lambda 逐次、(ResetDate, UserID) 複合キー
+- Q-B9: 説明後 "a" → `BudgetSettings.MonthlyBudget` 素直適用、`EffectiveFrom` は監査メタデータのみ
+- Q-B10: 説明後 "a" → 完全リセット、前残高は BudgetResetLog 記録のみ
+- Q-B11: 説明後 "a" → クイックボタン（10k/30k/50k/80k/100k） + 数値入力 + リアルタイムバリデーション
+- Q-B11 補足（数値刻み）: 矛盾検出で軽微確認 → "γ" → 1,000 円刻み（モバイル UI 簡素化）
+- Q-B12: 説明後 "a" → ¥XX,XXX 大フォント + 「残りダメ予算」ラベル + リセット日カウントダウン、80% 超で赤
+
+**矛盾検出結果**: 当初の 5 ルールはすべて整合、軽微な刻み未確定のみ追加質問で γ に確定。最終整合性 OK。
+**AI Response**: 全回答を Plan ファイルの `[Answer]:` タグに反映。チェックリストの全 6 項目を [x] 化。Functional Design 成果物の生成へ進行。
+**Context**: Functional Design Plan 完了、Step 6（成果物生成）へ
+
+---
+
+## Construction — Unit B Functional Design 成果物生成完了
+**Timestamp**: 2026-05-21T01:00:00Z
+**User Input**: (N/A - 自動生成)
+**AI Response**: `aidlc-docs/construction/budget/functional-design/` 配下に 4 ドキュメントを生成:
+- domain-entities.md: Wallet / BudgetSettings / IdempotencyRecord / BudgetResetLog の 4 エンティティ + RaiseLog 値オブジェクト、ER 図、ドメインサービス契約 4 種、不変条件サマリ
+- business-rules.md: Validation 6 / Decision 5 / Constraint 5 / Policy 6 = 計 22 ルール、ストーリー × ルール / NFR × ルールトレーサビリティ、HTTP エラーマッピング
+- business-logic-model.md: 6 ユースケース詳細（UC-B-01 〜 UC-B-06）、Wallet / IdempotencyRecord 状態遷移図、シーケンス図 7 本、データフロー図 3 本、ダメ化UX 織り込み、横断的関心事
+- frontend-components.md: 8 コンポーネント仕様（BudgetSetupScreen / BudgetForm / QuickBudgetButtons / BudgetNumberInput / BudgetSubmitButton / BalanceDisplay / BalanceAmount / BalanceLabel / ResetCountdown）、useWallet / useSetBudget フック、ASCII モック、アクセシビリティ、既存設計との差分
+
+aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に変更（ユーザ承認待ち）。
+**Context**: Unit B Functional Design ステージ完了、ユーザ承認ゲートへ
+
+---

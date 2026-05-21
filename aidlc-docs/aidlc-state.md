@@ -35,11 +35,22 @@
 - [x] Units Generation (2026-05-07, unit-of-work.md / unit-of-work-dependency.md / unit-of-work-story-map.md を生成、5 Unit 構成: auth / budget / order / suggest / metrics) — ユーザー承認待ち
 
 ### 🟢 CONSTRUCTION PHASE (per-unit ループ + 最終 Build)
-- [ ] Functional Design (per-unit) - **EXECUTE**
-- [ ] NFR Requirements (per-unit) - **EXECUTE**
-- [ ] NFR Design (per-unit) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit) - **EXECUTE**
-- [ ] Code Generation (per-unit) - **EXECUTE**
+
+**Unit B `budget` 進捗** (worktree: future-unit-b)
+- [x] Functional Design (Unit B, 2026-05-21) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認待ち
+- [ ] NFR Requirements (Unit B) - **EXECUTE**
+- [ ] NFR Design (Unit B) - **EXECUTE**
+- [ ] Infrastructure Design (Unit B) - **EXECUTE**
+- [ ] Code Generation (Unit B) - **EXECUTE**
+
+**他 Unit (worktree 別)**
+- [ ] Functional Design (per-unit, Unit A/C/D/E) - **EXECUTE**
+- [ ] NFR Requirements (per-unit, Unit A/C/D/E) - **EXECUTE**
+- [ ] NFR Design (per-unit, Unit A/C/D/E) - **EXECUTE**
+- [ ] Infrastructure Design (per-unit, Unit A/C/D/E) - **EXECUTE**
+- [ ] Code Generation (per-unit, Unit A/C/D/E) - **EXECUTE**
+
+**全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
 
 ### 🟡 OPERATIONS PHASE
