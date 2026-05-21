@@ -5,7 +5,8 @@
 **Stage**: Construction / Functional Design
 **Unit**: C — `order`
 **Depth**: Comprehensive
-**Related**: [business-logic-model.md](./business-logic-model.md), [business-rules.md](./business-rules.md), [frontend-components.md](./frontend-components.md)
+**Related**: [business-logic-model.md](./business-logic-model.md), [business-rules.md](./business-rules.md), [frontend-components.md](./frontend-components.md), 凍結契約 [unit-interfaces.md](../../interfaces/unit-interfaces.md)
+**Aligned with**: 凍結契約 §4.1 (公開 OrderRecord), §4.4 (DynamoDB キー設計 / GSI / TTL 属性 expiresAt)
 
 本ドキュメントは Unit C `order` のドメインエンティティ・値オブジェクト・DTO を **技術非依存** で記述する。Go の interface / struct を使ったメモは含めるが、これは表現手段であり、本質は **業務概念の構造と制約** を確定することにある。Comprehensive 深度として、フィールド単位の意味・制約・由来 BR-ID を網羅する。
 
@@ -42,52 +43,75 @@ ErrSuggestionExpired                   Unit D → C で受信（透過フォー�
 **目的**: 1 回の代行手配の事実を永続化する集約ルート
 
 **永続化先**: DynamoDB `GoroPay_OrderHistory`
-**所有 Unit**: C（書き込み専有）。Unit D / E は読取参照のみ
-**主キー設計**:
-- PK: `USER#<userID>`
-- SK: `ORDER#<orderedAtUnix>#<orderID>`（時系列ソート可能）
-- GSI1 (`GSI_IdempotencyKey`): PK = `IDEM#<userID>#<idempotencyKey>` → BR-C15 で利用
+**所有 Unit**: C（書き込み専有）。Unit D / E は `OrderHistoryReader` で読取参照
+**主キー設計**（凍結契約 `unit-interfaces.md §4.4` に追従）:
+- PK: `userId`
+- SK: `orderId`（ULID、時系列ソート可能）
+- GSI: `gsi_byCreatedAt`（PK: `userId`, SK: `orderedAt`）— 月間集計用、Unit E が利用
+- TTL 属性名: `expiresAt`（90 日後）
 
-**フィールド定義**:
+#### 2.1.1 公開フィールド（凍結契約）
+
+凍結契約 `unit-interfaces.md §4.1` で公開する `OrderRecord`:
+
+| フィールド | 型 | 由来 |
+|---|---|---|
+| `OrderID` | string (ULID) | BR-C22 |
+| `UserID` | string | BR-C22 |
+| `Category` | string | BR-C22, BR-C27 |
+| `StoreName` | string | BR-C22 |
+| `MenuName` | string | BR-C22 |
+| `Amount` | int | BR-C17 |
+| `OrderedAt` | time.Time | BR-C22 |
+
+これらは Unit D / E が `OrderHistoryReader.ListRecent` 経由で読み取る最低限のフィールド。
+
+#### 2.1.2 内部追加属性（DynamoDB に永続化、公開しない）
+
+Unit C の Functional Design / Comprehensive 補完で追加する内部属性。`OrderHistoryReader` には公開せず Unit C 内部の Repository 実装で扱う:
 
 | フィールド | 型 | 必須 | 制約 | 由来 |
 |---|---|---|---|---|
-| `OrderID` | string (ULID) | ✓ | 26 文字 Crockford Base32 | BR-C22 |
-| `UserID` | string | ✓ | Cognito sub UUID 形式 | BR-C22 |
-| `IdempotencyKey` | string (ULID) | ✓ | Frontend 発行、26 文字 | BR-C12, BR-C22 |
-| `Category` | string | ✓ | `"food"` のみ（MVP） | BR-C27 |
-| `StoreName` | string | ✓ | 1〜80 文字、UTF-8 | — |
-| `MenuName` | string | ✓ | 1〜80 文字、UTF-8 | — |
-| `Amount` | int | ✓ | 1 ≤ Amount ≤ 100,000 整数円 | BR-C17, BR-C18 |
-| `OrderedAt` | time.Time | ✓ | UTC RFC3339（永続化は Unix epoch 秒） | BR-C22 |
-| `DayOfWeek` | string | ✓ | `Monday` 〜 `Sunday`、JST 換算 | BR-C22 |
+| `IdempotencyKey` | string (ULID) | ✓ | 26 文字 | BR-C12, BR-C15（Wallet 経由参照のため必須） |
+| `DayOfWeek` | string | ✓ | `Monday` 〜 `Sunday`、JST 換算 | BR-C22（Unit D 学習用、`OrderHistoryReader` 拡張時に公開） |
 | `Source` | string | ✓ | `"button"` または `"suggest"` | BR-C23 |
-| `TTL` | int64 | ✓ | Unix epoch 秒、`OrderedAt + 90 日` | BR-C20 |
+| `expiresAt` | int64 | ✓ | Unix epoch 秒、`orderedAt + 90 日`（DynamoDB TTL 属性） | BR-C20 |
+
+**フィールド名規約**（凍結契約 §0 の DynamoDB 内部属性は Infra Design で確定する範疇に従う）:
+- DynamoDB 属性名は **camelCase**（`userId`, `orderId`, `orderedAt`, `expiresAt`）
+- Go 構造体名は **PascalCase**
 
 **Go 表現**（参考、Code Generation で詳細化）:
 
 ```go
+// 公開（凍結契約）
 type OrderRecord struct {
-    OrderID        string    `json:"orderId"        dynamodbav:"OrderID"`
-    UserID         string    `json:"userId"         dynamodbav:"UserID"`
-    IdempotencyKey string    `json:"idempotencyKey" dynamodbav:"IdempotencyKey"`
-    Category       string    `json:"category"       dynamodbav:"Category"`
-    StoreName      string    `json:"storeName"      dynamodbav:"StoreName"`
-    MenuName       string    `json:"menuName"       dynamodbav:"MenuName"`
-    Amount         int       `json:"amount"         dynamodbav:"Amount"`
-    OrderedAt      time.Time `json:"orderedAt"      dynamodbav:"OrderedAt"`
-    DayOfWeek      string    `json:"dayOfWeek"      dynamodbav:"DayOfWeek"`
-    Source         string    `json:"source"         dynamodbav:"Source"`
-    TTL            int64     `json:"-"              dynamodbav:"TTL"`
+    OrderID   string    `json:"orderId"   dynamodbav:"orderId"`
+    UserID    string    `json:"userId"    dynamodbav:"userId"`
+    Category  string    `json:"category"  dynamodbav:"category"`
+    StoreName string    `json:"storeName" dynamodbav:"storeName"`
+    MenuName  string    `json:"menuName"  dynamodbav:"menuName"`
+    Amount    int       `json:"amount"    dynamodbav:"amount"`
+    OrderedAt time.Time `json:"orderedAt" dynamodbav:"orderedAt"`
+}
+
+// Unit C 内部の永続化用（OrderRecord を埋め込み + 内部属性）
+// パッケージ: internal/repo/order_history
+type orderRow struct {
+    OrderRecord
+    IdempotencyKey string `dynamodbav:"idempotencyKey"`
+    DayOfWeek      string `dynamodbav:"dayOfWeek"`
+    Source         string `dynamodbav:"source"`     // "button" | "suggest"
+    ExpiresAt      int64  `dynamodbav:"expiresAt"`  // TTL
 }
 ```
 
 **インバリアント**（永続化前に必ず満たす）:
-- INV-OR-1: すべての必須フィールドが非ゼロ値
+- INV-OR-1: 公開フィールド + `IdempotencyKey` / `Source` / `expiresAt` がすべて非ゼロ値
 - INV-OR-2: `Amount >= 1`
 - INV-OR-3: `OrderID` が ULID 形式
 - INV-OR-4: `IdempotencyKey` が ULID 形式
-- INV-OR-5: `TTL == OrderedAt.Add(90*24h).Unix()`
+- INV-OR-5: `expiresAt == orderedAt.Add(90*24h).Unix()`
 
 ---
 
@@ -248,6 +272,7 @@ Content-Type: application/json
 | 400 | INVALID_LIMIT | GetHistory の limit 範囲外 | `{got: 200, max: 100}` | BR-C21 |
 | 401 | UNAUTHORIZED | JWT 不正 | — | Unit A 担当 |
 | 402 | INSUFFICIENT_BALANCE | 残高不足 | `{balance: <現残高>}` | BR-C16 |
+| 409 | IDEMPOTENCY_CONFLICT | 同一 idempotencyKey で異 payload | — | BR-C39、凍結契約 §4.3 |
 | 500 | DELIVERY_FAILED | DeliveryAdapter 失敗 | — | BR-C25（Mock では発生しない） |
 | 500 | INTERNAL_ERROR | その他予期せぬエラー | — | フォールスルー |
 
@@ -327,13 +352,14 @@ type OrderHistoryBrief struct {
 
 ## 4. ドメイン Errors（センチネル）
 
-Unit C で発生する / 受け取る代表的なエラーの定義。Code Generation で `internal/apperrors/` に集約される予定。
+Unit C で発生する / 受け取る代表的なエラーの定義。Code Generation で `internal/apperrors/` に集約される予定。凍結契約 §3.1 の `wallet.ErrInsufficientBalance` / `wallet.ErrIdempotencyConflict` を受信側として参照。
 
 | エラー名 | 発生元 | Unit C での扱い |
 |---|---|---|
-| `ErrInsufficientBalance` | Unit B `WalletService.Deduct` | 402 INSUFFICIENT_BALANCE に変換 |
-| `ErrIdempotentHit` | Unit B（情報提供のみ、エラーではない） | 既存履歴復元へ分岐（業務上の正常系） |
-| `ErrSuggestionNotFound` | Unit D `SuggestService.ResolveSuggestion` | BR-C10 透過フォールバック（エラー応答にしない） |
+| `wallet.ErrInsufficientBalance` | Unit B `WalletService.Deduct` | 402 INSUFFICIENT_BALANCE に変換 |
+| `wallet.ErrIdempotencyConflict` | Unit B `WalletService.Deduct` | 409 IDEMPOTENCY_CONFLICT に変換（BR-C39） |
+| `DeductResult.Idempotent=true` | Unit B（情報提供のみ、エラーではない） | 既存履歴復元へ分岐（業務上の正常系、BR-C15） |
+| `suggest.ErrSuggestionNotFound` | Unit D `SuggestService.ResolveSuggestion` | BR-C10 透過フォールバック（エラー応答にしない） |
 | `ErrBedrockUnavailable` | 横串 BedrockAdapter | リトライ/フォールバックへ |
 | `ErrDeliveryFailed` | 横串 DeliveryAdapter | 500 DELIVERY_FAILED（Mock では発生しない） |
 | `ErrInvalidRequest` | OrderHandler | 400 + code を返す |
@@ -421,43 +447,52 @@ erDiagram
 
 ## 7. 永続化スキーマ（DynamoDB 詳細）
 
+凍結契約 `unit-interfaces.md §4.4` を正として記述する。
+
 ### 7.1 テーブル: `GoroPay_OrderHistory`
 
 | 属性 | 型 | 用途 |
 |---|---|---|
-| PK (`PK`) | S | `USER#<userID>` |
-| SK (`SK`) | S | `ORDER#<orderedAtUnix>#<orderID>` |
-| OrderID | S | ULID |
-| UserID | S | Cognito sub |
-| IdempotencyKey | S | ULID |
-| Category | S | `food` |
-| StoreName | S | UTF-8 |
-| MenuName | S | UTF-8 |
-| Amount | N | int |
-| OrderedAt | N | Unix epoch 秒 |
-| DayOfWeek | S | Monday〜Sunday |
-| Source | S | button/suggest |
-| TTL | N | DynamoDB TTL 属性、`OrderedAt + 7776000` |
+| PK (`userId`) | S | Cognito sub |
+| SK (`orderId`) | S | ULID（時系列ソート可） |
+| `category` | S | `food` |
+| `storeName` | S | UTF-8 |
+| `menuName` | S | UTF-8 |
+| `amount` | N | int |
+| `orderedAt` | S | RFC3339 文字列 |
+| `idempotencyKey` | S | ULID（内部、BR-C15） |
+| `dayOfWeek` | S | Monday〜Sunday（内部、Unit D 学習用） |
+| `source` | S | button/suggest（内部） |
+| `expiresAt` | N | DynamoDB TTL 属性、`orderedAt + 90日` のエポック秒 |
 
-### 7.2 GSI: `GSI_IdempotencyKey`
+### 7.2 GSI: `gsi_byCreatedAt`
 
 | 属性 | 型 |
 |---|---|
-| PK (`GSI1PK`) | S | `IDEM#<userID>#<idempotencyKey>` |
+| PK | S | `userId` |
+| SK | S | `orderedAt` |
 | 投影 | ALL |
 
-**用途**: BR-C15 連打時の既存 `OrderRecord` 検索
+**用途**: Unit E の月間集計（PK=userId, SK BETWEEN 月初 AND 月末）。Unit C 自身も時刻範囲クエリに使用可能
 
 ### 7.3 アクセスパターン
 
-| アクセス | テーブル/GSI | キー |
-|---|---|---|
-| 注文 1 件取得（OrderID 不明） | GSI1 | `IDEM#alice#01HXAB...` |
-| ユーザの最新 N 件取得 | テーブル | `PK = USER#alice`, `Limit=N`, `ScanIndexForward=false` |
-| ユーザの月間 / 期間集計 | テーブル | `PK = USER#alice`, `SK BETWEEN ORDER#<m_start> AND ORDER#<m_end>` (Unit E が利用) |
-| TTL 自動削除 | 自動 | `TTL` 属性 |
+| アクセス | テーブル/GSI | キー | 利用元 |
+|---|---|---|---|
+| 注文 1 件取得（OrderID 既知、冪等命中時の復元） | テーブル | `userId=<u>`, `orderId=<o>` | Unit C BR-C15（Wallet payload から OrderID 取得後） |
+| ユーザの最新 N 件取得 | テーブル | `userId=<u>`, `Limit=N`, `ScanIndexForward=false` | Unit C `GetHistory` / Unit D `OrderHistoryReader.ListRecent` |
+| ユーザの月間 / 期間集計 | GSI `gsi_byCreatedAt` | `userId=<u>`, `orderedAt BETWEEN <m_start> AND <m_end>` | Unit E `OrderHistoryReader.CountThisMonth` / `SumThisMonth` |
+| TTL 自動削除 | 自動 | `expiresAt` 属性 | DynamoDB が削除 |
 
-### 7.4 容量見積（NFR Requirements / Infrastructure Design で再評価）
+### 7.4 GSI 不要化の根拠
+
+旧版で検討した `GSI_IdempotencyKey`（PK=`IDEM#<userID>#<idempotencyKey>`）は **採用しない**。理由:
+
+- 凍結契約（`unit-interfaces.md §4.4`）では GSI は `gsi_byCreatedAt` 1 個のみ
+- 連打時の既存 OrderRecord 復元は **Unit B IdempotencyRepository の payload に `orderID` を保存**し、Unit C は payload 経由で OrderID を取得 → テーブルの通常 Get で復元（BR-C15）
+- GSI を 1 つ減らせる + 凍結契約と整合
+
+### 7.5 容量見積（NFR Requirements / Infrastructure Design で再評価）
 - 1 注文 ≈ 400 バイト
 - 1 ユーザ平均 30 注文/月 × 90 日保持 → 90 注文/ユーザ × 400B = 36KB/ユーザ
 - 100 ユーザで 3.6MB → On-Demand キャパシティで十分
