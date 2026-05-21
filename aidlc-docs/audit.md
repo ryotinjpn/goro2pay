@@ -343,3 +343,49 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: Functional Design Part 2 — 成果物生成段階へ
 
 ---
+
+## Functional Design (Unit A) — 凍結 Interface 整合 (PR #66)
+**Timestamp**: 2026-05-21T01:00:00Z
+**User Input**: "Functional Design 側で修正" (Q-A4/Q-A6 等のヒアリング後、PR #64 で凍結された unit-interfaces.md との差分検出への対応指示)
+**AI Response**: PR #66 を作成しマージ。API path を `/api/auth/logout` に統一、useAuth 公開メソッド名を signup/login/logout に統一、Amplify SDK 関数名との区別凡例を追加。
+**Context**: Functional Design 完了、凍結 Interface 契約と完全整合
+
+---
+
+## NFR Requirements (Unit A) — Plan 作成
+**Timestamp**: 2026-05-21T02:00:00Z
+**User Input**: "NFR Requirements実行"
+**AI Response**: aidlc-docs/construction/plans/auth-nfr-requirements-plan.md を作成。Functional Design からの引き継ぎ事項と requirements.md の Unit A 関連 NFR を整理し、確認質問 Q-N1〜Q-N13 (13問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Requirements Plan のユーザ承認を待機中
+
+---
+
+## NFR Requirements (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-21T02:05:00Z
+**User Input**: "1つづつ質問して"
+**AI Response**: Plan 承認と解釈。Q-N1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## NFR Requirements (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-21T02:30:00Z
+**User Inputs** (Q-N1〜Q-N13、対話形式で順次):
+- Q-N1: "B: 8h / 30d (ダメ化UX寄り)"
+- Q-N2: "A: P50 500ms / P95 1.5s"
+- Q-N3: "C: 目標値を定めず NFR-PERF-01 全体予算 (3 秒) 内で OK"
+- Q-N4: "A: デモ最小同時 5 人 / ピーク 10 req/s"
+- Q-N5: "A: Cognito SLA に追従 + エラー表示のみ"
+- Q-N6: "もう一度教えて" → AI 4 案比較表提示 → "C: Stage 全体 100 req/s / Burst 200 (気休め)"
+- Q-N7: "B: 標準 (level/ts/userId/action/traceId/requestId/email_hash/userAgent)"
+- Q-N8: "A: 取得しない (NFR-OBS-02 厳密準拠)"
+- Q-N9: "A: Cognito 標準 + ユーザにエラー表示"
+- Q-N10: "どう違うの？" → AI PBT 概念 + 各案プロパティ例 + 工数比較提示 → "B: メール正規化と email_hash にだけ"
+- Q-N11: "A: モダンブラウザ最新 2 バージョンのみ"
+- Q-N12: "どっちが方針に沿ってる？" → AI Q-A1/Q-A8 整合性比較表提示 → "A: Frontend で日本語マッピング"
+- Q-N13: "Inception フェーズで定義しなかったっけ？" → AI requirements.md §4.6 NFR-COMP-01〜03 引用提示 → "A: NFR-COMP-01〜03 を引用のみ"
+
+**AI Response**: 全回答を auth-nfr-requirements-plan.md に [Answer] タグ反映。矛盾なし。次に NFR Requirements 成果物 2 種 (nfr-requirements.md / tech-stack-decisions.md) を生成。
+**Context**: NFR Requirements ヒアリング完了、成果物生成段階へ
+
+---
