@@ -300,3 +300,46 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: Units Generation ステージ完了、Inception フェーズ全成果物完成、ユーザ承認ゲートへ
 
 ---
+
+## Construction Phase — Unit A 担当開始
+**Timestamp**: 2026-05-21T00:00:00Z
+**User Input**: "Constructionを実行unitAを担当"
+**AI Response**: Construction フェーズ開始。Per-unit ループのうち Unit A (auth) を担当することを了解。Unit A は Standard 深度、stories US-0-01 / US-0-02 を範囲とする。Functional Design ステージから順次実施し、各ステージで承認ゲートを設ける。
+**Context**: Worktree `future-unit-a` 上で Unit A を実装。並列ブランチで他 Unit が進行中の前提。
+
+---
+
+## Functional Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-21T00:05:00Z
+**User Input**: (N/A)
+**AI Response**: aidlc-docs/construction/plans/auth-functional-design-plan.md を作成。Q-A1 〜 Q-A10 の 10 問の確認質問を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: Plan 承認待ち
+
+---
+
+## Functional Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-21T00:10:00Z
+**User Input**: "ヒアリングして"
+**AI Response**: Plan 承認と解釈。Q-A1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## Functional Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-21T00:30:00Z
+**User Inputs** (Q-A1〜Q-A10、対話形式で順次):
+- Q-A1: "B: メール検証なし（auto-confirm）" — Pre Sign-up Lambda Trigger で即 CONFIRMED
+- Q-A2: "B: 標準（8文字、英大小・数字混在）"
+- Q-A3: "A: 含める（API + UI 仕様化）" — POST /auth/logout + GlobalSignOut
+- Q-A4: "jwtをフロントからアクセストークン投げてapigwがcoginto認証してlambdaに行くんだよね？？" → AI フロー図解説明 → "A: Authorizer のみ（推奨）"
+- Q-A5: "A: sub（UUID v4）を採用"
+- Q-A6: "A: 同一 URL に Landing UI を表示し UI 切替"
+- Q-A7: "A: AWS Amplify Auth（@aws-amplify/auth）"
+- Q-A8: "B: ダメ化トーン軽"
+- Q-A9: "B: ダメ化風モーダル表示 → ログイン画面"
+- Q-A10: "メリットデメリットは？" → AI 比較表提示 → "B: / 側で分岐（推奨）"
+
+**AI Response**: 全回答を auth-functional-design-plan.md に [Answer] タグ反映。矛盾なし、追加質問なし。次に Functional Design 成果物 4 種（business-logic-model / business-rules / domain-entities / frontend-components）を生成。
+**Context**: Functional Design Part 2 — 成果物生成段階へ
+
+---
