@@ -12,6 +12,8 @@
 
 Unit B `budget` のドメインモデル（エンティティ・値オブジェクト・関連）を技術非依存で定義する。永続化やインフラの詳細は Infrastructure Design / Code Generation で記述する。
 
+**凍結された Unit 間 Interface 契約**: Unit B が公開する Go interface（`WalletService` / `wallet_repo.WalletReader` / `budget_settings.BudgetSettingsReader` / `budget_settings.BudgetSettingsWriter`）と公開 DTO（`WalletSnapshot` / `DeductResult` / `ResetResult`）、Sentinel error（`wallet.ErrInsufficientBalance` / `wallet.ErrIdempotencyConflict` / `wallet.ErrBudgetOutOfRange`）は [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3 / §6.3 で凍結済み。本ドキュメントの §4 ドメインサービスはその契約に整合する形で内部ロジックを記述する。差異が必要な場合は先に unit-interfaces.md を更新する。
+
 ---
 
 ## 1. エンティティ一覧
@@ -66,7 +68,7 @@ Unit B `budget` のドメインモデル（エンティティ・値オブジェ�
 **バリデーション** (Q-B1 = A, Q-B11 補足 γ):
 - `1 ≤ monthlyBudget ≤ 100,000`
 - `monthlyBudget % 1000 == 0`（1,000 円刻み）
-- 上記を満たさないリクエストは `ErrValidation`（HTTP 400 `VALIDATION_FAILED`）
+- 上記を満たさないリクエストは凍結 IF の `wallet.ErrBudgetOutOfRange`（範囲外専用 Sentinel）を返却。Handler 層で HTTP 400 `VALIDATION_FAILED` にマップ ([unit-interfaces.md §3.1 / §8](../../interfaces/unit-interfaces.md))
 
 **ライフサイクル** (Q-B2 = B, Q-B3 = B):
 - **生成**: `SetBudget` 初回呼び出し時（Wallet が存在しない時を初回判定）
@@ -185,25 +187,29 @@ erDiagram
 
 ドメインサービスは「複数のエンティティをまたぐ操作」を表現する。実装は `WalletService` (Unit B 内部) に集約。
 
-### 4.1 `GetBalance(userID)`
+### 4.1 `GetBalance(ctx, userID)`
+
+凍結 IF: `WalletService.GetBalance(ctx context.Context, userID string) (*WalletSnapshot, error)`
 
 | 項目 | 内容 |
 |---|---|
-| 入力 | `userID: string` |
-| 出力 | `WalletSnapshot{ userID, balance, monthlyBudget, updatedAt }` |
-| 例外 | `ErrUnauthorized`（認証失敗、Unit A の責務）、`ErrInternal` |
+| 入力 | `ctx: context.Context`, `userID: string` |
+| 出力 | `*WalletSnapshot{ UserID, Balance, MonthlyBudget, UpdatedAt }` (凍結 DTO、unit-interfaces.md §3.1) |
+| 例外 | `auth.ErrUnauthorized`（認証失敗、Unit A の sentinel を Handler 層で返却）、`ErrInternal` |
 | 副作用 | なし（読み取り専用） |
 | 整合性 | `Wallet` と `BudgetSettings` の両方を取得して合成 |
 
 ---
 
-### 4.2 `SetBudget(userID, monthlyBudget)`
+### 4.2 `SetBudget(ctx, userID, monthlyBudget)`
+
+凍結 IF: `WalletService.SetBudget(ctx context.Context, userID string, monthlyBudget int) error`
 
 | 項目 | 内容 |
 |---|---|
-| 入力 | `userID: string`, `monthlyBudget: int` |
-| 出力 | `BudgetSettings`（更新後） |
-| 例外 | `ErrValidation`（範囲外 / 1,000 円刻み外）、`ErrInternal` |
+| 入力 | `ctx: context.Context`, `userID: string`, `monthlyBudget: int` |
+| 出力 | `error`（凍結 IF 上、更新後の値は返さない。Handler 層が必要に応じて再取得して JSON 組み立て） |
+| 例外 | `wallet.ErrBudgetOutOfRange`（範囲外 / 1,000 円刻み外）、`ErrInternal` |
 | 副作用 | `BudgetSettings` の Upsert + `Wallet` の作成または差分調整 |
 | 初回判定 | `Wallet` が存在しない場合を初回とする (Q-B3 = B) |
 | 初回処理 | `Wallet` を `balance = monthlyBudget` で新規作成、`BudgetSettings` を新規作成 |
@@ -224,15 +230,17 @@ elif delta < 0:
 
 ---
 
-### 4.3 `Deduct(userID, amount, idempotencyKey)`
+### 4.3 `Deduct(ctx, userID, amount, idempotencyKey)`
+
+凍結 IF: `WalletService.Deduct(ctx context.Context, userID string, amount int, idempotencyKey string) (*DeductResult, error)`
 
 | 項目 | 内容 |
 |---|---|
-| 入力 | `userID: string`, `amount: int (>0)`, `idempotencyKey: string` |
-| 出力 | `DeductResult{ newBalance, idempotent }` |
-| 例外 | `ErrInsufficientBalance`（残高不足、HTTP 402）、`ErrIdempotencyConflict`（同一キー × 異なる payload）、`ErrInternal` |
+| 入力 | `ctx: context.Context`, `userID: string`, `amount: int (>0)`, `idempotencyKey: string` |
+| 出力 | `*DeductResult{ NewBalance, Idempotent }` (凍結 DTO、unit-interfaces.md §3.1) |
+| 例外 | `wallet.ErrInsufficientBalance`（残高不足、Handler で HTTP 402）、`wallet.ErrIdempotencyConflict`（同一キー × 異なる payload、Handler で HTTP 409）、`ErrInternal` |
 | 副作用 | `IdempotencyRecord` の作成 + `Wallet.balance` の条件付き減算 |
-| 冪等性 | 同一 `idempotencyKey` × 同一 `payload` の再呼び出しは `idempotent=true` で初回結果を返す |
+| 冪等性 | 同一 `idempotencyKey` × 同一 `payload` の再呼び出しは `Idempotent=true` で初回結果を返す |
 | 失敗時の冪等レコード | 失敗結果も `response` として保存、同一キー再送には保存通り返却 (Q-B5 = A) |
 
 **処理フロー**:
@@ -242,14 +250,14 @@ elif delta < 0:
    if err != nil: return ErrInternal
    if !acquired:
        # 既存レコード
-       if prevPayloadHash != payloadHash: return ErrIdempotencyConflict
+       if prevPayloadHash != payloadHash: return wallet.ErrIdempotencyConflict
        deserializedResult = parse(prevResponse)
        return deserializedResult with idempotent=true
 3. wallet, err = WalletRepository.DeductConditional(userID, amount)
-   if err == ErrInsufficientBalance:
+   if err == wallet.ErrInsufficientBalance:
        # 失敗結果を IdempotencyRecord.response に保存（race condition で再送される場合に同じエラーを返す）
        IdempotencyRepository.SaveResponse(key, serialize({error: "ErrInsufficientBalance"}))
-       return ErrInsufficientBalance
+       return wallet.ErrInsufficientBalance
    if err != nil: return ErrInternal
 4. successResponse = serialize({newBalance: wallet.balance})
    IdempotencyRepository.SaveResponse(key, successResponse)
@@ -260,11 +268,13 @@ elif delta < 0:
 
 ### 4.4 `ResetAll(ctx)` — Scheduler Lambda 専用
 
+凍結 IF: `WalletService.ResetAll(ctx context.Context) (*ResetResult, error)`
+
 | 項目 | 内容 |
 |---|---|
 | 入力 | `ctx: context.Context` |
-| 出力 | `ResetResult{ processedUsers, errors[] }` |
-| 例外 | 個別ユーザの失敗は集約して継続、致命的失敗のみ停止 |
+| 出力 | `*ResetResult{ ProcessedUsers, Errors []error }` (凍結 DTO、unit-interfaces.md §3.1) |
+| 例外 | 個別ユーザの失敗は `Errors` に集約して継続、致命的失敗のみ stop（呼び出し側に error を返却） |
 | 副作用 | 全ユーザの `Wallet.balance` を `BudgetSettings.monthlyBudget` にリセット + `BudgetResetLog` を Insert |
 | 冪等性 | `BudgetResetLog` の `(resetDate, userID)` 主キー条件付き Insert で保証 (Q-B8 = A) |
 
@@ -293,9 +303,52 @@ elif delta < 0:
 
 ---
 
+### 4.5 Unit E 向け公開 Repository Interface（凍結 IF §6.3 準拠）
+
+Unit B は他 Unit から内部 Repository を直接叩かれないよう、**Unit E 向けに限定して** 以下の Read / Write Interface を公開する（unit-interfaces.md §3.2 / §6.3）。
+
+```go
+// package wallet_repo
+type WalletReader interface {
+    Get(ctx context.Context, userID string) (*WalletRecord, error)
+}
+type WalletRecord struct {
+    UserID    string
+    Balance   int
+    UpdatedAt time.Time
+}
+```
+
+```go
+// package budget_settings
+type BudgetSettingsReader interface {
+    Get(ctx context.Context, userID string) (*BudgetSettings, error)
+}
+type BudgetSettings struct {
+    UserID        string
+    MonthlyBudget int
+    EffectiveFrom time.Time
+}
+
+// Unit E (BudgetRaiseService) からの増額適用専用 Writer
+type BudgetSettingsWriter interface {
+    Set(ctx context.Context, userID string, monthlyBudget int, effectiveFrom time.Time) error
+}
+```
+
+**責務分担**:
+- `WalletReader` / `BudgetSettingsReader`: Unit E `MetricsService` がメトリクス計算で参照
+- `BudgetSettingsWriter`: Unit E `BudgetRaiseService.Accept` が翌月適用の予算更新で呼び出し（即時 `Wallet.balance` 加算は伴わない、UC-B-06 参照）。`raiseHistory` のエントリ追加は Writer 内で行うか Unit E が組み立てて渡すかを Code Generation 段で決定
+
+**注**: Write 系（`Wallet` の作成・残高更新）は Unit B 内部 (`WalletService`) のみが触る。他 Unit からは公開しない。
+
+---
+
 ## 5. 認証境界
 
-Unit B のすべてのドメインサービスは Unit A の `AuthContextService` で認証済みコンテキスト（`userID`）を前提とする。`Deduct` のリクエスト元 (`OrderService`) は同一 Lambda 内であり Cognito JWT 検証は API Gateway 段で完了している。
+Unit B のすべてのドメインサービスは Unit A の `auth.AttachUserID()` middleware が `gin.Context` に注入した `userID`（`auth.UserIDFromContext(c)` で取得）を前提とする。不正時は `auth.ErrUnauthorized`（凍結 IF §2.1）を返却し、Handler 層で HTTP 401 にマップする。
+
+`Deduct` のリクエスト元 (`OrderService`) は同一 Lambda 内であり Cognito JWT 検証は API Gateway Cognito Authorizer 段で完了している。
 
 `ResetAll` のみ EventBridge Scheduler 経由で Lambda が呼ばれ、認証コンテキストを持たない。Lambda の IAM Role が DynamoDB への読み書き権限を持つ前提（Infrastructure Design で定義）。
 

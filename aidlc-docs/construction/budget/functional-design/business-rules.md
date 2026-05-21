@@ -14,6 +14,8 @@ Unit B `budget` のビジネスルール（Decision Rules / Validation Rules / C
 
 ルールは技術非依存で記述し、実装上の表現（Go のエラー型・DynamoDB Condition Expression 等）は Code Generation で扱う。
 
+**凍結された Unit 間 Interface 契約**: ルール違反時に返す Sentinel error 名（`wallet.ErrInsufficientBalance` / `wallet.ErrIdempotencyConflict` / `wallet.ErrBudgetOutOfRange` / `auth.ErrUnauthorized`）と HTTP マッピングは [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3.1 / §8 で凍結済み。本ドキュメントの §8 エラーマッピングはそれと整合させる。
+
 ---
 
 ## 1. ルール分類サマリ
@@ -32,54 +34,54 @@ Unit B `budget` のビジネスルール（Decision Rules / Validation Rules / C
 
 ### VR-B-01: 月間予算の範囲
 
-- **対象**: `SetBudget(userID, monthlyBudget)`
+- **対象**: `WalletService.SetBudget(ctx, userID, monthlyBudget)`
 - **ルール**: `1 ≤ monthlyBudget ≤ 100,000`
-- **違反時**: `ErrValidation` を返す（HTTP 400 `VALIDATION_FAILED`）
+- **違反時**: `wallet.ErrBudgetOutOfRange` を返す。Handler 層が HTTP 400 `VALIDATION_FAILED` にマップ（凍結 IF §8）
 - **根拠**: Q-B1 = A、Application Design / requirements.md
 - **対応ストーリー**: US-0-03
 - **テスト境界値**: `0`, `1`, `100000`, `100001`, `-1`
 
 ### VR-B-02: 月間予算の刻み
 
-- **対象**: `SetBudget(userID, monthlyBudget)`
+- **対象**: `WalletService.SetBudget(ctx, userID, monthlyBudget)`
 - **ルール**: `monthlyBudget % 1000 == 0`（1,000 円刻み）
-- **違反時**: `ErrValidation`
+- **違反時**: `wallet.ErrBudgetOutOfRange`（範囲外と同 sentinel に集約。詳細は Handler の error message で判別）
 - **根拠**: Q-B11 補足 = γ
 - **対応ストーリー**: US-0-03
 - **テスト境界値**: `1000`（OK）, `1500`（NG）, `30000`（OK）, `30001`（NG）
 
 ### VR-B-03: `Deduct` の amount は正値
 
-- **対象**: `Deduct(userID, amount, idempotencyKey)`
+- **対象**: `WalletService.Deduct(ctx, userID, amount, idempotencyKey)`
 - **ルール**: `amount > 0`
-- **違反時**: `ErrValidation`
+- **違反時**: 凍結 IF に専用 sentinel が無いため、Handler の入力バリデーション層 (`validator.ValidationErrors`) で 400 `VALIDATION_FAILED` を返す（凍結 IF §8）
 - **根拠**: ドメイン上の自明な制約（負の減算 = 加算は許容しない）
 - **対応ストーリー**: US-1-05, US-1-06
 - **テスト境界値**: `0`（NG）, `1`（OK）, `-1`（NG）
 
 ### VR-B-04: `idempotencyKey` の形式
 
-- **対象**: `Deduct(userID, amount, idempotencyKey)`
+- **対象**: `WalletService.Deduct(ctx, userID, amount, idempotencyKey)`
 - **ルール**: `idempotencyKey` は `{userID}:{ulid}` 形式（ULID は 26 文字の Crockford's Base32）
-- **違反時**: `ErrValidation`（HTTP 400 `VALIDATION_FAILED`）
+- **違反時**: `validator.ValidationErrors` → HTTP 400 `VALIDATION_FAILED`（凍結 IF §8）
 - **根拠**: Q-B4 = A
 - **対応ストーリー**: US-1-05
 - **正規表現** (参考): `^[a-zA-Z0-9_-]+:[0-9A-HJKMNP-TV-Z]{26}$`
 
 ### VR-B-05: `idempotencyKey` のユーザ照合
 
-- **対象**: `Deduct(userID, amount, idempotencyKey)`
+- **対象**: `WalletService.Deduct(ctx, userID, amount, idempotencyKey)`
 - **ルール**: `idempotencyKey` のプレフィックス（`:` の左側）が認証コンテキストの `userID` と一致すること
-- **違反時**: `ErrValidation`（他人のキーを横取りできない）
+- **違反時**: `validator.ValidationErrors` → HTTP 400 `VALIDATION_FAILED`（他人のキーを横取りできない）
 - **根拠**: Q-B4 = A の userID プレフィックス採用
 - **対応ストーリー**: US-1-05（セキュリティ補強）
 
 ### VR-B-06: `userID` 必須
 
 - **対象**: 全ドメインサービス
-- **ルール**: `userID` が空文字列または不正形式の場合は処理せず `ErrUnauthorized`
-- **違反時**: `ErrUnauthorized`（HTTP 401）
-- **根拠**: Unit A `AuthContextService` の責務だが、Unit B 側でも防御的に検査
+- **ルール**: `userID` が空文字列または不正形式の場合は処理せず `auth.ErrUnauthorized` を返す
+- **違反時**: `auth.ErrUnauthorized`（HTTP 401、凍結 IF §2.1 / §8）
+- **根拠**: Unit A `auth.AttachUserID()` middleware の責務だが、Unit B 側でも防御的に検査
 - **対応ストーリー**: 全ストーリー（前提）
 
 ---
@@ -119,9 +121,9 @@ Unit B `budget` のビジネスルール（Decision Rules / Validation Rules / C
   if !acquired:
       # 既存レコードあり
       if hash(prevPayload) == hash(currentPayload):
-          return prevResponse with idempotent=true
+          return prevResponse with Idempotent=true
       else:
-          return ErrIdempotencyConflict   # HTTP 409
+          return wallet.ErrIdempotencyConflict   # Handler で HTTP 409 IDEMPOTENCY_CONFLICT
   else:
       # 新規取得
       proceed to DeductConditional
@@ -131,10 +133,10 @@ Unit B `budget` のビジネスルール（Decision Rules / Validation Rules / C
 
 ### DR-B-04: 残高不足の判定主体
 
-- **対象**: `Deduct(...)` 実行時
+- **対象**: `WalletService.Deduct(...)` 実行時
 - **ルール**: 残高不足の最終判定は **`WalletRepository.DeductConditional` の DynamoDB ConditionExpression** が担う。Unit C 側で事前に `GetBalance` チェックは不要
 - **根拠**: Q-B7 = A
-- **動作**: `balance < amount` の場合 `ErrInsufficientBalance` を返す（HTTP 402 `INSUFFICIENT_BALANCE`）
+- **動作**: `balance < amount` の場合 `wallet.ErrInsufficientBalance` を返す。Handler が HTTP 402 `INSUFFICIENT_BALANCE` にマップ（凍結 IF §8）
 - **対応ストーリー**: US-1-04, US-1-06
 
 ### DR-B-05: 月初リセットのスキップ判定
@@ -263,14 +265,24 @@ Unit B `budget` のビジネスルール（Decision Rules / Validation Rules / C
 
 ## 8. 例外・エラーマッピング（HTTP 応答レベル）
 
-API 応答時のエラーコード対応:
+API 応答時のエラーコード対応（凍結 IF [unit-interfaces.md §8](../../interfaces/unit-interfaces.md) 準拠）:
 
-| ルール違反 | Go エラー | HTTP | API Code |
+| ルール違反 | Go エラー (sentinel) | HTTP | API Code |
 |---|---|---|---|
-| VR-B-01 〜 VR-B-04 | `ErrValidation` | 400 | `VALIDATION_FAILED` |
-| VR-B-05, VR-B-06 | `ErrUnauthorized` | 401 | `UNAUTHORIZED` |
-| DR-B-04 残高不足 | `ErrInsufficientBalance` | 402 | `INSUFFICIENT_BALANCE` |
-| DR-B-03 異 payload | `ErrIdempotencyConflict` | 409 | `IDEMPOTENCY_CONFLICT` |
-| 想定外エラー | `ErrInternal` | 500 | `INTERNAL_ERROR` |
+| VR-B-01, VR-B-02 (予算範囲・刻み) | `wallet.ErrBudgetOutOfRange` | 400 | `VALIDATION_FAILED` |
+| VR-B-03, VR-B-04, VR-B-05 (Deduct 入力) | `validator.ValidationErrors` (Handler 入力検証層) | 400 | `VALIDATION_FAILED` |
+| VR-B-06 (`userID` 不正・空) | `auth.ErrUnauthorized` | 401 | `UNAUTHORIZED` |
+| DR-B-04 残高不足 | `wallet.ErrInsufficientBalance` | 402 | `INSUFFICIENT_BALANCE` |
+| DR-B-03 異 payload | `wallet.ErrIdempotencyConflict` | 409 | `IDEMPOTENCY_CONFLICT` |
+| 想定外エラー | （sentinel 無し、wrap された error） | 500 | `INTERNAL_ERROR` |
 
-これらは Application Design 既存の定義 (component-methods.md §7) と整合する。
+エラーレスポンス JSON は凍結 IF §8 通り:
+
+```json
+{
+  "code": "INSUFFICIENT_BALANCE",
+  "message": "今月のダメ予算を使い切りました"
+}
+```
+
+これらは Application Design 既存の定義 (component-methods.md §7) および凍結 IF (unit-interfaces.md §8) と整合する。

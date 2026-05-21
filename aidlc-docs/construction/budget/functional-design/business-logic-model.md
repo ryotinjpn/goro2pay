@@ -12,6 +12,8 @@
 
 Unit B `budget` のビジネスロジックを、ユースケース・処理フロー・状態遷移・データフローの 4 視点で技術非依存に記述する。エンティティ定義は [domain-entities.md](./domain-entities.md)、ルール詳細は [business-rules.md](./business-rules.md) を参照のこと。
 
+**凍結された Unit 間 Interface 契約**: 公開 Go interface・公開 DTO・REST API path・Sentinel error の名称は [unit-interfaces.md](../../interfaces/unit-interfaces.md) (Wave 1 並列化用 Interface 契約集) で凍結済みであり、本ドキュメントはそれと整合する範囲でのみ内部ロジックを記述する。差異が必要な場合は先に unit-interfaces.md を更新する。
+
 ---
 
 ## 1. ユースケースサマリ
@@ -39,14 +41,14 @@ Unit B `budget` のビジネスロジックを、ユースケース・処理フ�
 
 ```
 1. ユーザは BudgetSetupScreen で予算 (例: 30,000) をクイックボタンまたは数値入力で選択
-2. クライアントが POST /wallet/budget {monthlyBudget: 30000} を送信
-3. WalletHandler.SetBudget が AuthContext から userID を取得
-4. WalletService.SetBudget(userID, 30000) を呼び出し:
+2. クライアントが POST /api/wallet/budget {monthlyBudget: 30000} を送信
+3. WalletHandler.SetBudget が auth.UserIDFromContext(c) で userID を取得
+4. WalletService.SetBudget(ctx, userID, 30000) を呼び出し:
    4.1 バリデーション: VR-B-01（範囲）, VR-B-02（刻み）
    4.2 WalletRepository.Get(userID) → NotFound（初回判定 DR-B-01 = B）
    4.3 BudgetSettingsRepository.Set(userID, 30000, effectiveFrom=now) で新規作成
    4.4 WalletRepository.Create(userID, balance=30000) で新規作成
-5. BudgetSettings を返却
+5. SetBudget は error のみ返却（凍結IF）。Handler は { monthlyBudget, appliedFrom } JSON を組み立てて 200 を返す
 6. クライアントが MainScreen にリダイレクト
 ```
 
@@ -65,10 +67,10 @@ Unit B `budget` のビジネスロジックを、ユースケース・処理フ�
 **主シナリオ**:
 
 ```
-1. ユーザは BudgetSetupScreen で新予算 (例: 50,000) を入力（同じ画面、再入場時 or 増額誘導経由）
-2. クライアントが POST /wallet/budget {monthlyBudget: 50000} を送信
-3. WalletHandler.SetBudget が AuthContext から userID を取得
-4. WalletService.SetBudget(userID, 50000) を呼び出し:
+1. ユーザは BudgetSetupScreen で新予算 (例: 50,000) を入力（同じ画面、再入場時）
+2. クライアントが POST /api/wallet/budget {monthlyBudget: 50000} を送信
+3. WalletHandler.SetBudget が auth.UserIDFromContext(c) で userID を取得
+4. WalletService.SetBudget(ctx, userID, 50000) を呼び出し:
    4.1 バリデーション: VR-B-01, VR-B-02
    4.2 WalletRepository.Get(userID) → Wallet あり（変更判定）
    4.3 oldBudget = BudgetSettings.monthlyBudget (例: 30000)
@@ -76,11 +78,11 @@ Unit B `budget` のビジネスロジックを、ユースケース・処理フ�
    4.5 BudgetSettingsRepository.Set(userID, 50000, effectiveFrom=now)
    4.6 WalletRepository.UpdateBalance(userID, +delta) で残高 +20,000
         （減額時は max(balance, newBudget) で打ち切り、DR-B-02）
-5. 更新後の BudgetSettings を返却
+5. SetBudget は error のみ返却。Handler は { monthlyBudget, appliedFrom } JSON を組み立てて 200 を返す
 ```
 
 **代替シナリオ**:
-- 増額誘導モーダル経由（US-3-04 / Unit E）: `BudgetRaiseService.Accept` から内部的に SetBudget を呼ぶ。HTTP は `/budget/raise` で受けるが、内部処理はこのユースケースに合流
+- 増額誘導経由（US-3-04 / Unit E）: 凍結 IF (unit-interfaces.md §6.3) では Unit E の `BudgetRaiseService.Accept` が `BudgetSettingsWriter.Set(ctx, userID, newMonthlyBudget, effectiveFrom)` を **直接呼ぶ**（`WalletService.SetBudget` 経由ではない）。HTTP は `POST /api/budget/raise` で受け、Unit E 配下で扱う。Unit B は `BudgetSettingsWriter` を Unit E 専用に公開する責務のみを負う（[domain-entities.md §4.5](./domain-entities.md) 参照）
 - 減額時 (newBudget < oldBudget): `Wallet.balance` が新予算を超えていたら新予算で打ち切り
 
 ---
@@ -94,13 +96,13 @@ Unit B `budget` のビジネスロジックを、ユースケース・処理フ�
 **主シナリオ**:
 
 ```
-1. フロントが MainScreen 描画時に GET /wallet 発行
-2. WalletHandler.GetBalance が userID を取得
-3. WalletService.GetBalance(userID) を呼び出し:
+1. フロントが MainScreen 描画時に GET /api/wallet 発行
+2. WalletHandler.GetBalance が auth.UserIDFromContext(c) で userID を取得
+3. WalletService.GetBalance(ctx, userID) を呼び出し:
    3.1 WalletRepository.Get(userID) を ConsistentRead で取得 (PR-B-05)
    3.2 BudgetSettingsRepository.Get(userID) を取得
-   3.3 両者を WalletSnapshot に合成して返却
-4. 200 OK + WalletSnapshot
+   3.3 両者を *WalletSnapshot{ UserID, Balance, MonthlyBudget, UpdatedAt } に合成して返却
+4. Handler は 200 OK で { balance, monthlyBudget, updatedAt } JSON を返却
 ```
 
 **代替シナリオ**:
@@ -194,25 +196,29 @@ Unit B `budget` のビジネスロジックを、ユースケース・処理フ�
 
 ---
 
-### UC-B-06: 増額誘導の予算更新を受ける（Unit E から）
+### UC-B-06: 増額誘導の予算更新を受ける（Unit E から、Writer 経由）
 
 **アクター**: Unit E `BudgetRaiseService.Accept`
 **前提条件**: ユーザが RaiseModal で増額に同意（例: 30,000 → 45,000）
-**事後条件**: UC-B-02（変更）と同じ。加えて `BudgetSettings.RaiseHistory` にエントリ追加
+**事後条件**: `BudgetSettings.monthlyBudget` が更新（`appliedFrom` は翌月 1 日 00:00 JST）。`Wallet.balance` の即時調整は本ユースケースの責務外（凍結 IF 上、`BudgetRaiseService.Accept` は翌月 1 日適用モデル）。
 
-**主シナリオ**:
+**主シナリオ** (凍結 IF 通り):
 
 ```
-1. Unit E BudgetRaiseService.Accept(userID, newBudget=45000) が呼ばれる
-2. Unit E が WalletService.SetBudget(userID, 45000) を呼び出し（UC-B-02 に合流）
-3. SetBudget の中で:
-   3.1 BudgetSettings 更新前に、Unit E が RaiseHistory にエントリ追加（at=now, prevBudget=30000, newBudget=45000）
-   3.2 BudgetSettingsRepository.Set(userID, 45000, effectiveFrom=now) （RaiseHistory 含む）
-   3.3 Wallet.balance を差分調整 (+15000)
-4. ユーザは MainScreen で残高が +15,000 されたのを目撃 → ダメ化UX 強化
+1. Unit E BudgetRaiseService.Accept(ctx, userID, newMonthlyBudget=45000) が呼ばれる
+2. Unit E は Unit B が公開する budget_settings.BudgetSettingsWriter.Set(ctx, userID, 45000, effectiveFrom=翌月1日00:00 JST) を直接呼び出す
+   （unit-interfaces.md §6.3 で Unit B が Unit E 向けに公開する Writer Interface）
+3. BudgetSettingsRepository.Set:
+   3.1 BudgetSettings.monthlyBudget = 45000、effectiveFrom = 翌月 1 日 00:00 JST
+   3.2 raiseHistory にエントリ追加（at=now, prevBudget=30000, newBudget=45000）は Unit E の Accept 内で組み立てて Writer に渡すか、Writer 内でフックする（実装詳細）
+4. 翌月 1 日の月初リセット (UC-B-05) で Wallet.balance = 45000 に再設定される
+5. ユーザは MainScreen で予算が 45,000 円に更新されたのを翌月から目撃
 ```
 
-**注**: RaiseHistory への記録は Unit E `BudgetRaiseService` 側の責務。Unit B の `WalletService.SetBudget` は単純に `BudgetSettings` を上書きするだけで、`RaiseHistory` は呼び出し側が組み立てて渡す。
+**注**:
+- 凍結 IF (unit-interfaces.md §6) では `BudgetRaiseResult.AppliedFrom = 翌月 1 日 00:00 JST` であり、即時の `Wallet.balance` 加算は行わない（UC-B-02 の即時反映ロジックとは経路が分離されている）
+- 当月の即時増額が必要なケース（変更）はユーザが BudgetSetupScreen から `POST /api/wallet/budget` を直接呼ぶ UC-B-02 のパスを使う
+- Unit B 側の責務は `BudgetSettingsWriter` を Unit E 向けに公開し、Set 操作で raiseHistory を更新することのみ（[domain-entities.md §4.5](./domain-entities.md)）
 
 ---
 
@@ -270,7 +276,7 @@ sequenceDiagram
     participant BR as BudgetSettingsRepo
     participant WR as WalletRepo
 
-    U->>H: POST /wallet/budget {monthlyBudget: 30000}
+    U->>H: POST /api/wallet/budget {monthlyBudget: 30000}
     H->>S: SetBudget(userID, 30000)
     S->>S: validate (VR-B-01, VR-B-02)
     S->>WR: Get(userID)
@@ -417,7 +423,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     User([ユーザ]) -->|monthlyBudget| BSS[BudgetSetupScreen]
-    BSS -->|POST /wallet/budget| API[WalletHandler]
+    BSS -->|POST /api/wallet/budget| API[WalletHandler]
     API -->|userID + monthlyBudget| WS[WalletService.SetBudget]
     WS -->|validate| RULES[(VR-B-01..02)]
     WS -->|Get| WR[(WalletRepo)]
@@ -499,7 +505,7 @@ flowchart LR
 
 ### 7.3 認証・認可
 
-- 全 HTTP エンドポイントは Cognito JWT 検証済み（Unit A の `AuthContextService`）
+- 全 HTTP エンドポイントは Cognito JWT 検証済み（Unit A の `auth.AttachUserID()` middleware が `gin.Context` に `userID` を注入。Handler は `auth.UserIDFromContext(c)` で取得し、不正時は `auth.ErrUnauthorized` を返す）
 - `Deduct` 内部呼び出しでも `userID` パラメータと `idempotencyKey` のプレフィックスを照合 (VR-B-05)
 - Scheduler Lambda は IAM Role で DynamoDB 全テーブル R/W 権限（後続の Infrastructure Design で詳細）
 

@@ -13,6 +13,8 @@
 
 Unit B `budget` のフロントエンド側コンポーネント階層・props/state・ユーザインタラクション・バリデーション・API 連携を定義する。実装は Code Generation で行うが、本ドキュメントは UI レベルの仕様確定に責任を持つ。
 
+**凍結された Unit 間 Interface 契約**: REST API パス（`GET /api/wallet`、`POST /api/wallet/budget`）と `useWallet` フックの公開シグネチャは [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3.3 / §9 で凍結済み。本ドキュメントの §3.1 `useWallet` は凍結契約と完全一致させ、エラー時の UI 制御はフック内部で `query.isError` を直接参照する方式（公開 API には含めない）に統一する。差異が必要な場合は先に unit-interfaces.md を更新する。
+
 ---
 
 ## 1. コンポーネント階層
@@ -93,7 +95,7 @@ interface BudgetSetupState {
 - 送信ボタン: `BudgetSubmitButton` クリック時に `useSetBudget().mutate(monthlyBudget)`
 
 **API 連携**:
-- `POST /wallet/budget` を `useSetBudget` フック経由で呼び出し
+- `POST /api/wallet/budget` を `useSetBudget` フック経由で呼び出し（凍結 IF §3.3）
 - 成功時: `queryClient.invalidateQueries(['wallet'])` で残高キャッシュ無効化、`router.push('/')` で MainScreen へ遷移
 - 失敗時: `validationError` にエラーメッセージ表示
 
@@ -238,9 +240,9 @@ const isWarning = consumptionRate > 0.8;
 const amountColor = isWarning ? 'red' : 'black';
 ```
 
-**Loading 状態**:
+**Loading / エラー状態**:
 - `useWallet().isLoading == true` の間はスケルトン表示
-- エラー時は `"残高取得失敗"` 表示 + リトライボタン
+- エラー時の表示（`"残高取得失敗"` + リトライボタン）は ErrorBoundary または `BalanceDisplay` 内で直接 `useQuery({ queryKey: ['wallet'] })` を購読して `query.isError` を判定する方式とする（凍結 IF の `useWallet` には `isError` を含めないため、§3.1 注を参照）
 
 **ストーリー対応**: US-0-04（残高初期表示）、US-1-02（残高常時可視化）
 
@@ -303,13 +305,12 @@ function computeRemainingDays(): number {
 
 **目的**: 残高 + 月間予算の取得・キャッシュ
 
-**シグネチャ**:
+**シグネチャ**（[unit-interfaces.md §9](../../interfaces/unit-interfaces.md) で凍結。本ドキュメントは凍結契約と完全一致させる）:
 ```typescript
 function useWallet(): {
   balance: number;
   monthlyBudget: number;
   isLoading: boolean;
-  isError: boolean;
   refetch(): void;
 };
 ```
@@ -319,21 +320,21 @@ function useWallet(): {
 function useWallet() {
   const query = useQuery({
     queryKey: ['wallet'],
-    queryFn: () => api.getWallet(),
+    queryFn: () => api.getWallet(),  // GET /api/wallet（凍結 IF §3.3）
     staleTime: 30_000,         // 30 秒間 fresh
   });
   return {
     balance: query.data?.balance ?? 0,
     monthlyBudget: query.data?.monthlyBudget ?? 0,
     isLoading: query.isLoading,
-    isError: query.isError,
     refetch: query.refetch,
   };
 }
 ```
 
-**Application Design 既存定義との差分**:
-- 既存定義（component-methods.md §6.2）に `isError` を追加。エラー時の表示制御に必要
+**注 (エラー時の UI 制御)**:
+- 凍結 IF は `isError` を公開シグネチャに含めない方針。エラー UI が必要なコンポーネント（例: `BalanceDisplay`）は内部で `useQuery({ queryKey: ['wallet'], ... })` を直接呼ぶか、ErrorBoundary でラップして対応する
+- 公開シグネチャを変更したい場合は先に unit-interfaces.md §9 を v1.1 に改定し、影響 Unit に共有してから本書を更新する
 
 ---
 
@@ -356,7 +357,7 @@ function useSetBudget() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: (monthlyBudget: number) => api.postWalletBudget(monthlyBudget),
+    mutationFn: (monthlyBudget: number) => api.postWalletBudget(monthlyBudget),  // POST /api/wallet/budget（凍結 IF §3.3）
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet'] });  // PR-B-05 自動 invalidate
       router.push('/');                                          // MainScreen へ遷移
@@ -455,16 +456,16 @@ export const monthlyBudgetAtom = atom((get) => {
 
 ---
 
-## 9. 既存設計（Application Design）との差分
+## 9. 既存設計（Application Design / 凍結 IF）との差分
 
 | 項目 | 既存定義 | 本ドキュメント | 理由 |
 |---|---|---|---|
 | `BudgetSetupScreen` | 「予算額の入力・バリデーション」 | クイックボタン 5 個 + 数値入力（1,000 円刻み） | Q-B11 = A, Q-B11 補足 = γ |
 | `BalanceDisplay` | （components.md §2.4 MainScreen 内に「大きな残高」と概略記載のみ） | 残高 + ラベル + リセット日カウントダウンの 3 要素 | Q-B12 = A |
-| `useWallet` | `{ balance, monthlyBudget, isLoading, refetch }` | `+ isError` を追加 | エラー UI 制御に必要 |
-| `useSetBudget` | （未定義） | 新規追加 | Unit B Functional Design で必要 |
+| `useWallet` | 凍結 IF §9: `{ balance, monthlyBudget, isLoading, refetch }` | 同（凍結契約と完全一致） | 凍結 IF 準拠。エラー UI は ErrorBoundary または直接 useQuery で対応（§3.1 注） |
+| `useSetBudget` | （Application Design では未定義、凍結 IF にも記載なし） | 新規追加（Unit B 内部の utility hook） | Unit 境界をまたがないため凍結 IF への追加不要 |
 
-これらは Application Design の精緻化であり、矛盾はない。
+凍結 IF の公開シグネチャは Wave 1 並列化のため変更不可。`useSetBudget` は Unit B 内部の実装詳細であり、凍結 IF §9 への追記は行わない。
 
 ---
 
