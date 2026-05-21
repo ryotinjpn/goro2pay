@@ -258,6 +258,23 @@ D) Other（[Answer] 後に記述）
 
 矛盾なしのため、ユーザ Plan 承認を得てから Functional Design Artifacts 4 ファイルの生成へ進む。
 
+---
+
+## 9. 事後追記: 凍結 Interface 契約への整合（2026-05-21 同日）
+
+PR #64（develop）で `aidlc-docs/construction/interfaces/unit-interfaces.md` が追加され、Wave 1 並列化のための Unit 間 Interface 契約が凍結された。本 Plan の決定事項と凍結契約の差分を以下のように Functional Design Artifacts に反映済み:
+
+| 項目 | 本 Plan の決定 | 凍結契約 | 反映先 |
+|---|---|---|---|
+| `idempotencyKey` テーブル PK | `(userId, key)` 複合（誤り） | `key` 単独、payload で衝突検知 | BR-C13 修正 |
+| 冪等命中時の OrderID 取得 | OrderHistory に GSI を追加して GetByIdempotencyKey | Wallet payload から OrderID を取得 → 通常 Get | BR-C15 修正 / S-04 シーケンス図修正 |
+| OrderHistory GSI | `GSI_IdempotencyKey` を新設 | `gsi_byCreatedAt` 1 個のみ | domain-entities.md §7.4 で不採用を明文化 |
+| TTL 属性名 | `TTL` | `expiresAt` | BR-C20 / BR-C22 / domain-entities.md 全体 |
+| 409 IDEMPOTENCY_CONFLICT | 言及なし | エラー一覧に存在 | BR-C39 新設 / 状態遷移図 / Frontend ハンドラ |
+| カテゴリ | `"food"` のみ（MVP） | `"food" \| "errand" \| ...` 拡張余地 | BR-C27 注記追加 |
+
+これらは Q-1〜Q-12 のヒアリング結論（リトライ / フォールバック / suggestionId / 1 タップ完結）には影響せず、永続化方式とエラー契約の追従修正に留まる。
+
 
 ---
 
