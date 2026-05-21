@@ -409,3 +409,28 @@ Functional Design ステージを in_progress として開始。
 **Context**: ⛔ GATE: Functional Design 完了承認を待機中
 
 ---
+
+## Functional Design — 凍結 Interface 契約への整合修正（Unit C）
+**Timestamp**: 2026-05-21T01:30:00Z
+**User Input**: "developを取り込んで" → "今修正して"
+**AI Response**: develop マージで取り込んだ `aidlc-docs/construction/interfaces/unit-interfaces.md`（PR #64、Unit 間 Interface 凍結契約）と Unit C Functional Design Artifacts の差分を以下のとおり Unit C 側で追従修正:
+
+### 修正項目（凍結契約を正として追従）
+
+1. **`idempotencyKey` テーブル設計** (BR-C13): PK は `key` 単独でグローバルユニーク。`(userId, key)` 複合の誤った設計を修正。payload に userID を保存し衝突検知を行う方式に変更
+2. **冪等命中時の OrderID 取得** (BR-C15): 旧版で `GSI_IdempotencyKey` を新設して取得する設計を破棄。Wallet payload から `orderID` を取得し、OrderHistoryRepository の通常 Get で復元する方式に変更
+3. **OrderHistory GSI** (domain-entities.md §7.4): 凍結契約に合わせ `gsi_byCreatedAt` のみ保持。`GSI_IdempotencyKey` の不採用理由を明文化
+4. **TTL 属性名** (BR-C20 / BR-C22 / domain-entities.md §2.1 / §7.1): `TTL` → `expiresAt` に統一
+5. **409 IDEMPOTENCY_CONFLICT** (新規 BR-C39): 凍結契約のエラー一覧に従い、`wallet.ErrIdempotencyConflict` 受信時に 409 を返すルールを新設。状態遷移図 / ログイベント / Frontend ハンドラに反映
+6. **カテゴリ表現** (BR-C27): MVP は `"food"` のみ受理だが、凍結契約の `"food" \| "errand" \| ..."` 拡張余地に整合する注記を追加
+7. **属性名規約**: DynamoDB 属性は camelCase（`userId`, `orderId`, `orderedAt`, `expiresAt`）、Go 型は PascalCase で統一
+8. **OrderRecord フィールド分離** (domain-entities.md §2.1): 凍結契約 §4.1 の公開フィールド 7 個と Unit C 内部の追加属性 4 個（idempotencyKey/dayOfWeek/source/expiresAt）を §2.1.1 / §2.1.2 で明確に分離
+
+### 影響しなかった事項
+- Q-1〜Q-12 のヒアリング結論（リトライ 1 回 / タイムアウト 1.5 秒 / フォールバック / suggestionId 透過 / Frontend エラー UX 等）には影響なし
+- ユーザ向けの操作・体験仕様には影響なし
+
+### 各ファイル冒頭に "Aligned with: 凍結契約 §X" 表記を追加し、トレーサビリティを向上。Plan ファイル末尾 (§9) に事後追記として差分反映の記録を残した。
+**Context**: ⛔ GATE: 凍結契約整合修正の commit + push 待機 → ユーザ Functional Design 完了承認待機
+
+---
