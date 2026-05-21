@@ -5,7 +5,8 @@
 **Stage**: Construction / Functional Design
 **Unit**: C — `order`
 **Depth**: Comprehensive
-**Related**: [business-logic-model.md](./business-logic-model.md), [domain-entities.md](./domain-entities.md), [frontend-components.md](./frontend-components.md)
+**Related**: [business-logic-model.md](./business-logic-model.md), [domain-entities.md](./domain-entities.md), [frontend-components.md](./frontend-components.md), 凍結契約 [unit-interfaces.md](../../interfaces/unit-interfaces.md)
+**Aligned with**: 凍結契約 §3.4 (IdempotencyKeys), §4.3 (REST エラー一覧 / 409 IDEMPOTENCY_CONFLICT)
 
 本ドキュメントは Unit C `order` の **業務ルール / 分岐条件 / バリデーション / 閾値 / コピー文言 / 将来の補償戦略** を網羅する業務ルールカタログである。Comprehensive 深度として全ルールを ID 付きで管理する（`BR-Cxx`）。
 
@@ -127,11 +128,15 @@
 - **適用箇所**: business-logic-model.md §3.4 + frontend-components.md §`useOrder`
 
 ### BR-C13: `idempotencyKey` の TTL とスコープ
-- **由来**: Plan Q-8 = A
+- **由来**: Plan Q-8 = A、凍結契約 `unit-interfaces.md §3.4` に追従
 - **ルール**:
-  - TTL: 24 時間（DynamoDB の TTL 属性で自動削除）
-  - スコープ: `(userID, idempotencyKey)` の複合 key で一意（同 ULID でも別ユーザは別エントリ）
-  - 命中時の挙動: Wallet 減算をスキップし、初回応答と同一の OrderID / Amount / RemainingBalance を返す
+  - TTL: 24 時間（DynamoDB の `expiresAt` 属性で自動削除）
+  - **PK**: `key`（idempotencyKey 単独）の **グローバルユニーク**（凍結契約。userID は payload に含めて衝突検知する）
+  - **payload**: `userID` / `amount` / `orderID` / `createdAt` を保存
+  - 命中時の挙動:
+    1. 既存 entry の `payload.userID` が現在のリクエストの userID と一致するか確認
+    2. 一致 → 冪等命中、`payload.orderID` で `OrderHistoryRepository.Get(userID, orderID)` を呼び出し、初回応答と同一の OrderID / Amount / RemainingBalance を返す
+    3. 不一致または amount が異なる → **409 IDEMPOTENCY_CONFLICT**（BR-C39 参照）
 - **注**: IdempotencyRepository 自体は **Unit B 所有**。Unit C は呼び出し側として本ルールに従う
 - **適用箇所**: business-logic-model.md §3.4 連打シナリオ
 
@@ -144,14 +149,28 @@
 - **適用箇所**: business-logic-model.md §3.4
 
 ### BR-C15: 冪等命中時の応答の取得方法
-- **由来**: Comprehensive 深度の補完（services.md §2.3 のあいまい部分を確定）
-- **ルール**: `WalletService.Deduct` が `idempotent=true` を返したら、`OrderHistoryRepository.GetByIdempotencyKey(userID, idempotencyKey)` で初回時に Insert したレコードを引き直し、その内容を応答に詰める
-- **OrderHistoryRepository への要請**: GSI を `(IdempotencyKey, UserID)` に張る（Insert 側で同時に格納）
+- **由来**: Comprehensive 深度の補完、凍結契約 `unit-interfaces.md §4.4` に追従
+- **ルール**: `WalletService.Deduct` が `idempotent=true` を返した場合、Unit B の IdempotencyRepository entry の **payload.orderID** を Unit B 経由で取得し、`OrderHistoryRepository.Get(userID, orderID)` で初回 Insert したレコードを引き直す
+- **OrderHistory アクセスパターン**: PK=`userId`, SK=`orderId` の通常 Get で完結（**追加 GSI 不要**、凍結契約は `gsi_byCreatedAt` 1 個のみ）
+- **WalletService.Deduct の戻り値**: `DeductResult.Idempotent=true` のケースで、Unit B が `payload.orderID` を `DeductResult` の追加フィールドとして返すか、または別 API（例: `IdempotencyReader.GetPayload`）で取得するかは Unit B 側の設計判断（NFR Requirements 段で Unit B と摺合せ）
 - **適用箇所**: business-logic-model.md §2.1 STEP 2 idempotent 分岐
 
 ---
 
 ## 6. 残高・金額に関するルール
+
+### BR-C39: 冪等性コンフリクト時のエラー応答
+- **由来**: 凍結契約 `unit-interfaces.md §4.3` の `409 IDEMPOTENCY_CONFLICT`、Unit B `ErrIdempotencyConflict`
+- **ルール**: 同一 `idempotencyKey` で既存 payload の `userID` または `amount` が現リクエストと異なる場合、Wallet 減算を行わず以下を返す
+  - HTTP: 409 Conflict
+  - エラーコード: `IDEMPOTENCY_CONFLICT`
+  - body: `{code: "IDEMPOTENCY_CONFLICT", message: "同じキーで異なる注文が記録されています"}`
+- **発生原因**:
+  - 開発者起因（同一 ULID を別注文で再利用、テスト時のみ起きうる）
+  - 異常系（Frontend バグで ULID 再利用）
+- **本 MVP での発生確率**: 0%（BR-C12 でボタン活性化ごとに新 ULID 生成、画面遷移までキャッシュのみ）
+- **理由**: 凍結契約として全 Unit に通知された安全装置。Unit C 側は実装のみで、ユーザに見せる UI は不要（致命的バグ顕在化として 500 系扱いでも良いが、契約上 409 を返す）
+- **適用箇所**: `OrderHandler.PlaceOrder` の `Wallet.Deduct` 呼び出しエラーハンドリング
 
 ### BR-C16: 残高不足時のエラー応答
 - **由来**: stories.md US-1-04 / US-1-06 / Plan Q-12 = A
@@ -188,9 +207,9 @@
 - **適用箇所**: business-logic-model.md §2.1 STEP 4
 
 ### BR-C20: 履歴の保持期間
-- **由来**: requirements.md FR-LEARNING-02 / stories.md US-1-03 / US-2-04
-- **ルール**: DynamoDB の TTL 属性で `OrderedAt + 90 日` を設定。期限超過は自動削除。
-- **適用箇所**: `OrderHistoryRepository.Insert`、`domain-entities.md OrderRecord.TTL`
+- **由来**: requirements.md FR-LEARNING-02 / stories.md US-1-03 / US-2-04、凍結契約 `unit-interfaces.md §4.4`
+- **ルール**: DynamoDB の `expiresAt` 属性（DynamoDB TTL 機能）で `orderedAt + 90 日` のエポック秒を設定。期限超過は自動削除。
+- **適用箇所**: `OrderHistoryRepository.Insert`、`domain-entities.md §2.1.2 expiresAt`
 
 ### BR-C21: `GetHistory` のクエリパラメータ
 - **由来**: Plan Q-11 = A
@@ -203,20 +222,12 @@
 - **適用箇所**: `OrderHandler.GetHistory`、`OrderHistoryRepository.Query`
 
 ### BR-C22: 履歴データの記録項目
-- **由来**: stories.md US-1-03 受入基準
-- **ルール**: 1 注文につき以下を記録
-  - OrderID (ULID)
-  - UserID
-  - IdempotencyKey
-  - Category (MVP: "food")
-  - StoreName
-  - MenuName
-  - Amount (int 円)
-  - OrderedAt (UTC RFC3339)
-  - DayOfWeek (Monday/Tuesday/.../Sunday、JST 換算後の値、Unit D の学習で使用)
-  - Source ("button" or "suggest"、Plan 由来の追加項目)
-  - TTL (Unix epoch、OrderedAt + 90 日)
-- **適用箇所**: domain-entities.md §2.1 OrderRecord
+- **由来**: stories.md US-1-03 受入基準、凍結契約 `unit-interfaces.md §4.1`
+- **ルール**: 1 注文につき以下を DynamoDB に記録
+  - **公開フィールド**（凍結契約 §4.1 OrderRecord）: orderId / userId / category / storeName / menuName / amount / orderedAt
+  - **内部追加属性**: idempotencyKey / dayOfWeek (JST 換算 Monday〜Sunday) / source ("button" or "suggest") / expiresAt (Unix epoch、orderedAt + 90 日)
+- **属性名規約**: DynamoDB は camelCase、Go 型は PascalCase
+- **適用箇所**: domain-entities.md §2.1 OrderRecord（公開）+ §2.1.2 内部追加属性
 
 ### BR-C23: `Source` フィールドの値
 - **由来**: Comprehensive 深度の追加（学習・分析用）
@@ -253,10 +264,10 @@
 
 ## 9. カテゴリ・拡張に関するルール
 
-### BR-C27: 対応カテゴリは "food" のみ
-- **由来**: requirements.md §2.4 In Scope（最小ユースケース「ご飯めんどくさい」）
-- **ルール**: `req.Category` は `"food"` のみ受理。他の値は 400 UNSUPPORTED_CATEGORY
-- **将来拡張**: laundry / cleaning / shopping などを段階追加。本 MVP では拒否
+### BR-C27: 対応カテゴリは "food" のみ（MVP）
+- **由来**: requirements.md §2.4 In Scope（最小ユースケース「ご飯めんどくさい」）、凍結契約 `unit-interfaces.md §4.1` の `Category string  // "food" | "errand" | ...`（拡張余地あり）に整合
+- **ルール（MVP）**: `req.Category` は `"food"` のみ受理。他の値は 400 UNSUPPORTED_CATEGORY
+- **将来拡張**: 凍結契約上は `"errand"` 等の追加カテゴリを許容する設計。具体的に何を追加するかは将来の Inception 増分で決定。本 MVP では実装拒否、凍結契約だけが将来余地を保持
 - **適用箇所**: `OrderHandler.PlaceOrder` バリデーション
 
 ### BR-C28: 入力バリデーション
@@ -336,6 +347,7 @@
 | `suggestion_expired` | warn | suggestionId 失効時 |
 | `idempotency_hit` | info | 連打 2 回目以降の命中時 |
 | `insufficient_balance` | info | 残高不足で 402 応答時 |
+| `idempotency_conflict` | error | 同 key で別 payload を検知し 409 応答時（BR-C39、本 MVP は通常発生しない） |
 | `delivery_failed` | error | DeliveryAdapter エラー時（本 MVP は発生しない） |
 | `order_history_insert_failed` | error | OrderHistory Insert 失敗時 |
 | `order_completed` | info | 201 応答時 |
@@ -418,7 +430,13 @@
 | BR-C35〜C36 | Comprehensive | 構造化ログ規約 |
 | BR-C37〜C38 | NFR-PERF-01 接続 | レイテンシ予算 |
 
-**総ルール数**: 38
+### 13.4 凍結 Interface 契約由来のルール
+
+| BR-ID | 由来 | 一行サマリ |
+|---|---|---|
+| BR-C39 | unit-interfaces.md §4.3 | 409 IDEMPOTENCY_CONFLICT のハンドリング |
+
+**総ルール数**: 39
 
 ---
 
