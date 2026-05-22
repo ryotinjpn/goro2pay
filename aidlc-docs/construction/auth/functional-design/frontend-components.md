@@ -1,8 +1,9 @@
 # Auth Unit — Frontend Components
 
-**Document Version**: 1.1
+**Document Version**: 1.2
 **Created**: 2026-05-21
 **Updated**: 2026-05-22 (BFF パターン採用: apiClient を Browser/Server 二段化、新規 BFF Route Handler を追加)
+**Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、Authorization: Bearer ヘッダで透過、X-Id-Token カスタムヘッダ廃止)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -374,9 +375,10 @@ import { fetchAuthSession } from "aws-amplify/auth";
 
 export const apiClient = {
   async request(input: RequestInit & { path: string }): Promise<Response> {
-    // idToken を取得（Amplify が必要なら自動 refresh）
+    // accessToken を取得（Amplify が必要なら自動 refresh）
+    // ※ API 認証は AccessToken を使う（OAuth2 ベストプラクティス、PII を含まない）
     const session = await fetchAuthSession();
-    const idToken = session.tokens?.idToken?.toString();
+    const accessToken = session.tokens?.accessToken?.toString();
 
     // Browser は同一オリジンの /api/* を叩く（Next.js Route Handler が proxy）
     // path 例: "/api/auth/logout"
@@ -384,7 +386,7 @@ export const apiClient = {
       ...input,
       headers: {
         ...input.headers,
-        ...(idToken ? { "X-Id-Token": idToken } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
     });
     if (res.status === 401) {
@@ -397,7 +399,7 @@ export const apiClient = {
 
 ### 10.2 Server 側 catch-all Route Handler (Next.js)
 
-`web/app/api/[...path]/route.ts` で全 `/api/*` リクエストを受けて API Gateway に転送する。`API_ENDPOINT` は server-only env。
+`web/app/api/[...path]/route.ts` で全 `/api/*` リクエストを受けて API Gateway に転送する。`API_ENDPOINT` は server-only env。`Authorization` ヘッダは Browser → Server → API Gateway を透過する（Server で変換しない）。
 
 ```ts
 // web/app/api/[...path]/route.ts (catch-all proxy)
@@ -417,9 +419,9 @@ async function proxyToApiGateway(request: NextRequest, pathSegments: string[]): 
     return new Response("API_ENDPOINT not configured", { status: 500 });
   }
 
-  const idToken = request.headers.get("X-Id-Token");
-  if (!idToken) {
-    return new Response("Missing X-Id-Token header", { status: 401 });
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response("Missing Authorization header", { status: 401 });
   }
 
   // path 例: ["auth", "logout"] → /api/auth/logout
@@ -427,7 +429,7 @@ async function proxyToApiGateway(request: NextRequest, pathSegments: string[]): 
   const upstream = await fetch(upstreamUrl, {
     method: request.method,
     headers: {
-      Authorization: `Bearer ${idToken}`,
+      Authorization: authHeader,  // 透過、Server で変換しない
       "Content-Type": request.headers.get("Content-Type") ?? "application/json",
     },
     body: ["GET", "HEAD"].includes(request.method)
@@ -449,12 +451,14 @@ async function proxyToApiGateway(request: NextRequest, pathSegments: string[]): 
 - **CORS が `*` でなく Amplify ドメインだけに絞れる**
 - ブラウザ ↔ Next.js Server は同一オリジンなので CORS 不要
 - **既存の `/api/*` パス定義に影響なし**（unit-interfaces.md / 他 Unit / 既存ドキュメント全て修正不要）
-- `X-Id-Token` 専用ヘッダで Authorization と分離（Server 側で正しく Bearer に変換）
+- **`Authorization: Bearer <accessToken>` 標準ヘッダ**で透過 → Server 側で IdToken → AccessToken 変換などの追加責務不要
+- **AccessToken 採用**で OAuth2 ベストプラクティス整合、ログ出力時の PII 漏洩リスク低減
 
 ### 10.4 注意点
 
 - Next.js の `app/api/*` 配下に **catch-all Route Handler** を置く以外、各機能ごとの個別 Route Handler を**作らない**（API Gateway 側で実装する責務を二重化しないため）
 - 個別 Route が必要になるケース（リクエスト/レスポンス整形、複数 API 集約等）が出てきたら、`app/api/<feature>/route.ts` を個別作成して catch-all より優先的にマッチさせる
+- AccessToken の claims には `email` が含まれないため、サーバ側ログの `email_hash` は認証前エンドポイント（Signup/Login）でのみ出力する。認証必須エンドポイントでは省略する（A-NFR-OBS-01 / R-JWT-2-A）
 ```
 
 ---

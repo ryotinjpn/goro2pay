@@ -1,8 +1,9 @@
 # Auth Unit — Business Logic Model
 
-**Document Version**: 1.1
+**Document Version**: 1.2
 **Created**: 2026-05-21
 **Updated**: 2026-05-22 (BFF パターン採用: F-3 / F-4 を Next.js Server 経由に書き換え、ブラウザ → Amplify SSR → API Gateway の経路に統一)
+**Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、ヘッダを Authorization: Bearer に統一、OAuth2 ベストプラクティス整合)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -231,12 +232,12 @@ sequenceDiagram
 
     User->>Browser: アクション (例: ログアウト確定)
     Browser->>Auth: fetchAuthSession()
-    Auth-->>Browser: idToken (有効期限内なら同じ、切れていれば自動 refresh)
+    Auth-->>Browser: accessToken (有効期限内なら同じ、切れていれば自動 refresh)
 
-    Browser->>NextSrv: POST /api/auth/logout<br/>X-Id-Token: <idToken>
-    Note over NextSrv: catch-all Route Handler<br/>(/api/[...path]/route.ts)<br/>server-only env API_ENDPOINT<br/>を読み出し
+    Browser->>NextSrv: POST /api/auth/logout<br/>Authorization: Bearer <accessToken>
+    Note over NextSrv: catch-all Route Handler<br/>(/api/[...path]/route.ts)<br/>server-only env API_ENDPOINT<br/>を読み出し、Authorization は透過
 
-    NextSrv->>APIGW: POST {API_ENDPOINT}/api/auth/logout<br/>Authorization: Bearer <idToken>
+    NextSrv->>APIGW: POST {API_ENDPOINT}/api/auth/logout<br/>Authorization: Bearer <accessToken>
     APIGW->>APIGW: 1. 署名検証 (JWKS)<br/>2. exp / aud / iss 検証
 
     alt Authorizer 成功
@@ -288,14 +289,14 @@ function UserIDFromContext(c) -> (userId, error):
 # web/app/api/[...path]/route.ts (catch-all proxy)
 export async function ANY_METHOD(request, { params: { path } }):
     const apiEndpoint = process.env.API_ENDPOINT  # server-only
-    const idToken = request.headers.get("X-Id-Token")
-    if not idToken:
-        return new Response("Missing X-Id-Token", { status: 401 })
+    const authHeader = request.headers.get("Authorization")
+    if not authHeader or not authHeader.startsWith("Bearer "):
+        return new Response("Missing Authorization header", { status: 401 })
 
     const upstreamUrl = `${apiEndpoint}/api/${path.join('/')}`
     const upstream = await fetch(upstreamUrl, {
         method: request.method,
-        headers: { Authorization: `Bearer ${idToken}` },
+        headers: { Authorization: authHeader },  # 透過、Server 側で変換しない
         body: request.method != "GET" ? await request.text() : undefined,
     })
 
@@ -305,7 +306,7 @@ export async function ANY_METHOD(request, { params: { path } }):
     })
 ```
 
-このパターンは Logout 専用ではなく、**全ての認証付き API** で同じ catch-all が動作する。個別整形が必要な API は `app/api/<feature>/route.ts` を個別作成して上書き可能。
+このパターンは Logout 専用ではなく、**全ての認証付き API** で同じ catch-all が動作する。`Authorization: Bearer <accessToken>` は Browser → Server → API Gateway を **透過する**（Server で変換しない）。個別整形が必要な API は `app/api/<feature>/route.ts` を個別作成して上書き可能。
 
 ---
 
@@ -329,23 +330,24 @@ sequenceDiagram
     User->>UI: 「ログアウト」確定
 
     UI->>Auth: fetchAuthSession()
-    Auth-->>UI: idToken (監査ログ送信用、signOut 前に取得)
-
-    UI->>Auth: signOut({ global: true })
-    Auth->>Cog: GlobalSignOut(accessToken)
-    Cog-->>Auth: 200
-    Auth->>Auth: localStorage からトークン除去
-    Auth-->>UI: 完了
+    Auth-->>UI: accessToken (監査ログ送信用、signOut 前に取得)
 
     Note over UI: 監査ログ目的（任意、UI が成立すれば router.push へ進む）
-    UI->>NextSrv: POST /api/auth/logout<br/>X-Id-Token: <idToken>
-    Note over NextSrv: catch-all Route Handler が proxy
-    NextSrv->>APIGW: POST {API_ENDPOINT}/api/auth/logout<br/>Authorization: Bearer <idToken>
+    UI->>NextSrv: POST /api/auth/logout<br/>Authorization: Bearer <accessToken>
+    Note over NextSrv: catch-all Route Handler が proxy<br/>(Authorization は透過)
+    NextSrv->>APIGW: POST {API_ENDPOINT}/api/auth/logout<br/>Authorization: Bearer <accessToken>
     APIGW->>LMD: invoke
     LMD->>LMD: 構造化ログに userId, action=logout 記録
     LMD-->>APIGW: 204
     APIGW-->>NextSrv: 204
     NextSrv-->>UI: 204
+
+    Note over UI: バックエンド監査ログ完了後、Cognito GlobalSignOut
+    UI->>Auth: signOut({ global: true })
+    Auth->>Cog: GlobalSignOut(accessToken)
+    Cog-->>Auth: 200
+    Auth->>Auth: localStorage からトークン除去
+    Auth-->>UI: 完了
 
     UI->>UI: router.push("/")<br/>(LandingScreen が描画)
 ```
@@ -379,8 +381,8 @@ sequenceDiagram
 
     Note over UI,APIGW: パターン 1: BFF (Next.js catch-all proxy) 経由 API 呼出時の 401
 
-    UI->>NextSrv: POST /api/xxx<br/>X-Id-Token: <expired>
-    NextSrv->>APIGW: 上流に転送 (Authorization: Bearer <expired>)
+    UI->>NextSrv: POST /api/xxx<br/>Authorization: Bearer <expired-accessToken>
+    NextSrv->>APIGW: 上流に透過転送 (Authorization: Bearer <expired-accessToken>)
     APIGW-->>NextSrv: 401 Unauthorized
     NextSrv-->>UI: 401 Unauthorized (透過)
     UI->>UI: 401 検出 (Client interceptor)
@@ -431,15 +433,14 @@ Next.js Server から API Gateway への転送。401 を透過して Client 側�
 
 ```pseudo
 function bffProxy(request, upstreamPath):
-    const idToken = request.headers.get("X-Id-Token")
-                  ?? (await request.json()).idToken
-    if not idToken:
-        return new Response("Missing idToken", { status: 401 })
+    const authHeader = request.headers.get("Authorization")
+    if not authHeader or not authHeader.startsWith("Bearer "):
+        return new Response("Missing Authorization header", { status: 401 })
 
     const apiEndpoint = process.env.API_ENDPOINT  # server-only
     const upstream = await fetch(`${apiEndpoint}${upstreamPath}`, {
         method: request.method,
-        headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },  # 透過
         body: request.method !== "GET" ? await request.text() : undefined,
     })
 
@@ -490,21 +491,21 @@ sequenceDiagram
 ## 8. データフロー（BFF パターン、Unit 横断）
 
 ```
-┌──────────┐  /bff/* リクエスト   ┌─────────────────┐    JWT付き Bearer    ┌──────────┐  claims抽出   ┌────────┐
+┌──────────┐  /api/* リクエスト   ┌─────────────────┐    Authorization     ┌──────────┐  claims抽出   ┌────────┐
 │ Browser  ├────────────────────►│ Next.js Server  ├────────────────────►│API Gateway├─────────────►│ Lambda │
-│ (Client) │   Body / Header     │ (Amplify SSR)   │   Authorization     │+JWT Auth  │              │        │
-│          │   に idToken        │                 │   header 付与        └──────────┘              │ Gin    │
+│ (Client) │   Authorization:    │ (Amplify SSR)   │   Bearer 透過        │+JWT Auth  │              │        │
+│          │   Bearer <accessTok>│                 │                      └──────────┘              │ Gin    │
 │ Amplify  │                     │ env.API_ENDPOINT│                                                 │+Auth MW│
 │ Auth     │                     │ (server-only)   │                                                 │        │
 │          │   AuthSession       │                 │                                                 │ ┌────┐ │
-│          │   ┌─────────────┐   │  Route Handler  │                                                 │ │user│ │
-│  user    │   │ idToken /   │   │  / Server Action│                                                 │ │Id  │ │
-│  state   │   │ access /    │   │  / Middleware   │                                                 │ │ctx │ │
-│          │   │ refresh tk  │   │                 │                                                 │ └─┬──┘ │
-│          │   └─────────────┘   │ ※ サーバ側にも  │                                                 │   │    │
-│          │   localStorage      │   一時保持      │                                                 │   ▼    │
-│          │                     │   (Lambda 実行  │                                                 │ Unit B/│
-│          │                     │    内のみ)       │                                                 │ C/D/E  │
+│          │   ┌─────────────┐   │  catch-all      │                                                 │ │user│ │
+│  user    │   │ idToken /   │   │  Route Handler  │                                                 │ │Id  │ │
+│  state   │   │ access /    │   │  /api/[...path] │                                                 │ │ctx │ │
+│          │   │ refresh tk  │   │  /route.ts      │                                                 │ └─┬──┘ │
+│          │   └─────────────┘   │                 │                                                 │   │    │
+│          │   localStorage      │ Authorization 透過                                                │   ▼    │
+│          │                     │ (Server で変換しない)                                              │ Unit B/│
+│          │                     │                 │                                                 │ C/D/E  │
 └──────────┘                     └─────────────────┘                                                 │ ハンド │
                                                                                                      │ ラへ   │
                                                                                                      └────────┘
@@ -512,8 +513,10 @@ sequenceDiagram
 ポイント:
 1. ブラウザは API Gateway URL を一切知らない (NEXT_PUBLIC_* に API_ENDPOINT を含めない)
 2. `API_ENDPOINT` は Next.js Server (Amplify SSR Compute) のみが知る server-only env
-3. CORS は Amplify ドメインのみに絞れる (allow_origins = "*" でなくよい)
-4. UserIdentity の永続化は Cognito User Pool のみ。アプリ DB には userId のみ保存される
+3. CORS は Amplify ドメインのみに絞れる (allow_origins = "*" でなくよい)、本 MVP は CORS 設定そのものを未設定
+4. **API 認証は AccessToken を使用** (OAuth2 ベストプラクティス、PII を含まない)
+5. **`Authorization: Bearer <accessToken>`** ヘッダは Browser → Server → API Gateway を透過 (Server で変換しない)
+6. UserIdentity の永続化は Cognito User Pool のみ。アプリ DB には userId のみ保存される
 ```
 
 ---

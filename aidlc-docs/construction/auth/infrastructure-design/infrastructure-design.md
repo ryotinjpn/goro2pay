@@ -1,8 +1,9 @@
 # Auth Unit — Infrastructure Design
 
-**Document Version**: 1.1
+**Document Version**: 1.2
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
+**Updated**: 2026-05-22 (BFF パターン採用 + back/ ディレクトリリネーム + API 認証を AccessToken に統一、cors_configuration を未設定化)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction

@@ -1,8 +1,9 @@
 # Auth Unit — Deployment Architecture
 
-**Document Version**: 1.1
+**Document Version**: 1.2
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild/ECR を Unit A スコープに追加)
+**Updated**: 2026-05-22 (BFF パターン採用 + back/ ディレクトリリネーム + API 認証を AccessToken に統一)
 **Unit**: A (`auth`)
 **Stage**: Infrastructure Design / Construction
 **Predecessors**: [infrastructure-design.md](./infrastructure-design.md)
@@ -218,7 +219,7 @@ BFF パターンの利点:
    │
    │ 4. localStorage から Token 削除
    │
-   │ 5. POST /api/auth/logout (Authorization: Bearer <IdToken>)
+   │ 5. POST /api/auth/logout (Authorization: Bearer <AccessToken>)
    ▼
 [API Gateway HTTP API]
    │
@@ -254,7 +255,7 @@ BFF パターンの利点:
 ```
 [Frontend API call any endpoint]
    │
-   │ 1. Authorization: Bearer <expired IdToken>
+   │ 1. Authorization: Bearer <expired AccessToken>
    ▼
 [API Gateway JWT Authorizer]
    │
@@ -520,7 +521,7 @@ When productization is decided, the following changes are required:
 
 本 Unit A は **保護対象シークレットを扱わない**:
 - パスワードは Cognito 内部、アプリには到達しない
-- IdToken はクライアント側のみ、Lambda は claims を読むだけ
+- AccessToken / IdToken はクライアント側のみ、API 認証には AccessToken を使う、Lambda は claims を読むだけ
 - AWS API キー類は IAM Role 経由（明示的な Secret は不要）
 - `API_ENDPOINT` は機密ではないが、ブラウザ露出を避けることで攻撃面を縮小する目的（BFF パターン）
 

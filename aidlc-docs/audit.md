@@ -522,3 +522,48 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: BFF パターン + back/ リネーム反映完了、PR #69 再レビュー待ち
 
 ---
+
+## Infrastructure Design (Unit A) — API 認証 Token を AccessToken に統一 (PR #69 更新)
+**Timestamp**: 2026-05-22T05:00:00Z
+**User Input**: "apiClient│ ── │ X-Id-Token これってacseccトークンじゃないっけ？"
+**AI Response**: ご指摘は正当。OAuth2 ベストプラクティスでは API 認証は AccessToken を使うべき (IdToken は ID 提示用、PII を含む)。3 設計ドキュメント横断で AccessToken に統一する修正提案 → "Yes: AccessToken に統一（推奨）"
+
+修正内容:
+- Functional Design `business-logic-model.md` v1.2:
+  - F-3 シーケンス図: idToken → accessToken、X-Id-Token ヘッダ廃止 → Authorization: Bearer に統一
+  - F-4 (Logout): API 監査ログ送信を GlobalSignOut **より先に** 実行する順序に変更（accessToken 有効状態で送るため）
+  - F-5 (Session 失効): expired idToken → expired accessToken
+  - §4.4 catch-all Route Handler 疑似コード: X-Id-Token ヘッダ参照を Authorization ヘッダ透過に変更
+  - §6.2.2 BFF Route Handler 疑似コード: 同上
+  - §8 データフロー図: ヘッダ・Token 種・透過動作を明示
+
+- Functional Design `business-rules.md` v1.2:
+  - R-Logout-2 実装フロー: AccessToken 認証、API 送信を先・signOut を後の順序に変更
+  - R-Logout-3 API 仕様: Browser→Server / Server→APIGW 両方で Authorization: Bearer <AccessToken> を透過
+  - R-JWT-1 に「API 認証には AccessToken」明記、IdToken は API 送信に使わない注記
+  - R-JWT-2: AccessToken claims に email がない注記
+  - **R-JWT-2-A 新規追加**: email_hash 取扱の AccessToken 採用調整（認証必須エンドポイントで省略、認証前ハンドラのみ生成）
+
+- Functional Design `frontend-components.md` v1.2:
+  - §10.1 Browser apiClient: idToken → accessToken、X-Id-Token → Authorization: Bearer に変更
+  - §10.2 Server Route Handler: X-Id-Token 参照を Authorization 透過に変更
+  - §10.3 利点に「Authorization: Bearer 標準ヘッダ透過 → Server 側で IdToken→AccessToken 変換不要」「AccessToken 採用で OAuth2 整合 + PII 漏洩リスク低減」追加
+  - §10.4 注意点に「AccessToken に email なし、email_hash は認証前のみ」追加
+
+- NFR Design `nfr-design-patterns.md` v1.2:
+  - P-RES-01 設計責務: Browser apiClient は AccessToken + Authorization ヘッダ、Server Route Handler は Authorization 透過に書き換え
+  - P-SEC-02: 認証必須エンドポイントで email_hash 生成しない（オプション扱い）、認証前のみ生成、サブパターン B-2 のみ運用に変更
+  - P-SEC-03: API 認証は AccessToken を使う旨を明記
+  - P-OBS-01: emailHash は認証前エンドポイントのみオプション扱い
+
+- NFR Design `logical-components.md` v1.2:
+  - LC-AUTH-09 apiClient: AccessToken + Authorization: Bearer ヘッダ付与に責務変更
+  - LC-AUTH-18 BffProxyRouteHandler: Authorization ヘッダ透過に責務変更（X-Id-Token → Authorization 変換廃止）
+  - LC-AUTH-01 AttachUserIDMiddleware: AccessToken claims に email がないため middleware で emailHash 生成しない注記
+  - 関係図の X-Id-Token 表記を Authorization: Bearer <accessToken> に修正
+
+- Infrastructure Design `deployment-architecture.md` v1.2 / `infrastructure-design.md` v1.2:
+  - フロー記述の IdToken → AccessToken 修正、ドキュメントヘッダの version 更新
+**Context**: AccessToken 採用反映完了、PR #69 再レビュー待ち
+
+---
