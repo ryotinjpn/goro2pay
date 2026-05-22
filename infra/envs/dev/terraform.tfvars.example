@@ -1,0 +1,5 @@
+# cp infra/envs/dev/terraform.tfvars.example infra/envs/dev/terraform.tfvars して値を埋める
+# (terraform.tfvars は .gitignore で除外される、機密情報は含まない想定)
+
+github_owner  = "ryotinjpn"
+github_branch = "develop"
