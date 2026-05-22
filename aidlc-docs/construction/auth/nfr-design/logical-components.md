@@ -1,7 +1,8 @@
 # Auth Unit — Logical Components
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2026-05-22
+**Updated**: 2026-05-22 (BFF パターン採用: LC-AUTH-09 を Browser/Server 二段化、新規 LC-AUTH-18 BffProxyRouteHandler 追加)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: NFR Design / Construction
@@ -25,15 +26,16 @@
 | **LC-AUTH-06** | `LogoutHandler` | Backend / Go (`internal/handlers/`) | `POST /api/auth/logout` の最小ハンドラ |
 | **LC-AUTH-07** | `PreSignUpTriggerLambda` | AWS Lambda / Node.js (独立) | auto-confirm + auto-verify-email |
 | **LC-AUTH-08** | `useAuthHook` | Frontend / TypeScript (`hooks/`) | 認証状態管理 + signup/login/logout の公開 IF |
-| **LC-AUTH-09** | `apiClient` | Frontend / TypeScript (`lib/`) | fetch ラッパ + 401/429 interceptor |
+| **LC-AUTH-09** | `apiClient` | Frontend / TypeScript (`web/lib/`) | **Browser 側** fetch ラッパ + 401/429 interceptor + X-Id-Token ヘッダ付与 |
 | **LC-AUTH-10** | `sessionExpiredAtom` | Frontend / Jotai atom | セッション失効状態の atomic 管理 |
 | **LC-AUTH-11** | `SessionExpiredModalHost` | Frontend / React | atom 購読 + Modal 表示 + 1.5s 後遷移 |
 | **LC-AUTH-12** | `AuthGuard` | Frontend / React | 認証必須レイアウトのガード + 300ms Loading 遅延 |
-| **LC-AUTH-13** | `AuthMessagesResource` | Frontend / TypeScript (`lib/`) | AuthErrorCode → 日本語ダメ化トーン軽メッセージ |
-| **LC-AUTH-14** | `AuthHubListener` | Frontend / TypeScript (`lib/`) | Amplify Auth Hub `tokenRefresh_failure` 等を監視 |
+| **LC-AUTH-13** | `AuthMessagesResource` | Frontend / TypeScript (`web/lib/`) | AuthErrorCode → 日本語ダメ化トーン軽メッセージ |
+| **LC-AUTH-14** | `AuthHubListener` | Frontend / TypeScript (`web/lib/`) | Amplify Auth Hub `tokenRefresh_failure` 等を監視 |
 | **LC-AUTH-15** | `CognitoUserPoolConfig` | AWS / 論理表現 | User Pool の論理パラメータ群 |
 | **LC-AUTH-16** | `CognitoAppClientConfig` | AWS / 論理表現 | App Client の論理パラメータ群 |
 | **LC-AUTH-17** | `ApiGatewayStageThrottlingConfig` | AWS / 論理表現 | Stage Throttling のレート上限定義 |
+| **LC-AUTH-18** | `BffProxyRouteHandler` | Frontend / Next.js (`web/app/api/[...path]/route.ts`) | **Server 側** catch-all proxy: `/api/*` を受けて API Gateway に転送、`X-Id-Token` → `Authorization: Bearer` 変換、`API_ENDPOINT` server-only env 利用 |
 
 ---
 
@@ -43,7 +45,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/auth/middleware.go`（仮） |
+| 配置 | `back/api/internal/auth/middleware.go`（仮） |
 | 公開 IF | [unit-interfaces.md §2.1](../../interfaces/unit-interfaces.md) — `AttachUserID() gin.HandlerFunc` / `UserIDFromContext(c) (string, error)` |
 | 入力 | `gin.Context`（API Gateway → Lambda 経由、`requestContext.authorizer.claims` を保持） |
 | 出力 | `c.Set("userId", sub)`、`c.Set("emailHash", emailHash)`（P-SEC-02） |
@@ -54,7 +56,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/auth/email.go`（仮） |
+| 配置 | `back/api/internal/auth/email.go`（仮） |
 | 公開 IF | `Normalize(email string) string` |
 | 振る舞い | 前後 trim → `strings.ToLower(...)` |
 | テスト | PBT 対象（A-NFR-TEST-02 / P-TEST-01）: べき等性 / 大文字小文字不問 |
@@ -63,7 +65,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/auth/email.go`（仮、Normalizer と同パッケージ） |
+| 配置 | `back/api/internal/auth/email.go`（仮、Normalizer と同パッケージ） |
 | 公開 IF | `Hash(email string) string` |
 | 振る舞い | `hex.EncodeToString(sha256.Sum256([]byte(Normalize(email))))` |
 | テスト | PBT 対象: 長さ 64 / Normalize 整合 / 衝突なし |
@@ -72,7 +74,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/logging/middleware.go`（仮） |
+| 配置 | `back/api/internal/logging/middleware.go`（仮） |
 | 公開 IF | `RequestContext() gin.HandlerFunc` |
 | 振る舞い | リクエスト受信時に下記を `gin.Context` 経由で内部 context へ載せる:<br>- `requestId`（API Gateway / Lambda が付与した値、なければ ULID 生成）<br>- `traceId`（X-Ray header `X-Amzn-Trace-Id` から、なければ null）<br>- `userAgent`（リクエストヘッダ） |
 | 注意 | `userId` / `emailHash` は別 middleware (LC-AUTH-01) が後で書き込む |
@@ -82,7 +84,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/logging/handler.go`（仮） |
+| 配置 | `back/api/internal/logging/handler.go`（仮） |
 | 公開 IF | `New(w io.Writer, level slog.Level) slog.Handler` |
 | 振る舞い | `Handle(ctx, record)` で context から下記キーを抽出 → record に attrs 追加:<br>- `requestId`, `traceId`, `userId`, `userAgent`, `emailHash`, `action`<br>内部実装は `slog.NewJSONHandler` に委譲 |
 | 出力先 | `os.Stdout`（CloudWatch Logs に流れる） |
@@ -92,7 +94,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `apps/api/internal/handlers/logout.go`（仮） |
+| 配置 | `back/api/internal/handlers/logout.go`（仮） |
 | 公開 IF | `Logout(c *gin.Context)` |
 | 振る舞い | `userId` を context から取得 → `slog.InfoContext(ctx, "user logout", "action", "logout")` → `c.Status(204)` |
 | 認証 | 必須（middleware で済んでいる前提） |
@@ -126,10 +128,11 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `web/lib/apiClient.ts`（仮） |
-| 公開 IF | `request(input: RequestInit & { url: string }): Promise<Response>` |
-| 振る舞い | リクエスト前に `fetchAuthSession()` で IdToken 取得 → `Authorization: Bearer` ヘッダ付与<br>レスポンス 401 → `triggerSessionExpired()`（[LC-AUTH-10](#lc-auth-10-sessionexpiredatom)）+ `AuthErrorWithCode('SESSION_EXPIRED')` throw<br>429 → `AuthErrorWithCode('RATE_LIMIT_EXCEEDED')` throw（P-RES-04）<br>5xx / NetworkError → `AuthErrorWithCode('NETWORK_ERROR')` throw |
-| 連携 | [LC-AUTH-10 sessionExpiredAtom](#lc-auth-10-sessionexpiredatom), [LC-AUTH-13 AuthMessagesResource](#lc-auth-13-authmessagesresource) |
+| 配置 | `web/lib/apiClient.ts`（仮、Browser 側のみ） |
+| 公開 IF | `request(input: RequestInit & { path: string }): Promise<Response>` |
+| 振る舞い (BFF パターン) | 1. `fetchAuthSession()` で IdToken を取得<br>2. `fetch(input.path, { headers: { 'X-Id-Token': idToken, ...input.headers } })` で同一オリジンの `/api/*` を叩く<br>3. レスポンス 401 → `triggerSessionExpired()`（[LC-AUTH-10](#lc-auth-10-sessionexpiredatom)）+ `AuthErrorWithCode('SESSION_EXPIRED')` throw<br>4. 429 → `AuthErrorWithCode('RATE_LIMIT_EXCEEDED')` throw（P-RES-04）<br>5. 5xx / NetworkError → `AuthErrorWithCode('NETWORK_ERROR')` throw |
+| 連携 | [LC-AUTH-10 sessionExpiredAtom](#lc-auth-10-sessionexpiredatom), [LC-AUTH-13 AuthMessagesResource](#lc-auth-13-authmessagesresource), [LC-AUTH-18 BffProxyRouteHandler](#lc-auth-18-bffproxyroutehandler) |
+| 注意 | `Authorization: Bearer` ヘッダは付与しない（Server 側 LC-18 が付ける）。同一オリジンのため CORS 不要 |
 
 ### LC-AUTH-10: `sessionExpiredAtom`
 
@@ -219,6 +222,24 @@ Q-D9=B「A + 推奨項目」に従う。
 | `BurstLimit` | 200 (req) |
 | 適用範囲 | Stage 全体 |
 
+### LC-AUTH-18: `BffProxyRouteHandler`
+
+BFF パターン採用 (Q-I14/I15) に伴う新規論理コンポーネント。Next.js Server (Amplify SSR Compute) で動作。
+
+| 項目 | 内容 |
+|---|---|
+| 配置 | `web/app/api/[...path]/route.ts`（catch-all proxy） |
+| 公開 IF | Next.js Route Handler の規約に従い GET / POST / PUT / DELETE / PATCH の各エクスポート |
+| 振る舞い | 1. `request.headers.get('X-Id-Token')` で IdToken 取得（欠落時は 401 即返）<br>2. `process.env.API_ENDPOINT` (server-only) を読み出し<br>3. `params.path` から上流 URL を組み立て (`${API_ENDPOINT}/api/${path.join('/')}`)<br>4. `Authorization: Bearer ${idToken}` を付与して上流に fetch<br>5. 上流レスポンスの status / body / headers をそのまま透過 (401 を含む全 status) |
+| 環境変数 | `API_ENDPOINT` (server-only、`NEXT_PUBLIC_` プレフィックスなし) |
+| 連携 | [LC-AUTH-09 apiClient](#lc-auth-09-apiclient) からの呼び出しを受ける、上流 [LC-AUTH-15 Cognito](#lc-auth-15-cognitouserpoolconfig) で認証された API Gateway / API Lambda へ proxy |
+| 注意 | 個別 API ルート (`web/app/api/<feature>/route.ts`) を新設すると catch-all より優先される。本 Unit A では catch-all のみ実装し、各 Unit (B/C/D/E) も catch-all を再利用 |
+
+**設計上のポイント**:
+- `API_ENDPOINT` を Browser に露出しない（NEXT_PUBLIC_ なし）
+- ブラウザ ↔ Next.js Server は同一オリジンなので CORS preflight 不要
+- 401 は透過する（Server 側で SESSION_EXPIRED 検出はしない、責務は Client 側 LC-AUTH-09）
+
 ---
 
 ## 5. コンポーネント関係図
@@ -234,9 +255,11 @@ Q-D9=B「A + 推奨項目」に従う。
 │    │    │  signup/login/logout                          │
 │    │    ▼                                                │
 │    │  ┌──────────┐    ┌──────────────────┐              │
-│    │  │ apiClient│ ── │ Authorization    │              │
-│    │  │ (LC-09)  │    │ Bearer ヘッダ    │              │
-│    │  └─┬────────┘    └──────────────────┘              │
+│    │  │ apiClient│ ── │ X-Id-Token       │              │
+│    │  │ (LC-09)  │    │ (Browser 側)     │              │
+│    │  │ Browser  │    └──────────────────┘              │
+│    │  └─┬────────┘                                      │
+│    │    │ fetch /api/* (同一オリジン、CORS 不要)         │
 │    │    │ 401/429                                       │
 │    │    ▼                                                │
 │    │  ┌──────────────────┐                              │
@@ -255,7 +278,19 @@ Q-D9=B「A + 推奨項目」に従う。
 │       │ (300ms Loading)  │                              │
 │       └──────────────────┘                              │
 └──────────────────────────────────────────────────────────┘
-                       │ HTTPS
+       │ Browser → /api/* (同一オリジン)
+       ▼
+┌── Next.js Server (Amplify Hosting SSR) ──────────────────┐
+│                                                            │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │ BffProxyRouteHandler (LC-18)                        │  │
+│  │  /api/[...path]/route.ts (catch-all)                │  │
+│  │  - X-Id-Token → Authorization: Bearer 変換          │  │
+│  │  - server-only env API_ENDPOINT を読み出し          │  │
+│  │  - 上流 API Gateway に proxy                        │  │
+│  └─────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+                       │ HTTPS (server-to-server)
                        ▼
 ┌── API Gateway (Cognito Authorizer + Stage Throttling LC-17)
 └──┬──────────────────────────────────────────────────────┘
@@ -329,6 +364,7 @@ Q-D9=B「A + 推奨項目」に従う。
 | LC-AUTH-15 | P-SEC-04 (パラメータ整合性のみ) |
 | LC-AUTH-16 | P-SEC-03 |
 | LC-AUTH-17 | P-SEC-04 |
+| LC-AUTH-18 | P-RES-01 (BFF パターン Server 側), P-SEC-04 (API URL 秘匿化) |
 
 ---
 

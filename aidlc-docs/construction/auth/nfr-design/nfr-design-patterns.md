@@ -1,7 +1,8 @@
 # Auth Unit — NFR Design Patterns
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2026-05-22
+**Updated**: 2026-05-22 (BFF パターン採用: P-RES-01 / P-RES-04 を Browser/Server 二段構成に書き換え)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: NFR Design / Construction
@@ -15,25 +16,37 @@
 
 ## 1. Resilience Patterns（耐障害性）
 
-### P-RES-01: Frontend HTTP Client Interceptor (Q-D1)
+### P-RES-01: Frontend HTTP Client Interceptor (Q-D1, BFF パターン採用)
 
-**目的**: 認証経路と業務 API の双方で 401 / 429 / NetworkError を一元検出する。
+**目的**: 認証経路と業務 API の双方で 401 / 429 / NetworkError を一元検出する。**ブラウザは API Gateway を直接呼ばず、Next.js Server (catch-all Route Handler) 経由で呼び出す**（BFF パターン、Q-I14/I15 に整合）。
 
-**パターン**: 手書き fetch ラッパ（ファクトリ関数）。`@aws-amplify/api` や TanStack `onError` には依存させない。
+**パターン**: 手書き fetch ラッパを **Browser / Server の 2 段構成**で実装。`@aws-amplify/api` や TanStack `onError` には依存させない。
 
-**設計責務**:
+**設計責務（Browser 側 `apiClient`）**:
 - すべての API 呼び出しは `apiClient.request(...)` 経由とする（直接 `fetch` を呼ばない）
-- リクエスト前に Amplify Auth `fetchAuthSession()` で IdToken を取得し `Authorization: Bearer` を付与
+- リクエスト前に Amplify Auth `fetchAuthSession()` で IdToken を取得し **`X-Id-Token` ヘッダ** で送信（Authorization ヘッダは Server 側で付ける）
+- リクエスト URL は **既存の `/api/*` パス**（unit-interfaces.md §3.3）。同一オリジンのため CORS 不要
 - レスポンス受信時:
   - `401` → `triggerSessionExpired()` を呼び、`AuthErrorWithCode('SESSION_EXPIRED')` を throw
   - `429` → `AuthErrorWithCode('RATE_LIMIT_EXCEEDED')` を throw（P-RES-04）
   - `5xx` / NetworkError → `AuthErrorWithCode('NETWORK_ERROR')` を throw
 
+**設計責務（Server 側 catch-all Route Handler、`web/app/api/[...path]/route.ts`）**:
+- 全 HTTP メソッド (GET/POST/PUT/DELETE/PATCH) に対応
+- `X-Id-Token` ヘッダから IdToken を取得（欠落時は 401 即返）
+- server-only env `API_ENDPOINT` から API Gateway URL を読み出し、`Authorization: Bearer <idToken>` を付与して上流に転送
+- 上流の status / body / headers をそのまま Browser に透過（401 を含む全 status）
+- Server 側では JWT 検証・401 検出ロジックを持たない（責務分離: Browser 側 interceptor が拾う）
+
 **論理シグネチャ**:
 ```ts
+// Browser 側
 type ApiClient = {
-  request(input: RequestInit & { url: string }): Promise<Response>;
+  request(input: RequestInit & { path: string }): Promise<Response>;
 };
+
+// Server 側 (Route Handler の関数シグネチャ、Next.js が自動で呼ぶ)
+type RouteHandler = (request: NextRequest, ctx: { params: { path: string[] } }) => Promise<Response>;
 ```
 
 ### P-RES-02: 401 / Token Refresh 失敗の二重発火防止 (Q-D2)
