@@ -703,3 +703,23 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 **Context**: NFR Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
 
 ---
+
+## Infrastructure Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- Q-I1: "a" → 新規 `infra/modules/budget/` モジュール
+- Q-I2: "a" → zip（aws-lambda-go）、LWA 不要
+- Q-I3: "a" → 手動 terraform apply のみ
+- Q-I4: "a" → AWS マネージド（AES256）
+- Q-I5: "A" → 再試行なし + CloudWatch Logs 記録のみ
+- Q-I6: "a" → PITR 無効
+**AI Response**: 以下を生成・更新:
+- `aidlc-docs/construction/budget/infrastructure-design/infrastructure-design.md` (新規): DynamoDB 4 テーブル / Scheduler Lambda (zip) / API GW ルート 2 本 / IAM 権限追加 / terraform-test 方針
+- `aidlc-docs/construction/budget/infrastructure-design/deployment-architecture.md` (新規): AWS リソース全体図 / リクエストフロー 4 種 / デプロイ手順
+- `aidlc-docs/aidlc-state.md`: Unit B Infrastructure Design を `[x]` に更新
+- `budget-infrastructure-design-plan.md`: チェックボックス更新
+**Context**: Infrastructure Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
+
+---
+
+---
