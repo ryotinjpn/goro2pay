@@ -3,7 +3,7 @@ module "auth" {
 
   env              = "dev"
   region           = "ap-northeast-1"
-  github_owner     = var.github_owner
-  github_repo_name = "goro2pay"
-  github_branch    = var.github_branch
+  github_owner     = local.github_owner
+  github_repo_name = local.github_repo
+  github_branch    = local.github_branch
 }
