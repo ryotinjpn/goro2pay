@@ -41,6 +41,5 @@ variable "api_endpoint" {
 
 variable "amplify_yml_path" {
   type        = string
-  description = "Amplify build_spec の YAML ファイルパス (project root からの相対)"
-  default     = "../../../web/amplify.yml"
+  description = "Amplify build_spec の YAML ファイル絶対パス (envs 側で path.root 起点で渡すこと)"
 }
