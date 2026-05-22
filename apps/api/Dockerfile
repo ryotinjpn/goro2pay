@@ -29,7 +29,10 @@ ENV AWS_LWA_PORT=8080
 ENV PORT=8080
 ENV READINESS_CHECK_PATH=/health
 
-# Gin バイナリを Lambda エントリ名 (bootstrap) としてコピー
-COPY --from=builder /out/bootstrap /var/runtime/bootstrap
+# Gin バイナリを Lambda エントリ名 (bootstrap) としてコピー。
+# provided.al2023 では LAMBDA_TASK_ROOT (= /var/task) 配下の bootstrap を実行する。
+# /var/runtime/ は Lambda runtime 内部ディレクトリで、ユーザバイナリは置かない。
+# 参考: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html
+COPY --from=builder /out/bootstrap ${LAMBDA_TASK_ROOT}/bootstrap
 
 CMD ["bootstrap"]
