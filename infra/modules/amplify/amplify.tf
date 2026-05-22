@@ -17,11 +17,10 @@ resource "aws_amplify_app" "web" {
 
   build_spec = file(var.amplify_yml_path)
 
-  custom_rule {
-    source = "/<*>"
-    target = "/index.html"
-    status = "404-200"
-  }
+  # NOTE: SPA 用の custom_rule (`/<*>` → `/index.html` 404-200) は WEB_COMPUTE
+  # (Next.js SSR) では設定しない。Next.js Server がリクエストを受けて自前で
+  # ルーティングするため、Amplify 側で 404 を /index.html に書き換えると
+  # Server 経路と干渉して二重処理 / 想定外 fallback の原因になる。
 
   # oauth_token / access_token は Console での手動接続後に AWS 側で保持される。
   # terraform 側で空文字を渡すと一部 provider バージョンで ValidationException に
