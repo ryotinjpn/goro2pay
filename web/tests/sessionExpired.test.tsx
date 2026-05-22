@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import { Provider as JotaiProvider, getDefaultStore } from "jotai";
+import { getDefaultStore } from "jotai";
 
 import { SessionExpiredModalHost } from "@/components/auth/SessionExpiredModalHost";
 import { sessionExpiredAtom } from "@/state/auth";
@@ -11,6 +11,10 @@ const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, replace: pushMock }),
 }));
+
+// 注意: 本コンポーネントは getDefaultStore() を Hub.listen → triggerSessionExpired
+// 経路で書き換える前提のため、テストでは jotai の <Provider> を被せず
+// getDefaultStore に対して直接 set/reset する。
 
 describe("SessionExpiredModalHost", () => {
   beforeEach(() => {
@@ -24,20 +28,12 @@ describe("SessionExpiredModalHost", () => {
   });
 
   it("atom が null のときは modal を表示しない", () => {
-    render(
-      <JotaiProvider>
-        <SessionExpiredModalHost />
-      </JotaiProvider>
-    );
+    render(<SessionExpiredModalHost />);
     expect(screen.queryByTestId("session-expired-modal")).toBeNull();
   });
 
   it("atom が起動したら modal を表示し、1.5 秒後に /login へ遷移する", () => {
-    render(
-      <JotaiProvider>
-        <SessionExpiredModalHost />
-      </JotaiProvider>
-    );
+    render(<SessionExpiredModalHost />);
 
     act(() => {
       getDefaultStore().set(sessionExpiredAtom, { openedAt: Date.now() });
