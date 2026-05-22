@@ -426,3 +426,41 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: NFR Design ヒアリング完了、成果物生成段階へ
 
 ---
+
+## Infrastructure Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Input**: "マージした次に進んで"
+**AI Response**: PR #68 マージ済みを develop fast-forward 取り込み確認、Infrastructure Design ステージを開始。aidlc-docs/construction/plans/auth-infrastructure-design-plan.md を作成、NFR Design からの引き継ぎ事項 (LC-07/15/16/17) を Terraform 化対象として整理、確認質問 Q-I1〜Q-I13 (13 問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: Infrastructure Design Plan のユーザ承認を待機中
+
+---
+
+## Infrastructure Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-22T01:05:00Z
+**User Input**: "一つづつ質問して"
+**AI Response**: Plan 承認と解釈。Q-I1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## Infrastructure Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Inputs** (Q-I1〜Q-I13、対話形式で順次):
+- Q-I1: "A: 単一モジュール auth/"
+- Q-I2: "lwaはどっちかじゃないとダメじゃないっけ？" → AI LWA Event Source 表提示 → "公式ドキュメントにも書いてる？" → AI WebFetch で公式 README 引用 → "B: HTTP APIに切替（推奨）"
+- Q-I3: "A: Terraform archive_file data source（推奨）"
+- Q-I4: "B: gp-{env}-{resource}"
+- Q-I5: "A: dev のみ実構築、prd は空ディレクトリだけ作成"
+- Q-I6: "BだがDynamoDBは不要" → AI Terraform 公式ドキュメント (use_lockfile = true 機能 + DynamoDB deprecated) 引用 → "Yes: S3 + use_lockfile = true で進める（推奨）"
+- Q-I7: "A: Cognito デフォルト（推奨）"
+- Q-I8: "C: 60 秒（中間、推奨）"
+- Q-I9: "A: CloudWatch Logs 書込のみをインラインポリシーで記述（推奨）"
+- Q-I10: "どこのunitでlambda本体は作るんだっけ？" → AI unit-of-work.md 横串リソース整理 → "A1とA2の違いは？" → AI A1/A2 図解比較 → "Authorizerはトークン認証のlambdad?" → AI Lambda Authorizer vs JWT Authorizer 解説 → "横串 PRのタスクはどこで管理してるの？" → AI 計画上の空白指摘 + A3/A4 提案 → "Logout integrationこれは何のこと？" → AI API Gateway リソース構造図解説 → "A4: A3 + API Lambda 本体 (Gin Hello World) も Unit A で立ち上げ"
+- Q-I11: "A: Project / Env / Unit / ManagedBy の 4 種類（推奨）"
+- Q-I12: "A: 7 日（推奨）"
+- Q-I13: "A: INACTIVE（推奨）"
+
+**AI Response**: 全回答を auth-infrastructure-design-plan.md に [Answer] タグ反映。Q-I2 / Q-I6 / Q-I10 で重要な仕様確認・スコープ拡大あり。次に Infrastructure Design 成果物 2 種 (infrastructure-design.md / deployment-architecture.md) を生成。
+**Context**: Infrastructure Design ヒアリング完了、成果物生成段階へ
+
+---
