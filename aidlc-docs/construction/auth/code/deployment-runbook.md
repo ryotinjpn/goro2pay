@@ -25,13 +25,11 @@ bash infra/scripts/bootstrap-backend.sh
 成功すると `gp-tfstate-dev` bucket が `ap-northeast-1` に作成される。
 versioning / encryption / public-access-block 設定済み。
 
-### 2. terraform.tfvars を作成
+### 2. (env 値の確認)
 
-```bash
-cd infra/envs/dev
-cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvars を編集して github_owner を実際の値に
-```
+`infra/envs/dev/locals.tf` で env / region / github_owner / github_repo / github_branch を固定値で定義済み。tfvars は使わない (PR レビュー指摘で locals.tf 方式に変更)。
+
+別 env (本番化時の prd 等) を作る場合のみ、`infra/envs/prd/locals.tf` で別値を定義する。
 
 ### 3. Terraform apply (1 回目)
 

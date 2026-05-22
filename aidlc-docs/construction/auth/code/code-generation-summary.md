@@ -65,29 +65,17 @@
 | `infra/lambdas/pre-signup/index.js` | 5 行 auto-confirm |
 | `infra/scripts/bootstrap-backend.sh` | S3 tfstate bucket 作成 |
 | `infra/scripts/bootstrap-ecr-initial.sh` | ECR :bootstrap 初回 push |
-| `infra/modules/auth/main.tf` | Module 共通定義 |
-| `infra/modules/auth/variables.tf` / `outputs.tf` | env / region / GitHub vars + 13 outputs |
-| `infra/modules/auth/cognito.tf` | User Pool + App Client (Token 8h/30d) |
-| `infra/modules/auth/pre_signup_lambda.tf` | Pre Sign-up Lambda (Node.js arm64) |
-| `infra/modules/auth/api_gateway.tf` | HTTP API + JWT Authorizer (TTL 60s) + Stage Throttling |
-| `infra/modules/auth/ecr.tf` | ECR Repository + lifecycle policy |
-| `infra/modules/auth/api_lambda.tf` | API Lambda (image_uri = :bootstrap、ignore_changes) |
-| `infra/modules/auth/logout_route.tf` | Logout route + Health route + integration |
-| `infra/modules/auth/amplify.tf` | Amplify App + branch + CodeStar Connection |
-| `infra/modules/auth/codepipeline.tf` | CodePipeline + CodeBuild + S3 artifacts |
-| `infra/modules/auth/iam.tf` | IAM Roles 5 種 (最小権限) |
-| `infra/modules/auth/log_groups.tf` | CloudWatch Log Groups 3 種 (retention 7 日) |
-| `infra/modules/auth/README.md` | Module 利用ドキュメント |
-| `infra/modules/auth/tests/auth_basic.tftest.hcl` | mock_provider plan 成立 |
-| `infra/modules/auth/tests/auth_outputs.tftest.hcl` | 主要 outputs 非 null |
-| `infra/modules/auth/tests/auth_cognito_password_policy.tftest.hcl` | A-NFR-SEC-02 整合 |
-| `infra/modules/auth/tests/auth_lambda_lifecycle.tftest.hcl` | image_uri :bootstrap / Token Validity |
-| `infra/modules/auth/tests/auth_amplify_branch.tftest.hcl` | env vars BFF パターン整合 |
-| `infra/modules/auth/tests/auth_codebuild_iam.tftest.hcl` | IAM Role 存在 |
+| `infra/lambdas/pre-signup/index.js` | 5 行 auto-confirm |
+| `infra/scripts/bootstrap-backend.sh` | S3 tfstate bucket 作成 |
+| `infra/scripts/bootstrap-ecr-initial.sh` | ECR :bootstrap 初回 push |
+| **`infra/modules/cognito/`** (Auth Unit 所有) | User Pool + App Client (Token 8h/30d) + Pre Sign-up Lambda (Node.js arm64) + IAM。main.tf / variables.tf / cognito.tf / pre_signup_lambda.tf / iam.tf / outputs.tf / README.md / tests/cognito_basic.tftest.hcl |
+| **`infra/modules/api_gateway/`** (Unit 横串) | HTTP API + JWT Authorizer (TTL 60s) + Stage Throttling + Logout/Health route + 共通 integration。main.tf / variables.tf / api_gateway.tf / routes.tf / outputs.tf / README.md / tests/api_gateway_basic.tftest.hcl |
+| **`infra/modules/lambda_api/`** (Unit 横串) | API Lambda (image_uri = :bootstrap, ignore_changes) + ECR + CodePipeline + CodeBuild + S3 artifacts + IAM Role 3 種。main.tf / variables.tf / api_lambda.tf / ecr.tf / codepipeline.tf / iam.tf / outputs.tf / README.md / tests/lambda_api_basic.tftest.hcl |
+| **`infra/modules/amplify/`** (Unit 横串) | Amplify App + Branch (Next.js SSR、env: NEXT_PUBLIC_* + server-only API_ENDPOINT + AMPLIFY_MONOREPO_APP_ROOT=web) + SSR Role。main.tf / variables.tf / amplify.tf / iam.tf / outputs.tf / README.md / tests/amplify_basic.tftest.hcl |
 | `infra/envs/dev/backend.tf` | S3 + use_lockfile |
 | `infra/envs/dev/providers.tf` | default_tags |
-| `infra/envs/dev/main.tf` | auth module 呼出 |
-| `infra/envs/dev/variables.tf` / `outputs.tf` / `terraform.tfvars.example` | 入力 / 出力 |
+| `infra/envs/dev/main.tf` | 4 module 呼出 (cognito / api_gateway / lambda_api / amplify) + CodeStar Connection (lambda_api と amplify で共有) |
+| `infra/envs/dev/locals.tf` / `outputs.tf` | env / region / GitHub 値の固定 + 主要 outputs |
 | `infra/envs/prd/README.md` | placeholder |
 
 ### ルート

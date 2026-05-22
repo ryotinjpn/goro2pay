@@ -267,35 +267,51 @@ goro2pay/
 - [x] `infra/scripts/bootstrap-backend.sh` — S3 tfstate bucket 作成 + 暗号化 + Public access block
 - [x] `infra/scripts/bootstrap-ecr-initial.sh` — Local docker build → ECR `:bootstrap` tag push
 
-### Step 16: Terraform Module (`infra/modules/auth/`)
-- [x] `main.tf` — provider blocks 等（必要に応じて）
-- [x] `cognito.tf` — User Pool + App Client + Pre Sign-up Lambda 連携 + permission
-- [x] `pre_signup_lambda.tf` — archive_file + Lambda function
-- [x] `api_gateway.tf` — HTTP API + Authorizer + Stage（throttling 設定込み、cors_configuration 未設定）
-- [x] `api_lambda.tf` — API Lambda（image_uri = ECR :bootstrap、lifecycle.ignore_changes = [image_uri]）
+### Step 16: Terraform Modules (機能別 4 module、unit-of-work.md §4.1 準拠)
+
+レビュー指摘により、当初予定していた単一 `infra/modules/auth/` は撤回し、unit-of-work.md §4.1 通り機能別 4 module に分割する:
+
+#### `infra/modules/cognito/` (Auth Unit 所有)
+- [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
+- [x] `cognito.tf` — User Pool + App Client + Cognito Lambda Permission
+- [x] `pre_signup_lambda.tf` — archive_file + Lambda function + Log Group
+- [x] `iam.tf` — Pre Sign-up Lambda IAM Role
+- [x] `tests/cognito_basic.tftest.hcl` — plan / outputs / password_policy / token_validity
+
+#### `infra/modules/api_gateway/` (Unit 横串)
+- [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
+- [x] `api_gateway.tf` — HTTP API + Cognito JWT Authorizer + Stage Throttling
+- [x] `routes.tf` — POST /api/auth/logout + GET /health + 共通 integration
+- [x] `tests/api_gateway_basic.tftest.hcl` — plan / outputs / throttling / authorizer TTL
+
+#### `infra/modules/lambda_api/` (Unit 横串)
+- [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
+- [x] `api_lambda.tf` — API Lambda (image_uri = ECR :bootstrap, lifecycle.ignore_changes = [image_uri]) + permission + Log Group
 - [x] `ecr.tf` — ECR Repository + lifecycle policy
-- [x] `logout_route.tf` — POST /api/auth/logout route + integration
-- [x] `amplify.tf` — Amplify App + branch + SSR role + buildSpec + AMPLIFY_MONOREPO_APP_ROOT
-- [x] `codepipeline.tf` — CodeStar Connection + CodePipeline + CodeBuild + S3 artifacts
-- [x] `iam.tf` — IAM Roles 5 種（Pre Sign-up / API Lambda / Amplify SSR / CodePipeline / CodeBuild）
-- [x] `log_groups.tf` — CloudWatch Log Groups 3 種
-- [x] `variables.tf` — env / region / github_owner / github_repo_name / github_branch / tags
-- [x] `outputs.tf` — 13 種の output (LC-15/16/17 + その他)
-- [x] `README.md` — モジュール利用ドキュメント（bootstrap 手順、外部承認手順）
+- [x] `codepipeline.tf` — CodePipeline + CodeBuild + S3 artifacts + CodeBuild Log Group
+- [x] `iam.tf` — IAM Roles 3 種 (api_lambda / codepipeline_api / codebuild_api)
+- [x] `tests/lambda_api_basic.tftest.hcl` — plan / outputs / image_uri :bootstrap
+
+#### `infra/modules/amplify/` (Unit 横串)
+- [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
+- [x] `amplify.tf` — Amplify App + Branch (env vars: NEXT_PUBLIC_* + server-only API_ENDPOINT + AMPLIFY_MONOREPO_APP_ROOT)
+- [x] `iam.tf` — Amplify SSR Role
+- [x] `tests/amplify_basic.tftest.hcl` — plan / outputs / branch env vars (BFF パターン整合)
 
 ### Step 17: Terraform Env (`infra/envs/dev/`)
 - [x] `backend.tf` — S3 + use_lockfile = true
 - [x] `providers.tf` — default_tags
-- [x] `main.tf` — auth module 呼出
-- [x] `variables.tf` / `outputs.tf` / `terraform.tfvars.example`
+- [x] `locals.tf` — env / region / github_owner / github_repo / github_branch (tfvars 方式から locals.tf 方式に変更)
+- [x] `main.tf` — 4 module 呼出 + CodeStar Connection (lambda_api と amplify で共有)
+- [x] `outputs.tf` — 主要 6 種 (各 module の output を再公開)
 
-### Step 18: Terraform Tests (`infra/modules/auth/tests/`)
-- [x] `auth_basic.tftest.hcl` — mock_provider で plan 成立
-- [x] `auth_outputs.tftest.hcl` — 主要 output 非空
-- [x] `auth_cognito_password_policy.tftest.hcl` — A-NFR-SEC-02 整合
-- [x] `auth_lambda_lifecycle.tftest.hcl` — image_uri ignore_changes
-- [x] `auth_amplify_branch.tftest.hcl` — env vars 構成
-- [x] `auth_codebuild_iam.tftest.hcl` — IAM 最小権限
+### Step 18: Terraform Tests (各 module の tests/ ディレクトリ)
+- [x] `infra/modules/cognito/tests/cognito_basic.tftest.hcl`
+- [x] `infra/modules/api_gateway/tests/api_gateway_basic.tftest.hcl`
+- [x] `infra/modules/lambda_api/tests/lambda_api_basic.tftest.hcl`
+- [x] `infra/modules/amplify/tests/amplify_basic.tftest.hcl`
+
+各 module の tests/ で plan 成立 + 主要 outputs + 設計判断 (password_policy / token_validity / throttling / TTL / image_uri / branch env vars) を mock_provider で検証する。
 
 ### Step 19: Documentation
 - [x] `aidlc-docs/construction/auth/code/deployment-runbook.md` — 初回デプロイ手順、CodeStar 承認、ECR push、ロールバック手順

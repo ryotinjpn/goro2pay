@@ -1,10 +1,11 @@
 # Auth Unit — Deployment Architecture
 
-**Document Version**: 1.3
+**Document Version**: 1.4
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild/ECR を Unit A スコープに追加)
 **Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一)
 **Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持)
+**Updated**: 2026-05-22 (Terraform module を機能別 4 module に分割、unit-of-work.md §4.1 整合: cognito / api_gateway / lambda_api / amplify)
 **Unit**: A (`auth`)
 **Stage**: Infrastructure Design / Construction
 **Predecessors**: [infrastructure-design.md](./infrastructure-design.md)
@@ -333,45 +334,62 @@ CD なしの暗黙手動運用。
 
 ## 3. Terraform モジュール依存関係
 
-### 3.1 本 PR 内の依存
+### 3.1 本 PR 内の依存（実装は機能別 4 module 構成、unit-of-work.md §4.1 整合）
 
 ```
 infra/envs/dev/
-   └─ main.tf
-        └─ module "auth" (= infra/modules/auth/)
-              ├─ aws_cognito_user_pool.main
-              ├─ aws_cognito_user_pool_client.web
-              ├─ aws_lambda_function.pre_signup ─┐
-              ├─ data.archive_file.pre_signup ──┘
-              ├─ aws_apigatewayv2_api.main
-              ├─ aws_apigatewayv2_authorizer.cognito
-              ├─ aws_apigatewayv2_stage.default
-              ├─ aws_apigatewayv2_integration.api_lambda
-              ├─ aws_apigatewayv2_route.logout
-              ├─ aws_ecr_repository.api ─┐
-              ├─ aws_ecr_lifecycle_policy.api ┘
-              ├─ aws_lambda_function.api ─┐
-              │   (lifecycle.ignore_changes = [image_uri])
-              ├─ aws_codestarconnections_connection.github
-              ├─ aws_amplify_app.web ─┐
-              ├─ aws_amplify_branch.develop ┘
-              ├─ aws_codepipeline.api ─┐
-              ├─ aws_codebuild_project.api ─┤
-              ├─ aws_s3_bucket.codepipeline_artifacts ┘
-              ├─ aws_lambda_permission.* ─┘
-              ├─ aws_iam_role.* + aws_iam_role_policy.*
-              └─ aws_cloudwatch_log_group.*
+   ├─ locals.tf (env=dev / region / github_owner 等を固定)
+   ├─ providers.tf (default_tags + provider ~> 6.46)
+   ├─ backend.tf (S3 + use_lockfile = true)
+   ├─ main.tf
+   │   ├─ aws_codestarconnections_connection.github  ← envs 側で作成、下記 2 module で共有
+   │   ├─ module "cognito" (= infra/modules/cognito/、Auth Unit 所有)
+   │   │     ├─ aws_cognito_user_pool.main
+   │   │     ├─ aws_cognito_user_pool_client.web
+   │   │     ├─ aws_lambda_function.pre_signup ─┐
+   │   │     ├─ data.archive_file.pre_signup ──┘
+   │   │     ├─ aws_iam_role.pre_signup_lambda
+   │   │     └─ aws_cloudwatch_log_group.pre_signup
+   │   ├─ module "api_gateway" (= infra/modules/api_gateway/、Unit 横串)
+   │   │     ├─ aws_apigatewayv2_api.main (cors_configuration 未設定)
+   │   │     ├─ aws_apigatewayv2_authorizer.cognito (TTL 60s)
+   │   │     ├─ aws_apigatewayv2_stage.default (Throttling 100/200)
+   │   │     ├─ aws_apigatewayv2_integration.api_lambda
+   │   │     ├─ aws_apigatewayv2_route.logout (POST /api/auth/logout)
+   │   │     └─ aws_apigatewayv2_route.health (GET /health、認証不要)
+   │   ├─ module "lambda_api" (= infra/modules/lambda_api/、Unit 横串)
+   │   │     ├─ aws_ecr_repository.api ─┐
+   │   │     ├─ aws_ecr_lifecycle_policy.api ┘
+   │   │     ├─ aws_lambda_function.api ─┐
+   │   │     │   (image_uri = ECR :bootstrap、
+   │   │     │    lifecycle.ignore_changes = [image_uri])
+   │   │     ├─ aws_lambda_permission.apigw_invoke_api
+   │   │     ├─ aws_codepipeline.api ─┐
+   │   │     ├─ aws_codebuild_project.api ─┤
+   │   │     ├─ aws_s3_bucket.codepipeline_artifacts
+   │   │     ├─ aws_iam_role.api_lambda + policy (CloudWatch Logs)
+   │   │     ├─ aws_iam_role.codepipeline_api + policy
+   │   │     ├─ aws_iam_role.codebuild_api + policy
+   │   │     ├─ aws_cloudwatch_log_group.api
+   │   │     └─ aws_cloudwatch_log_group.codebuild_api
+   │   └─ module "amplify" (= infra/modules/amplify/、Unit 横串)
+   │         ├─ aws_amplify_app.web
+   │         ├─ aws_amplify_branch.develop
+   │         │   (env: NEXT_PUBLIC_* + server-only API_ENDPOINT
+   │         │        + AMPLIFY_MONOREPO_APP_ROOT=web)
+   │         └─ aws_iam_role.amplify_ssr (managed policy attachment)
+   └─ outputs.tf (各 module の output を再公開)
 ```
 
 ### 3.2 後続 PR からの参照
 
 ```
-[Unit A 完結済み: infra/modules/amplify/ も Auth module に同居]
-[各 Unit (B/C/D/E) PR]
-   └─ var.api_id                ← module.auth.api_id
-   └─ var.cognito_authorizer_id ← module.auth.cognito_authorizer_id
-   └─ var.api_lambda_invoke_arn ← module.auth.api_lambda_invoke_arn
-   └─ var.api_lambda_role_arn   ← module.auth.api_lambda_role_arn (DynamoDB 権限を追加)
+[各 Unit (B/C/D/E) PR が利用する横串 module の output]
+   └─ module.api_gateway.api_id                       ← 後続 route 追加
+   └─ module.api_gateway.cognito_authorizer_id        ← 後続 route の authorizer_id
+   └─ module.api_gateway.api_lambda_integration_id    ← 後続 route の target
+   └─ module.lambda_api.api_lambda_role_arn           ← 後続が DynamoDB 等の権限を attach
+   └─ module.lambda_api.api_lambda_role_name          ← 後続が aws_iam_role_policy_attachment で role を指定
 ```
 
 ---

@@ -1,10 +1,11 @@
 # Auth Unit — Infrastructure Design
 
-**Document Version**: 1.3
+**Document Version**: 1.4
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
 **Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一、cors_configuration を未設定化)
 **Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持。他 Unit の合意済みリポジトリ構造尊重)
+**Updated**: 2026-05-22 (Terraform module を機能別 4 module に分割: cognito / api_gateway / lambda_api / amplify、unit-of-work.md §4.1 整合。本書 §3 のリソース内容は変わらず配置 module のみ変更、§10.1 に整合性メモ追記済み)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction
@@ -669,10 +670,17 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 - **Amplify Hosting / CodePipeline / ECR の所属**: unit-of-work.md §4.1 では `amplify/` / `lambda_api/` を「Unit 横串」と記載していたが、横串 PR タスク管理が計画上空白だったため、本書で **横串インフラを全て Unit A スコープに包含する** 方針に確定（Q-I14 / Q-I15）。これにより Unit A PR 単体で Frontend と API の auto deploy 環境まで構築可能
 - **BFF パターン採用**: NEXT_PUBLIC_API_ENDPOINT でブラウザに API URL を露出する設計を取りやめ、`/api/*` パスは Next.js の catch-all Route Handler (`web/app/api/[...path]/route.ts`) が受けて API Gateway に proxy する BFF パターンを採用。`API_ENDPOINT` は server-only env、CORS allow_origins を Amplify ドメインだけに絞れる
 - **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を維持（他 Unit B/C/D/E と合意済みのリポジトリ構造を尊重）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
+- **Terraform module 構成 (Code Generation で確定)**: 本書では §3 で `infra/modules/auth/` (単一 module) として記述しているが、実装時はレビュー指摘により unit-of-work.md §4.1 通り **機能別 4 module** (`cognito/` / `api_gateway/` / `lambda_api/` / `amplify/`) に分割した。本書 §3 のリソース内容は変わらず、配置 module だけが変更:
+    - `infra/modules/cognito/`: Cognito User Pool + App Client + Pre Sign-up Lambda + 関連 IAM (Auth Unit 所有)
+    - `infra/modules/api_gateway/`: HTTP API + JWT Authorizer + Stage + Logout/Health route + 共通 integration (Unit 横串)
+    - `infra/modules/lambda_api/`: API Lambda + ECR + CodePipeline + CodeBuild + S3 artifacts + 関連 IAM (Unit 横串)
+    - `infra/modules/amplify/`: Amplify App + Branch + SSR Role (Unit 横串)
+    - `envs/dev/main.tf` で 4 module を組み合わせて呼出、CodeStar Connection は envs 側で 1 つ作成し lambda_api と amplify で共有
+    - 他 Unit (B/C/D/E) は `module.lambda_api.api_lambda_role_name` に権限 attach、`module.api_gateway.api_lambda_integration_id` を target に route 追加 する形で機能を拡張
 
 ### 10.2 整合修正メモ
 
 本 PR では既存ドキュメントは変更しないが、Code Generation 完了後にレビューで以下の調整を検討:
 
 - `unit-interfaces.md` §3.3 の API path prefix 確認（`/api/...` で統一済み、PR #66）
-- `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築、横串改善 PR で将来切り出し」の脚注追加（任意）
+- `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築」の脚注追加（任意）。本実装で機能別 4 module 構成を採用済みのため、unit-of-work.md §4.1 との整合は維持されている
