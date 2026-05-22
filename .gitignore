@@ -24,13 +24,15 @@ infra/lambdas/**/dist/
 infra/**/.terraform/tmp/
 
 # Terraform
+# envs 配下の .terraform.lock.hcl はチーム再現性確保のためコミット対象 (Terraform 公式推奨)。
+# modules 配下の lock は単独 init 時の中間生成物なので無視する。
 **/.terraform/
-**/.terraform.lock.hcl
 **/terraform.tfstate
 **/terraform.tfstate.*
 **/*.tfvars
 !**/*.tfvars.example
 **/.terragrunt-cache/
+infra/modules/**/.terraform.lock.hcl
 
 # Misc
 *.log
