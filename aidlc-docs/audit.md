@@ -690,28 +690,11 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 ---
 
-## NFR Design (Unit B) — 既存ユニットとの整合確認
-**Timestamp**: 2026-05-22T03:00:00Z
-**User Input**: "改めて既存ユニットとの矛盾点をもう一度確認してください。ここがズレるとあとあとめんどくさいので。ライブラリなどは全体で共通化したいです"
-**AI Response**: Unit A の nfr-design-patterns.md / logical-components.md と Unit B Q-D 回答を照合。以下 2 件を明記必須と判断:
-1. Unit B Frontend は LC-AUTH-09 `apiClient` を再利用（Unit B 独自の HTTP クライアント不要）
-2. Unit C は注文成功時に `queryClient.invalidateQueries({ queryKey: ['balance'] })` を呼ぶ（クロスユニット依存）
-**Context**: 整合確認完了
-
----
-
-## NFR Design (Unit B) — unit-interfaces.md 更新依頼
-**Timestamp**: 2026-05-22T03:05:00Z
-**User Input**: "はい、明記お願いしします。また、interfaces.mdに記載すべき内容があれば合わせて更新お願いします"
-**AI Response**: 成果物生成開始。
-**Context**: 成果物生成フェーズへ移行
-
----
-
 ## NFR Design (Unit B) — 成果物生成完了
 **Timestamp**: 2026-05-22T03:10:00Z
-**User Input**: (成果物生成)
-**AI Response**: 以下を生成・更新:
+**User Inputs**:
+- "既存ユニットとの矛盾点をもう一度確認して"
+**AI Response**: Unit A との整合確認で 2 件を明記必須と判断（LC-AUTH-09 再利用 / Unit C invalidate 依存）。以下を生成・更新:
 - `aidlc-docs/construction/budget/nfr-design/nfr-design-patterns.md` (新規): P-REL-01〜03 / P-PERF-01 / P-OBS-01〜02 / P-TEST-01 / P-DEG-01〜03 の 10 パターン。`log/slog` + `ContextAwareSlogHandler` (LC-AUTH-05) 再利用、`gopter` PBT（Unit A と統一）を明記。
 - `aidlc-docs/construction/budget/nfr-design/logical-components.md` (新規): LC-BUDGET-01〜12 定義。Unit A 再利用コンポーネント（LC-AUTH-05 / LC-AUTH-09 / LC-AUTH-18）を §4 に明記。Unit C の `invalidateQueries(['balance'])` 依存を LC-BUDGET-08 に記載。
 - `aidlc-docs/construction/interfaces/unit-interfaces.md` (更新): §9.1「クロスユニット TanStack Query key 契約」追加（`['balance']` query key の Unit B/C 間契約）、§12「共有 Frontend インフラ」追加（LC-AUTH-09 / LC-AUTH-18 の全 Unit 共有を明記）。
