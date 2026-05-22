@@ -9,22 +9,32 @@ variables {
   cognito_user_pool_id        = "ap-northeast-1_TESTPOOL"
   cognito_user_pool_client_id = "test-client-id"
   api_endpoint                = "https://example.execute-api.ap-northeast-1.amazonaws.com"
+  # 本 module 単体テスト用の固定 fixture (Frontend ブランチに依存しない)。
+  # 配置: infra/modules/amplify/tests/fixtures/amplify.yml
+  # `file()` は configuration root 起点なので modules/amplify/ からの相対で渡す。
+  amplify_yml_path = "tests/fixtures/amplify.yml"
 }
 
 run "plan_succeeds" {
   command = plan
 }
 
-run "outputs_present" {
+run "resources_present" {
   command = plan
 
+  # mock_provider では output (computed attr 経由) は plan 時点で unknown のため、
+  # resource の non-computed 属性で存在を確認する。
   assert {
-    condition     = output.amplify_app_id != null
-    error_message = "amplify_app_id should not be null"
+    condition     = aws_amplify_app.web.name == "gp-dev-web"
+    error_message = "Amplify App 名が想定と異なる"
   }
   assert {
-    condition     = output.amplify_default_domain != null
-    error_message = "amplify_default_domain should not be null"
+    condition     = aws_amplify_app.web.platform == "WEB_COMPUTE"
+    error_message = "Amplify platform は WEB_COMPUTE (Next.js SSR) であること"
+  }
+  assert {
+    condition     = aws_amplify_branch.develop.branch_name == "develop"
+    error_message = "Amplify branch_name は develop であること"
   }
 }
 

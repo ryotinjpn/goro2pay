@@ -12,20 +12,32 @@ run "plan_succeeds" {
   command = plan
 }
 
-run "outputs_present" {
+run "resources_present" {
   command = plan
 
+  # mock_provider では output (computed attr 経由) は plan 時点で unknown のため、
+  # resource の non-computed 属性で存在を確認する。
   assert {
-    condition     = output.api_id != null
-    error_message = "api_id output should not be null"
+    condition     = aws_apigatewayv2_api.main.name == "gp-dev-api"
+    error_message = "HTTP API 名が想定と異なる"
   }
   assert {
-    condition     = output.cognito_authorizer_id != null
-    error_message = "cognito_authorizer_id output should not be null"
+    condition     = aws_apigatewayv2_api.main.protocol_type == "HTTP"
+    error_message = "API は HTTP API であること"
   }
   assert {
-    condition     = output.api_lambda_integration_id != null
-    error_message = "api_lambda_integration_id output should not be null"
+    condition     = aws_apigatewayv2_authorizer.cognito.authorizer_type == "JWT"
+    error_message = "Authorizer は JWT であること"
+  }
+}
+
+run "access_log_enabled" {
+  command = plan
+
+  # Authorizer による 401/403 ログを CloudWatch に残す。
+  assert {
+    condition     = length(aws_apigatewayv2_stage.default.access_log_settings) == 1
+    error_message = "access_log_settings が有効化されていること"
   }
 }
 

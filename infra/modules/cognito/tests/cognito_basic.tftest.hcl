@@ -8,16 +8,18 @@ run "plan_succeeds" {
   command = plan
 }
 
-run "outputs_present" {
+run "resources_present" {
   command = plan
 
+  # mock_provider では output (computed attr 経由) は plan 時点で unknown のため、
+  # resource の non-computed 属性で存在を確認する。
   assert {
-    condition     = output.user_pool_id != null
-    error_message = "user_pool_id output should not be null"
+    condition     = aws_cognito_user_pool.main.name == "gp-dev-userpool"
+    error_message = "User Pool 名が想定と異なる"
   }
   assert {
-    condition     = output.user_pool_client_id != null
-    error_message = "user_pool_client_id output should not be null"
+    condition     = aws_cognito_user_pool_client.web.name == "gp-dev-appclient-web"
+    error_message = "User Pool Client 名が想定と異なる"
   }
 }
 
