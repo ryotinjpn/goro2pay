@@ -1,7 +1,8 @@
 # Auth Unit — Infrastructure Design
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2026-05-22
+**Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction
@@ -15,9 +16,9 @@
 
 ## 1. スコープと前提
 
-### 1.1 本書のスコープ（Q-I10=A4 確定）
+### 1.1 本書のスコープ（Q-I10=A4 / Q-I14 / Q-I15 確定）
 
-Unit A PR で構築するリソース:
+横串インフラ = Unit A 方針に従い、Unit A PR で構築するリソース:
 
 1. **Cognito** (User Pool / App Client) ← LC-15/16
 2. **Pre Sign-up Lambda** (Node.js, auto-confirm) ← LC-07
@@ -25,15 +26,18 @@ Unit A PR で構築するリソース:
 4. **JWT Authorizer** (Cognito 連携) ← LC-17
 5. **`POST /api/auth/logout` route + integration**
 6. **API Lambda 本体** (Go + Gin + LWA, 当面は Hello World + Logout のみ)
-7. CloudWatch Log Groups（Lambda 用）
-8. IAM Roles / Policies（Pre Sign-up Lambda + API Lambda）
+7. **AWS Amplify Hosting** (Next.js App Router、GitHub auto deploy) ← Q-I14=A
+8. **CodePipeline + CodeBuild** (API Lambda の CD) ← Q-I15=D
+9. **ECR Repository** (API Lambda image)
+10. CloudWatch Log Groups（Lambda + CodeBuild 用）
+11. IAM Roles / Policies（各 Lambda + Amplify SSR + CodePipeline + CodeBuild）
 
 ### 1.2 スコープ外（他 PR / 後続 Unit が担当）
 
-- Frontend Amplify Hosting → 別 PR
 - Unit B/C/D/E のハンドラ実装 + route 追加 → 各 Unit の Construction
 - DynamoDB テーブル定義 → 各 Unit の Infrastructure Design
 - Bedrock IAM → Unit C の Infrastructure Design
+- Pre Sign-up Lambda の CD（archive_file + terraform apply のまま手動運用）
 
 ### 1.3 不変前提
 
@@ -61,23 +65,31 @@ infra/
 │   └── prd/
 │       └── README.md             # placeholder (Q-I5)
 ├── modules/
-│   └── auth/                     # Q-I1=A 単一モジュール
+│   └── auth/                     # Q-I1=A 単一モジュール（横串インフラ含む）
 │       ├── README.md
 │       ├── main.tf               # メイン定義
 │       ├── cognito.tf            # User Pool + App Client
-│       ├── pre_signup_lambda.tf  # Pre Sign-up Lambda (Node.js)
+│       ├── pre_signup_lambda.tf  # Pre Sign-up Lambda (Node.js, archive_file)
 │       ├── api_gateway.tf        # HTTP API + Authorizer + Stage
-│       ├── api_lambda.tf         # API Lambda (Go + Gin + LWA, Hello World)
+│       ├── api_lambda.tf         # API Lambda (Go + Gin + LWA, ECR image)
+│       ├── ecr.tf                # ECR Repository (API Lambda image, Q-I15)
 │       ├── logout_route.tf       # POST /api/auth/logout route + integration
-│       ├── iam.tf                # 各 Lambda 用 IAM Role / Policy
+│       ├── amplify.tf            # Amplify Hosting (Next.js App Router) (Q-I14)
+│       ├── codepipeline.tf       # CodePipeline + CodeBuild (API Lambda CD) (Q-I15)
+│       ├── iam.tf                # 全 IAM Role / Policy
 │       ├── log_groups.tf         # CloudWatch Log Groups
 │       ├── variables.tf
 │       └── outputs.tf
-└── lambdas/
-    ├── pre-signup/
-    │   └── index.js              # 5 行 auto-confirm 実装 (Code Generation)
-    └── api/
-        └── (Code Generation で配置、Go バイナリ + Dockerfile)
+├── lambdas/
+│   ├── pre-signup/
+│   │   └── index.js              # 5 行 auto-confirm 実装 (Code Generation)
+│   └── api/
+│       ├── Dockerfile            # LWA + arm64 Go バイナリ (Code Generation)
+│       ├── buildspec.yml         # CodeBuild 用 build 仕様 (Code Generation)
+│       └── (Go ソースは apps/api/ 側、ビルド時に参照)
+└── scripts/
+    ├── bootstrap-backend.sh      # S3 tfstate bucket 作成 (Code Generation)
+    └── bootstrap-ecr-initial.sh  # ECR 初回 image push (Code Generation)
 ```
 
 `modules/auth/` の内訳は責務別にファイル分割し、1 ファイル ~100 行以内を目安。
@@ -171,7 +183,7 @@ Q-I3 = A、Code Generation で `infra/lambdas/pre-signup/index.js` を配置。
 |---|---|---|
 | `function_name` | `gp-${var.env}-api-fn` | Q-I4 |
 | `package_type` | `Image` | LWA + Go コンテナ |
-| `image_uri` | `${var.api_image_uri}` (ECR タグ、Code Generation で push) | Q-I10=A4 |
+| `image_uri` | `${aws_ecr_repository.api.repository_url}:bootstrap` (初期値、CD 後は CodeBuild が更新) | Q-I10=A4 / Q-I15 |
 | `role` | `aws_iam_role.api_lambda.arn` | — |
 | `memory_size` | 512 | LWA + Gin 起動余裕 |
 | `timeout` | 30 (seconds) | NFR-PERF-01 (3 秒) は handler 内、Lambda timeout は安全マージン |
@@ -181,10 +193,24 @@ Q-I3 = A、Code Generation で `infra/lambdas/pre-signup/index.js` を配置。
 | `environment.COGNITO_USER_POOL_ID` | `aws_cognito_user_pool.main.id` | unit-interfaces §10 |
 | `environment.COGNITO_APP_CLIENT_ID` | `aws_cognito_user_pool_client.web.id` | 同上 |
 | `environment.AWS_REGION` | `ap-northeast-1` | 同上 |
+| `lifecycle.ignore_changes` | `[image_uri]` | Q-I15: CodeBuild が image_uri を更新するため Terraform は無視 |
 
 #### 3.3.2 `aws_lambda_permission.apigw_invoke_api`
 
 API Gateway が API Lambda を呼び出せるよう許可。
+
+#### 3.3.3 `aws_ecr_repository.api`
+
+API Lambda の Docker image を保存。
+
+| 設定 | 値 | 根拠 |
+|---|---|---|
+| `name` | `gp-${var.env}-api-image` | Q-I4 |
+| `image_tag_mutability` | `MUTABLE` | CodeBuild が `latest` タグを上書きするため (Q-I15) |
+| `image_scanning_configuration.scan_on_push` | true | セキュリティ標準 |
+| `encryption_configuration.encryption_type` | `AES256` | A-NFR-SEC-05 マネージドデフォルト |
+
+`aws_ecr_lifecycle_policy.api`: 古いイメージを削除（直近 5 個保持、ストレージコスト削減）。
 
 ### 3.4 API Gateway HTTP API (Q-I2=B)
 
@@ -294,6 +320,189 @@ API Gateway が API Lambda を呼び出せるよう許可。
 |---|---|---|
 | `aws_cloudwatch_log_group.pre_signup` | `/aws/lambda/gp-${var.env}-presignup-fn` | 7 |
 | `aws_cloudwatch_log_group.api` | `/aws/lambda/gp-${var.env}-api-fn` | 7 |
+| `aws_cloudwatch_log_group.codebuild_api` | `/aws/codebuild/gp-${var.env}-api-build` | 7 |
+
+### 3.8 Amplify Hosting (Q-I14=A)
+
+#### 3.8.1 `aws_codestarconnections_connection.github`
+
+GitHub と AWS の接続を提供。Amplify と CodePipeline の両方が参照する。
+
+| 設定 | 値 |
+|---|---|
+| `name` | `gp-${var.env}-github-conn` |
+| `provider_type` | `GitHub` |
+
+**注意**: Connection 作成後、AWS Console で **Pending → Available** への手動承認が 1 回必要（GitHub App インストール）。Terraform apply 直後は Pending 状態。Unit A PR README に手動承認手順を明記。
+
+#### 3.8.2 `aws_amplify_app.web`
+
+| 設定 | 値 | 根拠 |
+|---|---|---|
+| `name` | `gp-${var.env}-web` | Q-I4 |
+| `repository` | `https://github.com/{owner}/goro2pay` | Q-I14 |
+| `platform` | `WEB_COMPUTE` | Next.js App Router SSR/SSG（PR #10 確定） |
+| `iam_service_role_arn` | `aws_iam_role.amplify_ssr.arn` | SSR 実行用 |
+| `enable_branch_auto_build` | true | Q-I14 |
+| `build_spec` | （後述 §3.8.5） | Next.js build |
+| `environment_variables` | `_LIVE_UPDATES`、`AMPLIFY_DIFF_DEPLOY=false` 等の Amplify 標準 | — |
+| `custom_rule[*]` | `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/`<br>`{ source: "</^[^.]+$|\.(?!(css|...)$)/", target: "/index.html", status: "200" }` | App Router の SPA fallback |
+| `connection_arn` | `aws_codestarconnections_connection.github.arn` | OAuth 不要 |
+
+#### 3.8.3 `aws_amplify_branch.develop`
+
+| 設定 | 値 |
+|---|---|
+| `app_id` | `aws_amplify_app.web.id` |
+| `branch_name` | `develop` |
+| `enable_auto_build` | true |
+| `framework` | `Next.js - SSR` |
+| `stage` | `DEVELOPMENT` |
+| `environment_variables.NEXT_PUBLIC_USER_POOL_ID` | `aws_cognito_user_pool.main.id` |
+| `environment_variables.NEXT_PUBLIC_USER_POOL_CLIENT_ID` | `aws_cognito_user_pool_client.web.id` |
+| `environment_variables.NEXT_PUBLIC_API_ENDPOINT` | `aws_apigatewayv2_api.main.api_endpoint` |
+| `environment_variables.NEXT_PUBLIC_AWS_REGION` | `ap-northeast-1` |
+
+このブランチへの GitHub push が auto deploy トリガとなる。
+
+#### 3.8.4 `aws_iam_role.amplify_ssr`
+
+Amplify Hosting の SSR Compute role。
+
+| 設定 | 値 |
+|---|---|
+| `name` | `gp-${var.env}-amplify-ssr-role` |
+| `assume_role_policy` | `amplify.amazonaws.com` service principal |
+
+インラインポリシー: CloudWatch Logs 書込のみ。Amplify SSR が他 AWS サービスを呼ぶ必要は本 MVP では無し（Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由）。
+
+#### 3.8.5 buildSpec（YAML 文字列を Terraform 内で）
+
+```yaml
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd web
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: web/.next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - web/node_modules/**/*
+          - web/.next/cache/**/*
+```
+
+具体 YAML は Code Generation で確定。
+
+### 3.9 CodePipeline + CodeBuild (Q-I15=D)
+
+API Lambda の CD パイプライン。
+
+#### 3.9.1 `aws_codebuild_project.api`
+
+| 設定 | 値 | 根拠 |
+|---|---|---|
+| `name` | `gp-${var.env}-api-build` | Q-I4 |
+| `service_role` | `aws_iam_role.codebuild_api.arn` | — |
+| `artifacts.type` | `CODEPIPELINE` | Pipeline 内で実行 |
+| `environment.compute_type` | `BUILD_GENERAL1_SMALL` | 最小コスト |
+| `environment.image` | `aws/codebuild/standard:7.0` | Docker / Go ビルド可能 |
+| `environment.type` | `LINUX_CONTAINER` | — |
+| `environment.privileged_mode` | true | Docker build に必要 |
+| `environment.environment_variable.AWS_DEFAULT_REGION` | `ap-northeast-1` | — |
+| `environment.environment_variable.ECR_REPOSITORY_URI` | `aws_ecr_repository.api.repository_url` | — |
+| `environment.environment_variable.LAMBDA_FUNCTION_NAME` | `aws_lambda_function.api.function_name` | image 更新用 |
+| `source.type` | `CODEPIPELINE` | — |
+| `source.buildspec` | `infra/lambdas/api/buildspec.yml` | — |
+| `logs_config.cloudwatch_logs.group_name` | `/aws/codebuild/gp-${var.env}-api-build` | — |
+
+#### 3.9.2 buildspec.yml（API Lambda 用）
+
+```yaml
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+  build:
+    commands:
+      - echo Building Docker image...
+      - docker buildx build --platform linux/arm64 -t $ECR_REPOSITORY_URI:$IMAGE_TAG -t $ECR_REPOSITORY_URI:latest -f infra/lambdas/api/Dockerfile .
+  post_build:
+    commands:
+      - echo Pushing Docker image...
+      - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
+      - docker push $ECR_REPOSITORY_URI:latest
+      - echo Updating Lambda function...
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $ECR_REPOSITORY_URI:$IMAGE_TAG --region $AWS_DEFAULT_REGION
+```
+
+具体 YAML は Code Generation で確定。
+
+#### 3.9.3 `aws_codepipeline.api`
+
+| 設定 | 値 |
+|---|---|
+| `name` | `gp-${var.env}-api-pipeline` |
+| `role_arn` | `aws_iam_role.codepipeline_api.arn` |
+| `artifact_store.location` | `aws_s3_bucket.codepipeline_artifacts.bucket` |
+| `artifact_store.type` | `S3` |
+
+##### Source Stage
+| 設定 | 値 |
+|---|---|
+| `category` | `Source` |
+| `owner` | `AWS` |
+| `provider` | `CodeStarSourceConnection` |
+| `configuration.ConnectionArn` | `aws_codestarconnections_connection.github.arn` |
+| `configuration.FullRepositoryId` | `{owner}/goro2pay` |
+| `configuration.BranchName` | `develop` |
+| `output_artifacts` | `["source_output"]` |
+
+##### Build Stage
+| 設定 | 値 |
+|---|---|
+| `category` | `Build` |
+| `owner` | `AWS` |
+| `provider` | `CodeBuild` |
+| `configuration.ProjectName` | `aws_codebuild_project.api.name` |
+| `input_artifacts` | `["source_output"]` |
+| `output_artifacts` | `["build_output"]` |
+
+#### 3.9.4 `aws_s3_bucket.codepipeline_artifacts`
+
+CodePipeline の中間アーティファクト保存用。
+
+| 設定 | 値 |
+|---|---|
+| `bucket` | `gp-${var.env}-codepipeline-artifacts` |
+| `force_destroy` | true (dev のみ) |
+| `versioning.enabled` | false (中間データのため) |
+| `lifecycle_rule` | 30 日後削除 |
+
+#### 3.9.5 IAM Roles for CD
+
+##### `aws_iam_role.codepipeline_api`
+- assume_role: `codepipeline.amazonaws.com`
+- 権限: S3 artifact bucket 読書、CodeBuild StartBuild、CodeStar Connection 使用
+
+##### `aws_iam_role.codebuild_api`
+- assume_role: `codebuild.amazonaws.com`
+- 権限:
+  - CloudWatch Logs 書込
+  - ECR push (`ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:PutImage`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload`)
+  - Lambda 更新 (`lambda:UpdateFunctionCode`) on `aws_lambda_function.api.arn` のみ
+  - S3 artifact bucket 読書
 
 ---
 
@@ -305,8 +514,12 @@ API Gateway が API Lambda を呼び出せるよう許可。
 |---|---|---|---|
 | `env` | string | — | 環境識別子 (例: `dev`) |
 | `region` | string | `ap-northeast-1` | AWS Region |
-| `api_image_uri` | string | — | API Lambda 用コンテナイメージ URI (ECR タグ) |
+| `github_owner` | string | — | GitHub オーナー (例: `ryotinjpn`) |
+| `github_repo_name` | string | `goro2pay` | リポジトリ名 |
+| `github_branch` | string | `develop` | Frontend / API CD のソースブランチ |
 | `tags` | map(string) | (default_tags で代替可) | 追加タグ |
+
+**注意**: `api_image_uri` 変数は不要となった（ECR を Unit A で構築、初期 image は bootstrap-ecr-initial.sh で push、以降は CodeBuild が更新するため Lambda の image_uri は `lifecycle.ignore_changes`）。
 
 ### 4.2 Module Outputs (`infra/modules/auth/outputs.tf`)
 
@@ -314,16 +527,20 @@ API Gateway が API Lambda を呼び出せるよう許可。
 
 | 名前 | 値 | 用途 |
 |---|---|---|
-| `user_pool_id` | `aws_cognito_user_pool.main.id` | Frontend Amplify 設定 / 他 Unit の Lambda env |
+| `user_pool_id` | `aws_cognito_user_pool.main.id` | Amplify env / 他 Unit の Lambda env |
 | `user_pool_arn` | `aws_cognito_user_pool.main.arn` | 他 IAM 連携 |
 | `user_pool_endpoint` | `aws_cognito_user_pool.main.endpoint` | JWT issuer URL |
-| `user_pool_client_id` | `aws_cognito_user_pool_client.web.id` | Frontend Amplify 設定 |
+| `user_pool_client_id` | `aws_cognito_user_pool_client.web.id` | Amplify env |
 | `api_id` | `aws_apigatewayv2_api.main.id` | 他 Unit の route 追加時 |
-| `api_endpoint` | `aws_apigatewayv2_api.main.api_endpoint` | Frontend が呼ぶ URL |
-| `api_lambda_function_name` | `aws_lambda_function.api.function_name` | 他 Unit の route で使用 |
+| `api_endpoint` | `aws_apigatewayv2_api.main.api_endpoint` | Amplify env / Frontend が呼ぶ URL |
+| `api_lambda_function_name` | `aws_lambda_function.api.function_name` | 他 Unit の route で使用、CodeBuild の lambda update |
 | `api_lambda_invoke_arn` | `aws_lambda_function.api.invoke_arn` | 他 Unit の integration |
 | `api_lambda_role_arn` | `aws_iam_role.api_lambda.arn` | 他 Unit が DynamoDB 等の権限を attach |
 | `cognito_authorizer_id` | `aws_apigatewayv2_authorizer.cognito.id` | 他 Unit の route の `authorizer_id` |
+| `amplify_app_id` | `aws_amplify_app.web.id` | デプロイ確認 / Console URL |
+| `amplify_default_domain` | `aws_amplify_app.web.default_domain` | Frontend 公開 URL |
+| `ecr_repository_url` | `aws_ecr_repository.api.repository_url` | 初回 image push スクリプト |
+| `codepipeline_name` | `aws_codepipeline.api.name` | デプロイ状態確認 |
 
 ---
 
@@ -343,7 +560,13 @@ terraform {
 }
 ```
 
-**注意**: bucket `gp-tfstate-dev` は手動 or bootstrap スクリプトで先行作成すること。Unit A PR の README に明記。
+**注意**: 以下を Unit A PR の README に明記、bootstrap スクリプトとして提供:
+
+1. **S3 tfstate bucket の作成**: `gp-tfstate-dev` を `infra/scripts/bootstrap-backend.sh` で作成
+2. **ECR 初回 image push**: CodePipeline が動作する前に Lambda が起動できるよう、`infra/scripts/bootstrap-ecr-initial.sh` で「最小の Hello World image」を `:bootstrap` タグで push。これは Lambda の `image_uri` 初期値となる
+3. **CodeStar Connection の手動承認**: Terraform apply 直後、AWS Console で「Pending → Available」へ手動承認（GitHub App インストール）
+
+これら 3 手順を terraform apply 前に 1 回だけ実施する。
 
 ---
 
@@ -379,6 +602,9 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 | `auth_basic.tftest.hcl` | mock_provider で `terraform plan` がエラーなく成立することを確認 |
 | `auth_outputs.tftest.hcl` | 主要 output が空文字でないことを確認 |
 | `auth_cognito_password_policy.tftest.hcl` | password_policy が A-NFR-SEC-02 と一致することを確認 |
+| `auth_lambda_lifecycle.tftest.hcl` | API Lambda の `lifecycle.ignore_changes = ["image_uri"]` が設定されていることを確認 (Q-I15) |
+| `auth_amplify_branch.tftest.hcl` | Amplify branch の env vars に `NEXT_PUBLIC_USER_POOL_ID` 等が含まれることを確認 (Q-I14) |
+| `auth_codebuild_iam.tftest.hcl` | CodeBuild IAM Role が Lambda UpdateFunctionCode 権限を最小限で持つことを確認 (Q-I15) |
 
 ---
 
@@ -394,8 +620,13 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 | `aws_apigatewayv2_stage.default` | (横串) | A-NFR-SEC-04 |
 | `aws_apigatewayv2_route.logout` + integration | (Logout 用) | LC-AUTH-06 |
 | `aws_lambda_function.api` | (横串、本 PR で先行) | Q-I10=A4 |
-| `aws_iam_role.*` | (各 Lambda) | Q-I9 |
-| `aws_cloudwatch_log_group.*` | (各 Lambda) | A-NFR-OBS-01 / Q-I12 |
+| `aws_ecr_repository.api` | (横串、API Lambda image) | Q-I15 |
+| `aws_amplify_app.web` + `aws_amplify_branch.develop` | (横串、Frontend hosting) | Q-I14 / 横串インフラ Unit A 方針 |
+| `aws_codestarconnections_connection.github` | (横串、CD ソース) | Q-I14 / Q-I15 |
+| `aws_codepipeline.api` + `aws_codebuild_project.api` | (横串、API Lambda CD) | Q-I15 |
+| `aws_s3_bucket.codepipeline_artifacts` | (CD 中間) | Q-I15 |
+| `aws_iam_role.*` | (各サービス) | Q-I9 / Q-I15 |
+| `aws_cloudwatch_log_group.*` | (各 Lambda + CodeBuild) | A-NFR-OBS-01 / Q-I12 |
 
 ---
 
@@ -403,9 +634,8 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 | 引き継ぎ先 | 内容 |
 |---|---|
-| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `infra/lambdas/api/` の Go コード + Dockerfile + ECR push スクリプト / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
-| **横串改善 PR (将来)** | `lambda_api/` を独立 module として切り出し、Auth module から API Lambda 関連を移動。本 MVP では Auth module 内の `api_lambda.tf` で先行構築 |
-| **Frontend Amplify Hosting** | 別 PR で `infra/modules/amplify/` を構築、Unit A から `user_pool_id` / `user_pool_client_id` / `api_endpoint` を output 経由で取得 |
+| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `infra/lambdas/api/Dockerfile` (LWA arm64) / `infra/lambdas/api/buildspec.yml` (CodeBuild) / `apps/api/` の Go コード本体 / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
+| **将来の横串改善 PR** | Auth module から `api_lambda.tf` / `amplify.tf` / `codepipeline.tf` / `ecr.tf` を独立 module へ切り出し（`lambda_api/` / `amplify/` / `cicd/`）。本 MVP では Auth module 内に集約 |
 
 ---
 
@@ -415,10 +645,11 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 - **API Gateway 種類**: 既存ドキュメント「REST」表記 → 本書で **HTTP API** に変更（Q-I2=B）。`unit-interfaces.md` §3.3 の「path」表記は HTTP API でも同じ動作。`A-NFR-SEC-04 Stage Throttling` は HTTP API では default_route_settings として表現される
 - **API Lambda 構築タイミング**: unit-of-work.md §4.1 では `lambda_api/` を「Unit 横串」と記載 → 本書で **Unit A PR で先行構築する**（横串 PR の所在不明確のため、Q-I10=A4）。後続 PR で必要なら独立 module への切り出しを検討
+- **Amplify Hosting / CodePipeline / ECR の所属**: unit-of-work.md §4.1 では `amplify/` / `lambda_api/` を「Unit 横串」と記載していたが、横串 PR タスク管理が計画上空白だったため、本書で **横串インフラを全て Unit A スコープに包含する** 方針に確定（Q-I14 / Q-I15）。これにより Unit A PR 単体で Frontend と API の auto deploy 環境まで構築可能
 
 ### 10.2 整合修正メモ
 
 本 PR では既存ドキュメントは変更しないが、Code Generation 完了後にレビューで以下の調整を検討:
 
 - `unit-interfaces.md` §3.3 の API path prefix 確認（`/api/...` で統一済み、PR #66）
-- `unit-of-work.md` §4.1 の `lambda_api/` 横串記述に「Unit A PR で先行構築」の脚注追加（任意）
+- `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築、横串改善 PR で将来切り出し」の脚注追加（任意）
