@@ -388,14 +388,24 @@ GitHub と AWS の接続を提供。Amplify と CodePipeline の両方が参照�
 
 #### 3.8.4 `aws_iam_role.amplify_ssr`
 
-Amplify Hosting の SSR Compute role。
+Amplify Hosting (WEB_COMPUTE) の SSR Compute role。
 
 | 設定 | 値 |
 |---|---|
 | `name` | `gp-${var.env}-amplify-ssr-role` |
 | `assume_role_policy` | `amplify.amazonaws.com` service principal |
+| 権限 | AWS managed policy `AWSAmplifyServerSideRendering` を attach |
 
-インラインポリシー: CloudWatch Logs 書込のみ。Amplify SSR が他 AWS サービスを呼ぶ必要は本 MVP では無し（Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由）。
+`AWSAmplifyServerSideRendering` は Amplify Hosting WEB_COMPUTE で SSR Lambda が
+deployment artifact (S3) 取得・SSM Parameter Store / Secrets Manager 参照・
+CloudWatch Logs 出力等を行うために必要な公式 managed policy。
+本 MVP では Amplify SSR が他 AWS サービスを直接呼ぶ業務ロジックは無いが
+(Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由)、Amplify Hosting
+の内部動作 (deployment / runtime) が同 policy を必須とするため attach する。
+
+NOTE: 設計の初稿では「インラインポリシーで CloudWatch Logs 書込のみ」としていたが、
+それでは Amplify Hosting WEB_COMPUTE の SSR が起動できないことが実装時に判明したため、
+公式要件に揃える形で managed policy 採用に変更した。
 
 #### 3.8.5 buildSpec（YAML 文字列を Terraform 内で）
 
