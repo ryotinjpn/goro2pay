@@ -1,4 +1,9 @@
 # AWS Provider + default_tags (Q-I11)
+#
+# region: locals.region (= "ap-northeast-1") と二重定義に見えるが、
+# provider の `region` は data source / variable の参照ができない
+# (provider 初期化が module 評価より前のため)。よって provider 側は
+# ハードコードのままとし、locals.region は module への変数注入だけに使う。
 
 provider "aws" {
   region = "ap-northeast-1"
