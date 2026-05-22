@@ -567,3 +567,35 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: AccessToken 採用反映完了、PR #69 再レビュー待ち
 
 ---
+
+## Infrastructure Design (Unit A) — back/ リネーム案を撤回 (PR #69 更新)
+**Timestamp**: 2026-05-22T06:00:00Z
+**User Inputs**:
+- amplify.yml の議論中 "frontのディレクトリ名ってinceptionフェーズで想定してたっけ？" → AI unit-of-work.md §4.1 で `web/` 確定済みを引用
+- "ごめんそれならapps/ │   ├── api/ # → 今回 PR で back/api/ にリネーム決定 これダメだ他の開発者が困る" → back/ 案撤回の判断
+- "yes" (撤回方針確定)
+
+**AI Response**: back/ リネーム案を撤回し、Inception 確定の apps/api/ / apps/scheduler/ に戻す。理由: unit-of-work.md §4.1 は他 Unit B/C/D/E との合意済みリポジトリ構造であり、Unit A の PR で勝手にリネームすると他 Unit 担当者の Functional Design / NFR Design ドキュメントとも矛盾するため。Wave 1 並列開発前提と不整合。
+
+修正内容:
+- NFR Design `logical-components.md` v1.3:
+  - LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ → apps/api/ に一括置換 (replace_all)
+  - 更新メモに「back/ リネーム撤回」追記
+
+- Infrastructure Design `infrastructure-design.md` v1.3:
+  - §2 ディレクトリ構造の back/ ブロックを apps/ に変更 (apps/api/ + apps/scheduler/ で並列)
+  - §3.9 CodeBuild の source.buildspec / buildspec.yml の docker build path を apps/api/ に修正
+  - §9 Code Generation 引き継ぎの apps/api/ 記述に統一
+  - §10.1 整合性メモから「back/ リネーム」を削除し「apps/api/ / apps/scheduler/ 表記を維持」に修正
+  - §10.2 整合修正メモから unit-of-work.md リネーム必須・各 Unit FD 修正必要の 2 項目を削除
+
+- Infrastructure Design `deployment-architecture.md` v1.3:
+  - §9.1 Code Generation 引き継ぎの back/api/ → apps/api/ 修正
+
+- Functional Design 3 ファイルは back/ 直接参照なしのため修正不要 (確認済み)
+- Plan ファイル auth-infrastructure-design-plan.md は back/ 参照なしのため修正不要
+
+横串インフラ Unit A 包含方針 (Q-I14/Q-I15) と BFF パターン採用 + AccessToken 統一は維持。本撤回は **ディレクトリ名表記のみ**の修正。
+**Context**: back/ 撤回反映完了、Inception §4.1 整合復帰、PR #69 再レビュー待ち
+
+---

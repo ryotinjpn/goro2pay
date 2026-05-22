@@ -1,9 +1,10 @@
 # Auth Unit — Infrastructure Design
 
-**Document Version**: 1.2
+**Document Version**: 1.3
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
-**Updated**: 2026-05-22 (BFF パターン採用 + back/ ディレクトリリネーム + API 認証を AccessToken に統一、cors_configuration を未設定化)
+**Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一、cors_configuration を未設定化)
+**Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持。他 Unit の合意済みリポジトリ構造尊重)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction
@@ -90,20 +91,22 @@ infra/
     └── bootstrap-ecr-initial.sh  # ECR 初回 image push (Code Generation)
 ```
 
-加えて、リポジトリルート直下の `back/` ディレクトリに API Lambda 関連の Go コードと Docker build 資材を配置:
+加えて、Inception unit-of-work.md §4.1 の確定構造に従い、リポジトリルート直下の `apps/` ディレクトリに API Lambda 関連の Go コードと Docker build 資材を配置:
 
 ```
-back/
-└── api/                          # API Lambda (Go + Gin + LWA)
-    ├── Dockerfile                # LWA + arm64 Go バイナリ build (Code Generation)
-    ├── buildspec.yml             # CodeBuild build 仕様 (Code Generation)
-    ├── go.mod
-    ├── main.go                   # Gin 起動 + 依存注入
-    └── internal/                 # Unit A〜E の実装パッケージ
-        ├── auth/
-        ├── logging/
-        ├── handlers/
-        └── (将来 Unit B/C/D/E が追加)
+apps/
+├── api/                          # API Lambda (Go + Gin + LWA)
+│   ├── Dockerfile                # LWA + arm64 Go バイナリ build (Code Generation)
+│   ├── buildspec.yml             # CodeBuild build 仕様 (Code Generation)
+│   ├── go.mod
+│   ├── main.go                   # Gin 起動 + 依存注入
+│   └── internal/                 # Unit A〜E の実装パッケージ
+│       ├── auth/
+│       ├── logging/
+│       ├── handlers/
+│       └── (将来 Unit B/C/D/E が追加)
+└── scheduler/                    # Scheduler Lambda (Go, aws-lambda-go zip、Unit B 着手時に追加)
+    └── (将来 Unit B 担当)
 ```
 
 `modules/auth/` の内訳は責務別にファイル分割し、1 ファイル ~100 行以内を目安。
@@ -439,7 +442,7 @@ API Lambda の CD パイプライン。
 | `environment.environment_variable.ECR_REPOSITORY_URI` | `aws_ecr_repository.api.repository_url` | — |
 | `environment.environment_variable.LAMBDA_FUNCTION_NAME` | `aws_lambda_function.api.function_name` | image 更新用 |
 | `source.type` | `CODEPIPELINE` | — |
-| `source.buildspec` | `back/api/buildspec.yml` | — |
+| `source.buildspec` | `apps/api/buildspec.yml` | — |
 | `logs_config.cloudwatch_logs.group_name` | `/aws/codebuild/gp-${var.env}-api-build` | — |
 
 #### 3.9.2 buildspec.yml（API Lambda 用）
@@ -455,7 +458,7 @@ phases:
   build:
     commands:
       - echo Building Docker image...
-      - docker buildx build --platform linux/arm64 -t $ECR_REPOSITORY_URI:$IMAGE_TAG -t $ECR_REPOSITORY_URI:latest -f back/api/Dockerfile back/api/
+      - docker buildx build --platform linux/arm64 -t $ECR_REPOSITORY_URI:$IMAGE_TAG -t $ECR_REPOSITORY_URI:latest -f apps/api/Dockerfile apps/api/
   post_build:
     commands:
       - echo Pushing Docker image...
@@ -652,7 +655,7 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 | 引き継ぎ先 | 内容 |
 |---|---|
-| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `infra/lambdas/api/Dockerfile` (LWA arm64) / `infra/lambdas/api/buildspec.yml` (CodeBuild) / `back/api/` の Go コード本体 / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
+| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `apps/api/Dockerfile` (LWA arm64) / `apps/api/buildspec.yml` (CodeBuild) / `apps/api/` の Go コード本体 (Gin + LWA + middleware + handlers) / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
 | **将来の横串改善 PR** | Auth module から `api_lambda.tf` / `amplify.tf` / `codepipeline.tf` / `ecr.tf` を独立 module へ切り出し（`lambda_api/` / `amplify/` / `cicd/`）。本 MVP では Auth module 内に集約 |
 
 ---
@@ -665,7 +668,7 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 - **API Lambda 構築タイミング**: unit-of-work.md §4.1 では `lambda_api/` を「Unit 横串」と記載 → 本書で **Unit A PR で先行構築する**（横串 PR の所在不明確のため、Q-I10=A4）。後続 PR で必要なら独立 module への切り出しを検討
 - **Amplify Hosting / CodePipeline / ECR の所属**: unit-of-work.md §4.1 では `amplify/` / `lambda_api/` を「Unit 横串」と記載していたが、横串 PR タスク管理が計画上空白だったため、本書で **横串インフラを全て Unit A スコープに包含する** 方針に確定（Q-I14 / Q-I15）。これにより Unit A PR 単体で Frontend と API の auto deploy 環境まで構築可能
 - **BFF パターン採用**: NEXT_PUBLIC_API_ENDPOINT でブラウザに API URL を露出する設計を取りやめ、`/api/*` パスは Next.js の catch-all Route Handler (`web/app/api/[...path]/route.ts`) が受けて API Gateway に proxy する BFF パターンを採用。`API_ENDPOINT` は server-only env、CORS allow_origins を Amplify ドメインだけに絞れる
-- **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を、本 PR 内で **`back/api/` / `back/scheduler/`** にリネーム（リポジトリルート直下の `back/` ディレクトリ）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
+- **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を維持（他 Unit B/C/D/E と合意済みのリポジトリ構造を尊重）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
 
 ### 10.2 整合修正メモ
 
@@ -673,5 +676,3 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 - `unit-interfaces.md` §3.3 の API path prefix 確認（`/api/...` で統一済み、PR #66）
 - `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築、横串改善 PR で将来切り出し」の脚注追加（任意）
-- `unit-of-work.md` §4.1 の Go ソース配置 `apps/api/` / `apps/scheduler/` を `back/api/` / `back/scheduler/` にリネーム（必須）
-- 各 Unit (B/C/D/E) の Functional Design で `apps/api/internal/<unit>/` 参照を `back/api/internal/<unit>/` に修正（各 Unit 担当者が自 Unit Construction 着手時に対応）

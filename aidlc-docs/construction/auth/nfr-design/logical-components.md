@@ -1,9 +1,10 @@
 # Auth Unit — Logical Components
 
-**Document Version**: 1.2
+**Document Version**: 1.3
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (BFF パターン採用: LC-AUTH-09 を Browser/Server 二段化、新規 LC-AUTH-18 BffProxyRouteHandler 追加)
 **Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、Authorization: Bearer ヘッダで透過、X-Id-Token ヘッダ廃止、LC-AUTH-09 / LC-AUTH-18 / LC-AUTH-01 の責務を更新)
+**Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ 表記に戻す。他 Unit の合意済みリポジトリ構造を尊重)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: NFR Design / Construction
@@ -46,7 +47,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/auth/middleware.go`（仮） |
+| 配置 | `apps/api/internal/auth/middleware.go`（仮） |
 | 公開 IF | [unit-interfaces.md §2.1](../../interfaces/unit-interfaces.md) — `AttachUserID() gin.HandlerFunc` / `UserIDFromContext(c) (string, error)` |
 | 入力 | `gin.Context`（API Gateway → Lambda 経由、`requestContext.authorizer.claims` を保持、AccessToken の claims） |
 | 出力 | `c.Set("userId", sub)`<br>※ AccessToken の claims に `email` がないため、emailHash は middleware では生成しない（P-SEC-02、認証前 handler 内でのみ生成） |
@@ -57,7 +58,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/auth/email.go`（仮） |
+| 配置 | `apps/api/internal/auth/email.go`（仮） |
 | 公開 IF | `Normalize(email string) string` |
 | 振る舞い | 前後 trim → `strings.ToLower(...)` |
 | テスト | PBT 対象（A-NFR-TEST-02 / P-TEST-01）: べき等性 / 大文字小文字不問 |
@@ -66,7 +67,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/auth/email.go`（仮、Normalizer と同パッケージ） |
+| 配置 | `apps/api/internal/auth/email.go`（仮、Normalizer と同パッケージ） |
 | 公開 IF | `Hash(email string) string` |
 | 振る舞い | `hex.EncodeToString(sha256.Sum256([]byte(Normalize(email))))` |
 | テスト | PBT 対象: 長さ 64 / Normalize 整合 / 衝突なし |
@@ -75,7 +76,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/logging/middleware.go`（仮） |
+| 配置 | `apps/api/internal/logging/middleware.go`（仮） |
 | 公開 IF | `RequestContext() gin.HandlerFunc` |
 | 振る舞い | リクエスト受信時に下記を `gin.Context` 経由で内部 context へ載せる:<br>- `requestId`（API Gateway / Lambda が付与した値、なければ ULID 生成）<br>- `traceId`（X-Ray header `X-Amzn-Trace-Id` から、なければ null）<br>- `userAgent`（リクエストヘッダ） |
 | 注意 | `userId` / `emailHash` は別 middleware (LC-AUTH-01) が後で書き込む |
@@ -85,7 +86,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/logging/handler.go`（仮） |
+| 配置 | `apps/api/internal/logging/handler.go`（仮） |
 | 公開 IF | `New(w io.Writer, level slog.Level) slog.Handler` |
 | 振る舞い | `Handle(ctx, record)` で context から下記キーを抽出 → record に attrs 追加:<br>- `requestId`, `traceId`, `userId`, `userAgent`, `emailHash`, `action`<br>内部実装は `slog.NewJSONHandler` に委譲 |
 | 出力先 | `os.Stdout`（CloudWatch Logs に流れる） |
@@ -95,7 +96,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 配置 | `back/api/internal/handlers/logout.go`（仮） |
+| 配置 | `apps/api/internal/handlers/logout.go`（仮） |
 | 公開 IF | `Logout(c *gin.Context)` |
 | 振る舞い | `userId` を context から取得 → `slog.InfoContext(ctx, "user logout", "action", "logout")` → `c.Status(204)` |
 | 認証 | 必須（middleware で済んでいる前提） |

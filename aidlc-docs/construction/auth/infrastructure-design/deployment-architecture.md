@@ -1,9 +1,10 @@
 # Auth Unit — Deployment Architecture
 
-**Document Version**: 1.2
+**Document Version**: 1.3
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild/ECR を Unit A スコープに追加)
-**Updated**: 2026-05-22 (BFF パターン採用 + back/ ディレクトリリネーム + API 認証を AccessToken に統一)
+**Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一)
+**Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持)
 **Unit**: A (`auth`)
 **Stage**: Infrastructure Design / Construction
 **Predecessors**: [infrastructure-design.md](./infrastructure-design.md)
@@ -576,7 +577,7 @@ When productization is decided, the following changes are required:
 ### 9.1 Code Generation で実装するもの
 
 1. `infra/lambdas/pre-signup/index.js` (5 行 auto-confirm)
-2. `back/api/` の Go コード (Gin + LWA + Logout handler + middleware) ※ Code 配置はリポジトリルート直下の `back/` ディレクトリを採用 (unit-of-work.md §4.1 の `apps/api/` 表記は本 PR 内で `back/api/` にリネーム決定、Code Generation 完了後に Inception ドキュメントへ別途反映)
+2. `apps/api/` の Go コード (Gin + LWA + Logout handler + middleware) ※ Code 配置は unit-of-work.md §4.1 確定の `apps/api/` をそのまま採用 (他 Unit B/C/D/E と合意済みのリポジトリ構造)
 3. `infra/lambdas/api/Dockerfile` (LWA + arm64 Go バイナリ build)
 4. `infra/lambdas/api/buildspec.yml` (CodeBuild: docker build + ECR push + lambda update)
 5. `web/` の Next.js Frontend 雛形（Auth Unit 担当ページ部分）
