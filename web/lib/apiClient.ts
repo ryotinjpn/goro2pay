@@ -47,8 +47,14 @@ export const apiClient = {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
 
-    const res = await fetch(input.path, {
-      ...input,
+    // path は RequestInit に存在しないキー。fetch 第 2 引数に紛れ込ませると
+    // 仕様外プロパティの混入になり、strict な TypeScript 設定で破綻するため、
+    // destructure で path を切り出してから残りを渡す。headers は新しい
+    // Headers インスタンスを優先するので元の headers も除外しておく。
+    const { path, headers: _omit, ...init } = input;
+    void _omit;
+    const res = await fetch(path, {
+      ...init,
       headers,
     });
 
