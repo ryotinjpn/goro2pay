@@ -7,8 +7,9 @@ import (
 )
 
 // ContextAwareSlogHandler は context から指定キー (requestId, traceId, userId,
-// userAgent, emailHash, action) を抽出して record に attrs を追加する slog.Handler。
+// userAgent, email_hash, action) を抽出して record に attrs を追加する slog.Handler。
 // NFR Design P-OBS-01 / LC-AUTH-05 に従う。
+// email_hash のみ snake_case (A-NFR-OBS-01 表に従う)、他は camelCase。
 type ContextAwareSlogHandler struct {
 	inner slog.Handler
 }

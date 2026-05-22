@@ -56,8 +56,8 @@ func TestContextAwareSlogHandler_OmitsMissingKeys(t *testing.T) {
 
 	assert.Equal(t, "req-1", entry["requestId"])
 	assert.Equal(t, "sub-1", entry["userId"])
-	_, hasEmailHash := entry["emailHash"]
-	assert.False(t, hasEmailHash, "emailHash should be absent when not set in context")
+	_, hasEmailHash := entry["email_hash"]
+	assert.False(t, hasEmailHash, "email_hash should be absent when not set in context")
 }
 
 func TestContextAwareSlogHandler_RespectsLogLevel(t *testing.T) {

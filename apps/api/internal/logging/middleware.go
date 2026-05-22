@@ -18,7 +18,7 @@ const (
 	CtxKeyTraceID   ctxKey = "traceId"
 	CtxKeyUserAgent ctxKey = "userAgent"
 	CtxKeyUserID    ctxKey = "userId"
-	CtxKeyEmailHash ctxKey = "emailHash" // 認証前 endpoint 限定 (P-SEC-02)
+	CtxKeyEmailHash ctxKey = "email_hash" // 認証前 endpoint 限定 (P-SEC-02 / A-NFR-OBS-01 snake_case)
 	CtxKeyAction    ctxKey = "action"
 )
 
