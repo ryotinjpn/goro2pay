@@ -6,20 +6,30 @@
 
 import { NextRequest } from "next/server";
 
-export async function GET(request: NextRequest, ctx: { params: { path: string[] } }) {
-  return proxy(request, ctx.params.path);
+// Next.js 15 の breaking change により、Route Handler の `context.params` は
+// Promise<{...}> 型になった。同期アクセスは型エラー & ランタイム警告になる。
+// 参考: https://nextjs.org/docs/app/api-reference/file-conventions/route#context-optional
+type RouteCtx = { params: Promise<{ path: string[] }> };
+
+export async function GET(request: NextRequest, ctx: RouteCtx) {
+  const { path } = await ctx.params;
+  return proxy(request, path);
 }
-export async function POST(request: NextRequest, ctx: { params: { path: string[] } }) {
-  return proxy(request, ctx.params.path);
+export async function POST(request: NextRequest, ctx: RouteCtx) {
+  const { path } = await ctx.params;
+  return proxy(request, path);
 }
-export async function PUT(request: NextRequest, ctx: { params: { path: string[] } }) {
-  return proxy(request, ctx.params.path);
+export async function PUT(request: NextRequest, ctx: RouteCtx) {
+  const { path } = await ctx.params;
+  return proxy(request, path);
 }
-export async function DELETE(request: NextRequest, ctx: { params: { path: string[] } }) {
-  return proxy(request, ctx.params.path);
+export async function DELETE(request: NextRequest, ctx: RouteCtx) {
+  const { path } = await ctx.params;
+  return proxy(request, path);
 }
-export async function PATCH(request: NextRequest, ctx: { params: { path: string[] } }) {
-  return proxy(request, ctx.params.path);
+export async function PATCH(request: NextRequest, ctx: RouteCtx) {
+  const { path } = await ctx.params;
+  return proxy(request, path);
 }
 
 async function proxy(request: NextRequest, pathSegments: string[]): Promise<Response> {
@@ -33,19 +43,36 @@ async function proxy(request: NextRequest, pathSegments: string[]): Promise<Resp
     return new Response("Missing Authorization header", { status: 401 });
   }
 
+  // 上流に渡すヘッダは Authorization 必須、Content-Type は body がある場合のみ。
+  // body 無しに application/json をデフォで付けると fetch 仕様 (RFC 7231) と
+  // 整合せず一部の上流が拒否する場合があるため省略する。
+  const upstreamHeaders: HeadersInit = { Authorization: authHeader };
+  const contentType = request.headers.get("Content-Type");
+  if (contentType) {
+    upstreamHeaders["Content-Type"] = contentType;
+  }
+
   const upstreamUrl = `${apiEndpoint}/api/${pathSegments.join("/")}${request.nextUrl.search}`;
   const upstream = await fetch(upstreamUrl, {
     method: request.method,
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": request.headers.get("Content-Type") ?? "application/json",
-    },
+    headers: upstreamHeaders,
     body: ["GET", "HEAD"].includes(request.method) ? undefined : await request.text(),
   });
 
-  // 上流レスポンスをそのまま透過 (401 を含む全 status)
+  // ホップバイホップ系のヘッダを除去してからクライアントへ転送する。
+  // - Content-Encoding: undici fetch は gzip/br を自動 decode するため、
+  //   元の encoding ヘッダを残すとブラウザが二重 decode しようとして
+  //   ERR_CONTENT_DECODING_FAILED で失敗する。
+  // - Content-Length / Transfer-Encoding: stream を再パイプするため
+  //   再計算が必要。Next.js / Node が再付与する。
+  // - Connection: HTTP/1.1 hop-by-hop ヘッダ。proxy 越しに残してはいけない。
+  const responseHeaders = new Headers(upstream.headers);
+  for (const h of ["content-encoding", "content-length", "transfer-encoding", "connection"]) {
+    responseHeaders.delete(h);
+  }
+
   return new Response(upstream.body, {
     status: upstream.status,
-    headers: upstream.headers,
+    headers: responseHeaders,
   });
 }
