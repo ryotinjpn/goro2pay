@@ -509,6 +509,14 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 ---
 
+## NFR Design (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Input**: "mergeしました　次いきましょう　次はこれですね https://github.com/ryotinjpn/goro2pay/issues/26"
+**AI Response**: `docs/construction-budget-nfr-design` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-design-plan.md` を作成。Q-D1〜Q-D8（ConditionalCheckFailedException処理 / SetBudget部分失敗リカバリ / 残高ローディング状態 / 残高枯渇演出 / ログライブラリ / PBTフレームワーク / invalidateパターン / ResetAllエラー収集）の 8 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Design Plan 承認待ち
+
+---
+
 ## Infrastructure Design (Unit A) — Plan 作成
 **Timestamp**: 2026-05-22T01:00:00Z
 **User Input**: "マージした次に進んで"
@@ -679,5 +687,19 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 横串インフラ Unit A 包含方針 (Q-I14/Q-I15) と BFF パターン採用 + AccessToken 統一は維持。本撤回は **ディレクトリ名表記のみ**の修正。
 **Context**: back/ 撤回反映完了、Inception §4.1 整合復帰、PR #69 再レビュー待ち
+
+---
+
+## NFR Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T03:10:00Z
+**User Inputs**:
+- "既存ユニットとの矛盾点をもう一度確認して"
+**AI Response**: Unit A との整合確認で 2 件を明記必須と判断（LC-AUTH-09 再利用 / Unit C invalidate 依存）。以下を生成・更新:
+- `aidlc-docs/construction/budget/nfr-design/nfr-design-patterns.md` (新規): P-REL-01〜03 / P-PERF-01 / P-OBS-01〜02 / P-TEST-01 / P-DEG-01〜03 の 10 パターン。`log/slog` + `ContextAwareSlogHandler` (LC-AUTH-05) 再利用、`gopter` PBT（Unit A と統一）を明記。
+- `aidlc-docs/construction/budget/nfr-design/logical-components.md` (新規): LC-BUDGET-01〜12 定義。Unit A 再利用コンポーネント（LC-AUTH-05 / LC-AUTH-09 / LC-AUTH-18）を §4 に明記。Unit C の `invalidateQueries(['balance'])` 依存を LC-BUDGET-08 に記載。
+- `aidlc-docs/construction/interfaces/unit-interfaces.md` (更新): §9.1「クロスユニット TanStack Query key 契約」追加（`['balance']` query key の Unit B/C 間契約）、§12「共有 Frontend インフラ」追加（LC-AUTH-09 / LC-AUTH-18 の全 Unit 共有を明記）。
+- `aidlc-docs/aidlc-state.md`: Unit B NFR Design を `[x]` に更新。
+- `budget-nfr-design-plan.md`: チェックボックス更新。
+**Context**: NFR Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
 
 ---
