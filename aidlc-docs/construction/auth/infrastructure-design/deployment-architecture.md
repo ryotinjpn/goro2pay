@@ -25,9 +25,14 @@
    │ ブラウザ    │ ─1──┼──┼►│ Amplify Hosting (gp-dev-web)            │ │          │
    │ (太郎)     │      │  │ │  Next.js App Router (SSR)               │ │          │
    └─────┬──────┘      │  │ │  branch: develop                        │ │          │
-         │              │  │ │  env: NEXT_PUBLIC_USER_POOL_ID,         │ │          │
-         │              │  │ │       NEXT_PUBLIC_USER_POOL_CLIENT_ID,  │ │          │
-         │              │  │ │       NEXT_PUBLIC_API_ENDPOINT          │ │          │
+         │              │  │ │  env (Browser 露出):                    │ │          │
+         │              │  │ │   NEXT_PUBLIC_USER_POOL_ID              │ │          │
+         │              │  │ │   NEXT_PUBLIC_USER_POOL_CLIENT_ID       │ │          │
+         │              │  │ │   NEXT_PUBLIC_AWS_REGION                │ │          │
+         │              │  │ │  env (server-only, BFF):                │ │          │
+         │              │  │ │   API_ENDPOINT                          │ │          │
+         │              │  │ │  catch-all Route Handler:               │ │          │
+         │              │  │ │   /api/[...path]/route.ts → API GW      │ │          │
          │              │  │ └─────────────────────────────────────────┘ │          │
          │              │  │                                              │          │
          │ 2: Sign-up   │  │ ┌─────────────────────────────────────────┐ │          │
@@ -124,9 +129,16 @@
 
 凡例:
    1 = ブラウザが Amplify Hosting から Frontend を取得
-   2 = Cognito 認証フロー (Amplify Auth ライブラリ経由)
-   3 = 業務 API 呼出 (IdToken 付与)
+   2 = Cognito 認証フロー (Amplify Auth ライブラリ経由、ブラウザ → Cognito 直接)
+   3 = 業務 API 呼出 (BFF パターン: ブラウザ → /api/* (同一オリジン)
+       → Next.js catch-all Route Handler が server-only env API_ENDPOINT
+       で API Gateway に proxy → API Lambda)
    4 = GitHub push → Amplify auto build (Frontend) + CodePipeline (API Lambda CD)
+
+BFF パターンの利点:
+   - API Gateway URL がブラウザバンドルに露出しない (server-only env)
+   - CORS 設定不要 (ブラウザ ↔ Next.js は同一オリジン)
+   - Authorization ヘッダ付与を Next.js Server で一元化
 ```
 
 ### 1.2 後続 PR で追加されるリソース（参考）
@@ -493,12 +505,24 @@ When productization is decided, the following changes are required:
 | `LOG_LEVEL` | `info` (default) / `debug` (デバッグ時) | slog Handler の Level |
 | `AWS_LWA_PORT` | `8080` (固定) | LWA 標準 |
 
-### 6.2 シークレット
+### 6.2 Amplify Hosting (Next.js Server) 環境変数（BFF パターン整合）
+
+| 変数 | 値の出所 | スコープ | 用途 |
+|---|---|---|---|
+| `NEXT_PUBLIC_USER_POOL_ID` | `aws_cognito_user_pool.main.id` | **Browser 露出 OK** | Amplify Auth がブラウザで利用 |
+| `NEXT_PUBLIC_USER_POOL_CLIENT_ID` | `aws_cognito_user_pool_client.web.id` | **Browser 露出 OK** | 同上 |
+| `NEXT_PUBLIC_AWS_REGION` | `ap-northeast-1` | **Browser 露出 OK** | Amplify Auth がブラウザで利用 |
+| `API_ENDPOINT` | `aws_apigatewayv2_api.main.api_endpoint` | **server-only** (NEXT_PUBLIC_ なし) | Next.js catch-all Route Handler が proxy 先として使用 |
+
+**重要**: `API_ENDPOINT` は `NEXT_PUBLIC_` プレフィックスを**付けない**。これにより Next.js のビルド時にブラウザバンドルから除外され、API Gateway URL が公開されない。catch-all Route Handler (`web/app/api/[...path]/route.ts`) のみが `process.env.API_ENDPOINT` でアクセス可能。
+
+### 6.3 シークレット
 
 本 Unit A は **保護対象シークレットを扱わない**:
 - パスワードは Cognito 内部、アプリには到達しない
 - IdToken はクライアント側のみ、Lambda は claims を読むだけ
 - AWS API キー類は IAM Role 経由（明示的な Secret は不要）
+- `API_ENDPOINT` は機密ではないが、ブラウザ露出を避けることで攻撃面を縮小する目的（BFF パターン）
 
 そのため AWS Secrets Manager / Parameter Store の利用は **本 Unit A では不要**。
 
@@ -551,7 +575,7 @@ When productization is decided, the following changes are required:
 ### 9.1 Code Generation で実装するもの
 
 1. `infra/lambdas/pre-signup/index.js` (5 行 auto-confirm)
-2. `apps/api/` の Go コード (Gin + LWA + Logout handler + middleware) ※ Code 配置は unit-of-work.md §4.1 の `apps/api/` を採用
+2. `back/api/` の Go コード (Gin + LWA + Logout handler + middleware) ※ Code 配置はリポジトリルート直下の `back/` ディレクトリを採用 (unit-of-work.md §4.1 の `apps/api/` 表記は本 PR 内で `back/api/` にリネーム決定、Code Generation 完了後に Inception ドキュメントへ別途反映)
 3. `infra/lambdas/api/Dockerfile` (LWA + arm64 Go バイナリ build)
 4. `infra/lambdas/api/buildspec.yml` (CodeBuild: docker build + ECR push + lambda update)
 5. `web/` の Next.js Frontend 雛形（Auth Unit 担当ページ部分）

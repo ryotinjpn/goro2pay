@@ -81,15 +81,28 @@ infra/
 │       ├── variables.tf
 │       └── outputs.tf
 ├── lambdas/
-│   ├── pre-signup/
-│   │   └── index.js              # 5 行 auto-confirm 実装 (Code Generation)
-│   └── api/
-│       ├── Dockerfile            # LWA + arm64 Go バイナリ (Code Generation)
-│       ├── buildspec.yml         # CodeBuild 用 build 仕様 (Code Generation)
-│       └── (Go ソースは apps/api/ 側、ビルド時に参照)
+│   └── pre-signup/
+│       └── index.js              # 5 行 auto-confirm 実装 (Code Generation)
+│                                  # ※ archive_file の source_dir 都合で infra/ 配下
 └── scripts/
     ├── bootstrap-backend.sh      # S3 tfstate bucket 作成 (Code Generation)
     └── bootstrap-ecr-initial.sh  # ECR 初回 image push (Code Generation)
+```
+
+加えて、リポジトリルート直下の `back/` ディレクトリに API Lambda 関連の Go コードと Docker build 資材を配置:
+
+```
+back/
+└── api/                          # API Lambda (Go + Gin + LWA)
+    ├── Dockerfile                # LWA + arm64 Go バイナリ build (Code Generation)
+    ├── buildspec.yml             # CodeBuild build 仕様 (Code Generation)
+    ├── go.mod
+    ├── main.go                   # Gin 起動 + 依存注入
+    └── internal/                 # Unit A〜E の実装パッケージ
+        ├── auth/
+        ├── logging/
+        ├── handlers/
+        └── (将来 Unit B/C/D/E が追加)
 ```
 
 `modules/auth/` の内訳は責務別にファイル分割し、1 ファイル ~100 行以内を目安。
@@ -220,9 +233,9 @@ API Lambda の Docker image を保存。
 |---|---|
 | `name` | `gp-${var.env}-api` |
 | `protocol_type` | `HTTP` |
-| `cors_configuration.allow_origins` | `["*"]` (本 MVP は緩く、Frontend ドメインに絞るのは本番化時) |
-| `cors_configuration.allow_methods` | `["GET", "POST", "OPTIONS"]` |
-| `cors_configuration.allow_headers` | `["Authorization", "Content-Type"]` |
+| `cors_configuration` | **未設定** (BFF パターン採用、API Gateway を直接ブラウザから叩かないため CORS 不要) |
+
+**Note**: BFF パターンにより、ブラウザは `/api/*` を Next.js Server (Amplify Hosting) 経由で呼び出す。API Gateway へのリクエストは常に server-to-server となり、CORS preflight は発生しない。本番化時に直叩きユースケースが出てきたら CORS 設定を追加する。
 
 #### 3.4.2 `aws_apigatewayv2_authorizer.cognito`
 
@@ -358,12 +371,16 @@ GitHub と AWS の接続を提供。Amplify と CodePipeline の両方が参照�
 | `enable_auto_build` | true |
 | `framework` | `Next.js - SSR` |
 | `stage` | `DEVELOPMENT` |
-| `environment_variables.NEXT_PUBLIC_USER_POOL_ID` | `aws_cognito_user_pool.main.id` |
-| `environment_variables.NEXT_PUBLIC_USER_POOL_CLIENT_ID` | `aws_cognito_user_pool_client.web.id` |
-| `environment_variables.NEXT_PUBLIC_API_ENDPOINT` | `aws_apigatewayv2_api.main.api_endpoint` |
-| `environment_variables.NEXT_PUBLIC_AWS_REGION` | `ap-northeast-1` |
+| `environment_variables.NEXT_PUBLIC_USER_POOL_ID` | `aws_cognito_user_pool.main.id` | Browser に露出 OK (Amplify Auth が利用) |
+| `environment_variables.NEXT_PUBLIC_USER_POOL_CLIENT_ID` | `aws_cognito_user_pool_client.web.id` | 同上 |
+| `environment_variables.NEXT_PUBLIC_AWS_REGION` | `ap-northeast-1` | 同上 |
+| `environment_variables.API_ENDPOINT` | `aws_apigatewayv2_api.main.api_endpoint` | **server-only**（NEXT_PUBLIC_ なし、catch-all Route Handler が proxy 先として使用） |
 
 このブランチへの GitHub push が auto deploy トリガとなる。
+
+**env var 命名ポリシー** (BFF パターン整合):
+- `NEXT_PUBLIC_*` → ブラウザバンドルに含まれて OK な値（Cognito User Pool ID / Client ID は public な情報、Amplify Auth がブラウザで利用するため必須）
+- prefix なし → server-only（Next.js Server からのみアクセス可、ブラウザバンドル除外）。`API_ENDPOINT` を秘匿することで API Gateway URL がブラウザに露出しない
 
 #### 3.8.4 `aws_iam_role.amplify_ssr`
 
@@ -421,7 +438,7 @@ API Lambda の CD パイプライン。
 | `environment.environment_variable.ECR_REPOSITORY_URI` | `aws_ecr_repository.api.repository_url` | — |
 | `environment.environment_variable.LAMBDA_FUNCTION_NAME` | `aws_lambda_function.api.function_name` | image 更新用 |
 | `source.type` | `CODEPIPELINE` | — |
-| `source.buildspec` | `infra/lambdas/api/buildspec.yml` | — |
+| `source.buildspec` | `back/api/buildspec.yml` | — |
 | `logs_config.cloudwatch_logs.group_name` | `/aws/codebuild/gp-${var.env}-api-build` | — |
 
 #### 3.9.2 buildspec.yml（API Lambda 用）
@@ -437,7 +454,7 @@ phases:
   build:
     commands:
       - echo Building Docker image...
-      - docker buildx build --platform linux/arm64 -t $ECR_REPOSITORY_URI:$IMAGE_TAG -t $ECR_REPOSITORY_URI:latest -f infra/lambdas/api/Dockerfile .
+      - docker buildx build --platform linux/arm64 -t $ECR_REPOSITORY_URI:$IMAGE_TAG -t $ECR_REPOSITORY_URI:latest -f back/api/Dockerfile back/api/
   post_build:
     commands:
       - echo Pushing Docker image...
@@ -634,7 +651,7 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 | 引き継ぎ先 | 内容 |
 |---|---|
-| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `infra/lambdas/api/Dockerfile` (LWA arm64) / `infra/lambdas/api/buildspec.yml` (CodeBuild) / `apps/api/` の Go コード本体 / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
+| **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `infra/lambdas/api/Dockerfile` (LWA arm64) / `infra/lambdas/api/buildspec.yml` (CodeBuild) / `back/api/` の Go コード本体 / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
 | **将来の横串改善 PR** | Auth module から `api_lambda.tf` / `amplify.tf` / `codepipeline.tf` / `ecr.tf` を独立 module へ切り出し（`lambda_api/` / `amplify/` / `cicd/`）。本 MVP では Auth module 内に集約 |
 
 ---
@@ -646,6 +663,8 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 - **API Gateway 種類**: 既存ドキュメント「REST」表記 → 本書で **HTTP API** に変更（Q-I2=B）。`unit-interfaces.md` §3.3 の「path」表記は HTTP API でも同じ動作。`A-NFR-SEC-04 Stage Throttling` は HTTP API では default_route_settings として表現される
 - **API Lambda 構築タイミング**: unit-of-work.md §4.1 では `lambda_api/` を「Unit 横串」と記載 → 本書で **Unit A PR で先行構築する**（横串 PR の所在不明確のため、Q-I10=A4）。後続 PR で必要なら独立 module への切り出しを検討
 - **Amplify Hosting / CodePipeline / ECR の所属**: unit-of-work.md §4.1 では `amplify/` / `lambda_api/` を「Unit 横串」と記載していたが、横串 PR タスク管理が計画上空白だったため、本書で **横串インフラを全て Unit A スコープに包含する** 方針に確定（Q-I14 / Q-I15）。これにより Unit A PR 単体で Frontend と API の auto deploy 環境まで構築可能
+- **BFF パターン採用**: NEXT_PUBLIC_API_ENDPOINT でブラウザに API URL を露出する設計を取りやめ、`/api/*` パスは Next.js の catch-all Route Handler (`web/app/api/[...path]/route.ts`) が受けて API Gateway に proxy する BFF パターンを採用。`API_ENDPOINT` は server-only env、CORS allow_origins を Amplify ドメインだけに絞れる
+- **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を、本 PR 内で **`back/api/` / `back/scheduler/`** にリネーム（リポジトリルート直下の `back/` ディレクトリ）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
 
 ### 10.2 整合修正メモ
 
@@ -653,3 +672,5 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 
 - `unit-interfaces.md` §3.3 の API path prefix 確認（`/api/...` で統一済み、PR #66）
 - `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築、横串改善 PR で将来切り出し」の脚注追加（任意）
+- `unit-of-work.md` §4.1 の Go ソース配置 `apps/api/` / `apps/scheduler/` を `back/api/` / `back/scheduler/` にリネーム（必須）
+- 各 Unit (B/C/D/E) の Functional Design で `apps/api/internal/<unit>/` 参照を `back/api/internal/<unit>/` に修正（各 Unit 担当者が自 Unit Construction 着手時に対応）
