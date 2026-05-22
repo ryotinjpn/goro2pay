@@ -56,6 +56,11 @@ function mapAmplifyErrorToCode(err: unknown): AuthErrorCode {
       return "RATE_LIMIT_EXCEEDED";
     case "NetworkError":
       return "NETWORK_ERROR";
+    case "UserAlreadyAuthenticatedException":
+      // 既ログイン状態のまま signUp / signIn を再度呼んだケース。
+      // 呼出側の signup / login が事前に signOut を試みているので
+      // 通常は到達しないが、競合状態の保険として明示的に分類する。
+      return "UNKNOWN";
     default:
       return "UNKNOWN";
   }
@@ -103,6 +108,9 @@ export function useAuth(): UseAuthReturn {
 
   const signup = useCallback(async (email: string, password: string) => {
     const normalized = normalizeEmail(email);
+    // 既ログイン状態のまま signUp を呼ぶと UserAlreadyAuthenticatedException が
+    // 飛ぶため、念のため事前に signOut を試みる (失敗しても無視)。
+    await amplifySignOut().catch(() => undefined);
     try {
       const result = await amplifySignUp({
         username: normalized,
@@ -126,6 +134,8 @@ export function useAuth(): UseAuthReturn {
 
   const login = useCallback(async (email: string, password: string) => {
     const normalized = normalizeEmail(email);
+    // signup と同じ理由で signOut を先に試みる。
+    await amplifySignOut().catch(() => undefined);
     try {
       await amplifySignIn({ username: normalized, password });
       await refreshSession();
