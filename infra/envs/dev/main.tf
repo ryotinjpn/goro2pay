@@ -29,13 +29,22 @@ module "lambda_api" {
   source                      = "../../modules/lambda_api"
   env                         = local.env
   region                      = local.region
-  api_gateway_execution_arn   = module.api_gateway.api_execution_arn
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
   codestar_connection_arn     = aws_codestarconnections_connection.github.arn
   github_owner                = local.github_owner
   github_repo_name            = local.github_repo
   github_branch               = local.github_branch
+}
+
+# API Gateway → API Lambda invoke 許可
+# 両 module の output を必要とするため、循環依存を避けるため envs 側に置く。
+resource "aws_lambda_permission" "apigw_invoke_api" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_api.api_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.api_gateway.api_execution_arn}/*/*"
 }
 
 # Amplify Hosting (Unit 横串、Frontend 配信)

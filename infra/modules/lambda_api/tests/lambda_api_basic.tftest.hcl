@@ -3,7 +3,6 @@ mock_provider "aws" {}
 variables {
   env                         = "dev"
   region                      = "ap-northeast-1"
-  api_gateway_execution_arn   = "arn:aws:execute-api:ap-northeast-1:000000000000:abcdef"
   cognito_user_pool_id        = "ap-northeast-1_TESTPOOL"
   cognito_user_pool_client_id = "test-client-id"
   codestar_connection_arn     = "arn:aws:codestar-connections:ap-northeast-1:000000000000:connection/abcd"

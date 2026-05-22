@@ -26,14 +26,11 @@ resource "aws_lambda_function" "api" {
   }
 }
 
-# API Gateway → API Lambda invoke 許可
-resource "aws_lambda_permission" "apigw_invoke_api" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.api.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${var.api_gateway_execution_arn}/*/*"
-}
+# 注意: API Gateway → API Lambda の invoke 許可 (aws_lambda_permission) は
+# envs/dev/main.tf 側で作成する。本 module で持つと
+# api_gateway.execution_arn → lambda_api、lambda_api.function_name → api_gateway
+# の双方向依存が発生して module グラフが循環するため、permission resource は
+# 「両 module の output を組み合わせる envs 側」に置く。
 
 resource "aws_cloudwatch_log_group" "api" {
   name              = "/aws/lambda/${local.prefix}-api-fn"

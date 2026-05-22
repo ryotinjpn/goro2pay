@@ -8,12 +8,6 @@ variable "region" {
   description = "AWS Region (CodeBuild の AWS_DEFAULT_REGION env に注入)"
 }
 
-# API Gateway 連携 (lambda_permission に必要)
-variable "api_gateway_execution_arn" {
-  type        = string
-  description = "API Gateway execution ARN (api_gateway module の output)"
-}
-
 # Cognito 連携 (API Lambda env として注入)
 variable "cognito_user_pool_id" {
   type        = string
