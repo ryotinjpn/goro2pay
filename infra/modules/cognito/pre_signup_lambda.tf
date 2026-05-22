@@ -19,12 +19,6 @@ resource "aws_lambda_function" "pre_signup" {
 
   memory_size = 128
   timeout     = 5
-
-  environment {
-    variables = {
-      LOG_LEVEL = "info"
-    }
-  }
 }
 
 resource "aws_cloudwatch_log_group" "pre_signup" {
