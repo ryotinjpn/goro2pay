@@ -240,13 +240,40 @@ MVP / dev 環境想定なら A、本番化時に B に切替。
 
 ---
 
+### Q-I14 (追加): AWS Amplify Hosting のデプロイソース連携
+
+横串インフラを Unit A 担当方針に伴い追加。Frontend のホスティングと CD 経路。
+
+| 案 | 内容 |
+|---|---|
+| A | **GitHub 連携 (auto deploy from main/develop)**: Amplify Hosting の標準パターン、CodeStar Connections / GitHub App 経由 |
+| B | **手動デプロイ (Manual deploy)**: zip / Build Output を手動アップロード、Terraform `aws_amplify_app` のみ |
+| C | **Webhook トリガだけ設定**: GitHub Actions 等から Amplify Webhook を叩く |
+
+[Answer]: **A**（GitHub 連携 auto deploy）。develop ブランチへの push で自動デプロイ、CodeStar Connection 経由。Personal Access Token は使わず GitHub App 連携 / CodeStar Connection を採用。
+
+### Q-I15 (追加): API Lambda の CD 戦略
+
+API Lambda の image 更新フロー。Pre Sign-up Lambda は archive_file + terraform apply（暗黙的に手動）のまま据え置き。
+
+| 案 | 内容 |
+|---|---|
+| A | **手動デプロイ**: ECR push + terraform apply、Frontend の自動デプロイと不整合 |
+| B | **GitHub Actions で ECR build/push + terraform apply**: フル自動、IAM OIDC 設定必要 |
+| C | **ECR push のみ自動、terraform 手動**: Lambda image_uri 更新は update_function_code |
+| D | **AWS CodePipeline + CodeBuild**: AWS ネイティブ CD、buildspec.yml + IAM Role |
+
+[Answer]: **D**（CodePipeline + CodeBuild）。推奨構成: Source (GitHub via CodeStar Connection) → Build (CodeBuild Docker build → ECR push + `aws lambda update-function-code --image-uri`)。Terraform 側 `aws_lambda_function.image_uri` は `lifecycle.ignore_changes = ["image_uri"]` で CD を妨げない。Frontend (Q-I14=A) との CD 整合性を確保、AWS ネイティブで Terraform 内完結。Pre Sign-up Lambda は archive_file 方式のまま手動 (terraform apply) 運用。
+
+---
+
 ## 5. 想定外の論点（後続ステージへの引き継ぎ）
 
-- API Lambda（Go + Gin + LWA）本体のリソース定義 → 他 Unit 共有 module（PR 別）
-- Frontend Amplify Hosting のリソース定義 → 他 PR
 - DynamoDB テーブル定義（Unit B/C/D 所有）→ それぞれの Unit Infrastructure Design
 - Pre Sign-up Lambda の Node.js コード本体 → Code Generation
+- API Lambda の Go コード本体 + Dockerfile → Code Generation
 - Backend Go middleware / Frontend hook 実装 → Code Generation
+- buildspec.yml の具体記述 → Code Generation
 
 ---
 
