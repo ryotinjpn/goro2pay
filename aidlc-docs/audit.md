@@ -464,3 +464,29 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: Infrastructure Design ヒアリング完了、成果物生成段階へ
 
 ---
+
+## Infrastructure Design (Unit A) — Q-I14/Q-I15 追加ヒアリング (PR #69 更新)
+**Timestamp**: 2026-05-22T03:00:00Z
+**User Inputs**:
+- "別 PR (Frontend): AWS Amplify Hosting (Next.js App Router) / Amplify ↔ Cognito 設定連携 (Auth Unit の output を参照) これどこのunit担当？"
+  → AI unit-of-work.md §4.1 確認 + 横串 PR 計画上空白を指摘 → 4 案提示
+- "横串インフラはunitAでやった方がいいかも" → 方針確定
+- Q-I14 (Amplify Hosting デプロイソース): "A: GitHub 連携 (auto deploy from main/develop)"
+- "lambdaのcdどうする？" → AI 5 案比較表提示
+- "API LambdaはCodePipeline / CodeBuildで Pre Sign-up Lambda は archive_file + terraform apply（暗黙的に手動）これはそのまま"
+- Q-I15 確認 (CodePipeline 推奨構成): "推奨構成で OK"
+
+**AI Response**: 横串インフラ全体（Amplify Hosting / CodePipeline / CodeBuild / ECR / CodeStar Connection / S3 artifacts）を Unit A スコープに追加。infrastructure-design.md / deployment-architecture.md / auth-infrastructure-design-plan.md を v1.1 に更新:
+- §1.1 スコープに Amplify / CodePipeline / CodeBuild / ECR / CodeStarConnection を追加
+- §2 ディレクトリ構造に amplify.tf / codepipeline.tf / ecr.tf / buildspec.yml / bootstrap-ecr-initial.sh を追加
+- §3.3 API Lambda に lifecycle.ignore_changes = [image_uri] を追加 (Q-I15)
+- §3.3.3 ECR Repository (force_delete dev/MUTABLE)、§3.7 CodeBuild Log Group、§3.8 Amplify Hosting (CodeStar Connection + amplify_app + branch + ssr role + buildSpec)、§3.9 CodePipeline + CodeBuild + S3 artifacts + IAM Roles を追加
+- §4.1 Variables から api_image_uri を削除し github_owner / github_repo_name / github_branch を追加
+- §4.2 Outputs に amplify_app_id / amplify_default_domain / ecr_repository_url / codepipeline_name を追加
+- §5 backend bootstrap 注意書きを ECR + CodeStar Connection 承認 + tfstate bucket の 3 手順に拡張
+- §7 terraform-test に lambda_lifecycle / amplify_branch / codebuild_iam の 3 ファイルを追加
+- §8 トレーサビリティに Amplify / CodePipeline / CodeBuild / ECR / CodeStar Connection を追加
+- deployment-architecture: 全体図を Amplify Hosting + CD パイプライン込みで再構成、§2.4 CD フロー / §2.5 Pre Sign-up Lambda 更新フローを新規追加、§3.1 module 依存関係を更新、§4 デプロイ手順を bootstrap-ecr-initial.sh + CodeStar 承認込みで 6 ステップに改訂、§7 観測ポイントに Amplify / CodePipeline を追加、§8 コスト見積を $1.66/月 に更新、§9 Code Generation 引き継ぎを 11 項目に拡張、§5.2 prd placeholder に Amplify branch / CodePipeline 切替も追加
+**Context**: 横串インフラ = Unit A 方針確定、PR #69 更新でレビュー再開待ち
+
+---
