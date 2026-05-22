@@ -1,0 +1,29 @@
+name: sync-aidlc-upstream
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: develop }
+      - run: |
+          set -e
+          git clone --depth 1 https://github.com/awslabs/aidlc-workflows.git /tmp/up
+          SHA=$(git -C /tmp/up rev-parse --short=7 HEAD)
+          rm -rf .aidlc-rule-details
+          cp -R /tmp/up/.aidlc-rule-details /tmp/up/CLAUDE.md .
+          git add -A .aidlc-rule-details CLAUDE.md
+          git diff --cached --quiet && exit 0
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -m "👍  aidlc-workflows upstream 同期 ($SHA)"
+          git push -f origin HEAD:refs/heads/update/sync_aidlc_upstream
+          T="aidlc-workflows upstream 同期 ($SHA)"
+          gh pr create --base develop --head update/sync_aidlc_upstream --title "$T" --body "$T" \
+            || gh pr edit update/sync_aidlc_upstream --title "$T" --body "$T"
