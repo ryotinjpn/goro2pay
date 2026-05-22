@@ -16,4 +16,6 @@ When productization is decided, the following changes are required:
 - Amplify branch を `main` に切替、stage を PRODUCTION に変更 (Q-I14)
 - CodePipeline Source branch を `main` に切替 (Q-I15)
 - CORS の allow_origins を Frontend ドメインに絞る
-- 横串改善: Auth module から amplify / codepipeline / lambda_api を独立 module に切り出し
+- ECR `image_tag_mutability = IMMUTABLE` への変更 (改ざん防止)
+- CodePipeline に Deploy stage を追加 (現状は CodeBuild post_build で update-function-code、本来 Deploy stage で表現すべき)
+- IAM policy の静的解析を CI に追加 (tflint / checkov / IAM Access Analyzer)。terraform-test の mock_provider では IAM policy JSON の deep assert が困難なため
