@@ -1,7 +1,9 @@
 # Auth Unit — NFR Design Patterns
 
-**Document Version**: 1.0
+**Document Version**: 1.2
 **Created**: 2026-05-22
+**Updated**: 2026-05-22 (BFF パターン採用: P-RES-01 / P-RES-04 を Browser/Server 二段構成に書き換え)
+**Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、Authorization: Bearer 標準ヘッダで透過、X-Id-Token カスタムヘッダ廃止、P-SEC-02 / P-OBS-01 の email_hash 取扱を更新)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: NFR Design / Construction
@@ -15,25 +17,37 @@
 
 ## 1. Resilience Patterns（耐障害性）
 
-### P-RES-01: Frontend HTTP Client Interceptor (Q-D1)
+### P-RES-01: Frontend HTTP Client Interceptor (Q-D1, BFF パターン採用)
 
-**目的**: 認証経路と業務 API の双方で 401 / 429 / NetworkError を一元検出する。
+**目的**: 認証経路と業務 API の双方で 401 / 429 / NetworkError を一元検出する。**ブラウザは API Gateway を直接呼ばず、Next.js Server (catch-all Route Handler) 経由で呼び出す**（BFF パターン、Q-I14/I15 に整合）。
 
-**パターン**: 手書き fetch ラッパ（ファクトリ関数）。`@aws-amplify/api` や TanStack `onError` には依存させない。
+**パターン**: 手書き fetch ラッパを **Browser / Server の 2 段構成**で実装。`@aws-amplify/api` や TanStack `onError` には依存させない。
 
-**設計責務**:
+**設計責務（Browser 側 `apiClient`）**:
 - すべての API 呼び出しは `apiClient.request(...)` 経由とする（直接 `fetch` を呼ばない）
-- リクエスト前に Amplify Auth `fetchAuthSession()` で IdToken を取得し `Authorization: Bearer` を付与
+- リクエスト前に Amplify Auth `fetchAuthSession()` で **AccessToken** を取得し **`Authorization: Bearer <accessToken>` ヘッダ** で送信（OAuth2 ベストプラクティス、PII を含まない）
+- リクエスト URL は **既存の `/api/*` パス**（unit-interfaces.md §3.3）。同一オリジンのため CORS 不要
 - レスポンス受信時:
   - `401` → `triggerSessionExpired()` を呼び、`AuthErrorWithCode('SESSION_EXPIRED')` を throw
   - `429` → `AuthErrorWithCode('RATE_LIMIT_EXCEEDED')` を throw（P-RES-04）
   - `5xx` / NetworkError → `AuthErrorWithCode('NETWORK_ERROR')` を throw
 
+**設計責務（Server 側 catch-all Route Handler、`web/app/api/[...path]/route.ts`）**:
+- 全 HTTP メソッド (GET/POST/PUT/DELETE/PATCH) に対応
+- `Authorization` ヘッダ存在チェック（`Bearer ` プレフィックス確認、欠落時は 401 即返）
+- server-only env `API_ENDPOINT` から API Gateway URL を読み出し、`Authorization` ヘッダを**透過**して上流に転送（変換なし）
+- 上流の status / body / headers をそのまま Browser に透過（401 を含む全 status）
+- Server 側では JWT 検証・401 検出ロジックを持たない（責務分離: Browser 側 interceptor が拾う）
+
 **論理シグネチャ**:
 ```ts
+// Browser 側
 type ApiClient = {
-  request(input: RequestInit & { url: string }): Promise<Response>;
+  request(input: RequestInit & { path: string }): Promise<Response>;
 };
+
+// Server 側 (Route Handler の関数シグネチャ、Next.js が自動で呼ぶ)
+type RouteHandler = (request: NextRequest, ctx: { params: { path: string[] } }) => Promise<Response>;
 ```
 
 ### P-RES-02: 401 / Token Refresh 失敗の二重発火防止 (Q-D2)
@@ -149,15 +163,15 @@ type ApiClient = {
 - `autoComplete="new-password"` (Signup) / `autoComplete="current-password"` (Login) で password manager 連携は維持
 - パスワードは sessionStorage / localStorage / Cookie / IndexedDB 等の永続層に決して書かない
 
-### P-SEC-02: email_hash 生成タイミング (Q-D6)
+### P-SEC-02: email_hash 生成タイミング (Q-D6、AccessToken 採用に伴う調整)
 
-**目的**: ログ用 `email_hash` (SHA256 hex) を 1 リクエスト 1 回だけ計算し、`gin.Context` 経由でログ Handler に渡す。
+**目的**: ログ用 `email_hash` (SHA256 hex) を **認証前エンドポイントでのみ** 1 リクエスト 1 回だけ計算し、`gin.Context` 経由でログ Handler に渡す。
 
-**パターン**: middleware / handler 入口で hash 化 → context に保存 → context-based slog Handler が自動抽出（P-OBS-01 と連携）。
+**パターン**: handler 入口で hash 化 → context に保存 → context-based slog Handler が自動抽出（P-OBS-01 と連携）。
 
 **設計責務**:
-- **認証必須エンドポイント**: `AttachUserID` middleware 内で `claims["email"]` から hash 生成 → `c.Set("emailHash", hash)`
-- **認証前エンドポイント** (Signup / Login / Logout): handler 内で request body の email を `normalize` → hash 生成 → `c.Set("emailHash", hash)`
+- **認証必須エンドポイント** (Logout 等): API 認証は AccessToken を使うため `claims` に `email` が含まれない → middleware で `email_hash` を **生成しない**、ログにも出力しない (A-NFR-OBS-01 の email_hash は **オプション扱い**)
+- **認証前エンドポイント** (Signup / Login): handler 内で request body の email を `normalize` → hash 生成 → `c.Set("emailHash", hash)` （P-SEC-02 サブパターン B-2 のみ運用）
 - ハッシュアルゴリズム: SHA256、出力は hex 文字列（64 桁）
 - Salt は使わない（A-NFR-SEC-08 の目的はトレーサビリティ目的、暗号学的耐性は本 MVP で要求していない）
 
@@ -165,11 +179,12 @@ type ApiClient = {
 
 **目的**: IdToken / AccessToken / RefreshToken をクライアント側のみで管理し、サーバ側で永続化しない。
 
-**パターン**: Amplify Auth の標準ストレージに委譲。
+**パターン**: Amplify Auth の標準ストレージに委譲。**API 認証には AccessToken を使う**（OAuth2 ベストプラクティス）。
 
 **設計責務**:
 - Amplify Auth はデフォルトで localStorage に Token を保存
-- Lambda 側は受信した IdToken の検証を Cognito Authorizer に任せ、claims を Context 経由で読むのみ
+- API 認証経路は **AccessToken** を `Authorization: Bearer` で送信（IdToken は API には使わない、PII 漏洩リスク低減）
+- Lambda 側は受信した AccessToken の検証を Cognito Authorizer に任せ、claims を Context 経由で読むのみ
 - Lambda・DynamoDB に Token 値を保存しない
 - ログ出力時 Token 値を含めない（A-NFR-OBS-01 の 8 項目に Token 値は含まれていない）
 
@@ -205,8 +220,8 @@ type ApiClient = {
 - **middleware の責務**:
   - リクエスト受信時に新しい context を生成し、API Gateway / Lambda が付与する `requestId` / `traceId` を読み取り context へ書き込む
   - `userAgent` をリクエストヘッダから取得して context へ書き込む
-  - `userId` は `AttachUserID` middleware が claims から書き込む（既存 Functional Design）
-  - `emailHash` は P-SEC-02 で書き込む
+  - `userId` は `AttachUserID` middleware が claims から書き込む（既存 Functional Design、AccessToken の `sub` claim から取得）
+  - `emailHash` は **認証前エンドポイントのみ** P-SEC-02 で書き込む（認証必須エンドポイントでは AccessToken に email がないため省略、オプション項目）
 - **ログ呼び出し側**: `slog.InfoContext(ctx, "user logout", "action", "logout")` のように呼ぶだけ
 - **平文 email を絶対に出力しない**: A-NFR-SEC-08 / A-NFR-OBS-01 の制約。レビューで grep `\"email\":` を検査ルールに含めることを推奨
 
