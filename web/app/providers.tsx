@@ -1,27 +1,25 @@
 "use client";
 
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { Amplify } from "aws-amplify";
+import { ReactNode, useEffect, useState } from "react";
 import { Provider as JotaiProvider } from "jotai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { amplifyConfig } from "@/lib/amplifyConfig";
+import { ensureAmplifyConfigured } from "@/lib/amplifyConfig";
 import { setupAuthHubListener } from "@/lib/authHubListener";
 import { SessionExpiredModalHost } from "@/components/auth/SessionExpiredModalHost";
 
 // AppProviders は アプリ全体に必要な Provider 群を組み合わせる。
-// - Amplify.configure を 1 度だけ呼ぶ
+// - Amplify.configure: lib/amplifyConfig.ts の module-level guard で 1 度だけ実行
 // - Auth Hub Listener を 1 度だけ登録
 // - Jotai / TanStack Query Provider を mount
 // - SessionExpiredModalHost を 1 つだけ mount
-export function AppProviders({ children }: { children: ReactNode }) {
-  const configuredRef = useRef(false);
-  const [queryClient] = useState(() => new QueryClient());
 
-  if (!configuredRef.current) {
-    Amplify.configure(amplifyConfig, { ssr: true });
-    configuredRef.current = true;
-  }
+// Amplify は module top で configure する。React render 中の副作用呼出を避け、
+// StrictMode の二重 render や複数 mount でも 1 度だけ実行されるよう保証する。
+ensureAmplifyConfigured();
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
     setupAuthHubListener();
