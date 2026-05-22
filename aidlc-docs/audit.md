@@ -490,3 +490,35 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: 横串インフラ = Unit A 方針確定、PR #69 更新でレビュー再開待ち
 
 ---
+
+## Infrastructure Design (Unit A) — BFF パターン採用 + back/ ディレクトリリネーム (PR #69 更新)
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- "NEXT_PUBLIC_API_ENDPOINTだとブラウザから直接apigwに飛ばしてない？ssrなのでamply経由にしたら？"
+  → AI BFF パターン提案 (3 オプション提示) → "Option B: BFF パターン採用（推奨）"
+- "今のPRで各ドキュメントで必要な箇所は全て変更実施"
+- "bff/は影響でかいのでapi/がいいのでそれはそのまま" → BFF Route Handler のパスは `/api/*` のまま透過プロキシ方式に変更
+- "apps/api/ back/apiは？" → AI 質問意図確認 (3 オプション) → "API Lambda のパスも /api/* のまま で golang の配置場所はルート直下に back ディレクトリに配置"
+- "A: 今回 Unit A PR の範囲ですべてリネーム（推奨）"
+
+**AI Response**: PR #69 内で 3 設計ドキュメント横断的に BFF パターン採用 + back/ リネームを反映:
+
+**BFF パターン採用（Q-I14 NEXT_PUBLIC_API_ENDPOINT 問題への対応）**:
+- Functional Design `business-logic-model.md` v1.0 → v1.1: F-3 (認証付き API 呼出) / F-4 (Logout) / F-5 (Session 失効) のシーケンス図に Next.js Server (catch-all Route Handler) を介在、§4.4 catch-all Route Handler 疑似コード追加、§8 データフロー図を BFF パターンに書き換え
+- Functional Design `business-rules.md` v1.0 → v1.1: R-Logout-2 (実装フロー) / R-Logout-3 (API 仕様) を BFF 経由に更新、R-JWT-1 に「Next.js Server は中継のみ、JWT 検証しない」を明記
+- Functional Design `frontend-components.md` v1.0 → v1.1: §10 を Browser 側 apiClient + Server 側 catch-all Route Handler の二段構成に書き換え、X-Id-Token ヘッダ方式採用
+- NFR Design `nfr-design-patterns.md` v1.0 → v1.1: P-RES-01 を BFF パターン Browser/Server 二段構成に書き換え
+- NFR Design `logical-components.md` v1.0 → v1.1: LC-AUTH-09 apiClient を Browser 側のみに限定、新規 LC-AUTH-18 BffProxyRouteHandler を追加、コンポーネント関係図に Next.js Server レイヤを追加、パターン対応表に LC-18 を追加
+- Infrastructure Design `infrastructure-design.md` v1.1: §3.4.1 cors_configuration を未設定（BFF で不要）、§3.8.3 Amplify branch env vars に NEXT_PUBLIC_API_ENDPOINT 削除 + server-only API_ENDPOINT 追加、§10.1 整合性メモに BFF パターン記述追加
+- Infrastructure Design `deployment-architecture.md` v1.1: §1.1 全体図 Amplify env vars セクションを BFF パターン構成に書き換え、§1 凡例に BFF 利点追加、§6.2 Amplify env vars セクション新規追加（NEXT_PUBLIC_ vs server-only の使い分け明示）
+
+**back/ ディレクトリリネーム（apps/api/ → back/api/、apps/scheduler/ → back/scheduler/）**:
+- NFR Design `logical-components.md`: LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ に置換 (replace_all で 6 箇所)
+- Infrastructure Design `infrastructure-design.md`: §2 ディレクトリ構造 / §9 Code Generation 引き継ぎの apps/api/ → back/api/ に置換 (replace_all で 2 箇所)
+- Infrastructure Design `deployment-architecture.md`: §9.1 Code Generation 引き継ぎの apps/api/ → back/api/ に修正、unit-of-work.md §4.1 のリネーム必要を明記
+- Infrastructure Design `infrastructure-design.md` §10.2: unit-of-work.md §4.1 の back/ リネーム必要を「Code Generation 完了後に Inception ドキュメントへ反映」と整合修正メモに追加
+
+**HTTP path 統一**: ブラウザ → Next.js → API Gateway → API Lambda 全層で `/api/*`、unit-interfaces.md §3.3 の path 定義（PR #66 で `/api/...` に統一済み）に影響なし。
+**Context**: BFF パターン + back/ リネーム反映完了、PR #69 再レビュー待ち
+
+---
