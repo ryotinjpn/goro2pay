@@ -389,3 +389,40 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 **Context**: NFR Requirements ヒアリング完了、成果物生成段階へ
 
 ---
+
+## NFR Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-22T00:00:00Z
+**User Input**: "NFR Design go"
+**AI Response**: aidlc-docs/construction/plans/auth-nfr-design-plan.md を作成。NFR Requirements からの引き継ぎ事項を整理、確認質問 Q-D1〜Q-D12 (12 問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Design Plan のユーザ承認を待機中
+
+---
+
+## NFR Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-22T00:05:00Z
+**User Input**: "一問ずつ質問して"
+**AI Response**: Plan 承認と解釈。Q-D1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## NFR Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T00:30:00Z
+**User Inputs** (Q-D1〜Q-D12、対話形式で順次):
+- Q-D1: "推奨はどれ？" → AI 3 案比較表提示 → "A: 手書き fetch ラッパ（推奨）"
+- Q-D2: "推奨はどれ？" → AI 3 案比較表提示 → "B: Jotai atom（推奨）"
+- Q-D3: "ダメかUXに従うとどうなる？" → AI NFR-DEG-01/02/03/05 適合度評価 + 折衷案提示 → "B+α: 300ms まで空白、それ以降スピナー（推奨）"
+- Q-D4: "どれがUX的にいいの？" → AI シナリオ別 UX + セキュリティトレードオフ提示 → "A: finally 句で setState(\"\")（推奨）"
+- Q-D5: "推奨は？" → AI 3 案比較表 + 実装イメージ提示 → "C: middleware + context-based（推奨）"
+- Q-D6: "推奨は？" → AI 3 案比較表 + B のサブパターン B-1/B-2 提示 → "B: middleware/handler 入口で 1 度 → context（推奨）"
+- Q-D7: "推奨は？" → AI 3 案比較表 + Node.js/Go 典型コード提示 → "A: Node.js（推奨）"
+- Q-D8: "どれが推奨？" → AI 3 案比較表 + 実行時間見積もり提示 → "A: 通常の go test の一部として実行（推奨）"
+- Q-D9: "B: A + 推奨項目（推奨）"
+- Q-D10: "どれが推奨？" → AI 3 案比較表 + 実装イメージ提示 → "A: useEffect + setTimeout（推奨）"
+- Q-D11: "推奨は？" → AI 3 案比較表 + 実装イメージ提示 → "A: AuthError.RATE_LIMIT_EXCEEDED にマップ（推奨）"
+- Q-D12: "A: NFR Design では追加で何もしない（推奨）"
+
+**AI Response**: 全回答を auth-nfr-design-plan.md に [Answer] タグ反映。矛盾なし、追加質問なし。次に NFR Design 成果物 2 種 (nfr-design-patterns.md / logical-components.md) を生成。
+**Context**: NFR Design ヒアリング完了、成果物生成段階へ
+
+---
