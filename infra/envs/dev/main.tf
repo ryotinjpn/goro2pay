@@ -28,6 +28,7 @@ module "api_gateway" {
 module "lambda_api" {
   source                      = "../../modules/lambda_api"
   env                         = local.env
+  region                      = local.region
   api_gateway_execution_arn   = module.api_gateway.api_execution_arn
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
@@ -48,4 +49,5 @@ module "amplify" {
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
   api_endpoint                = module.api_gateway.api_endpoint
+  amplify_yml_path            = "${path.root}/../../../web/amplify.yml"
 }

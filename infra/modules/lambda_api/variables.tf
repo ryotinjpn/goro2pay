@@ -3,6 +3,11 @@ variable "env" {
   description = "環境識別子"
 }
 
+variable "region" {
+  type        = string
+  description = "AWS Region (CodeBuild の AWS_DEFAULT_REGION env に注入)"
+}
+
 # API Gateway 連携 (lambda_permission に必要)
 variable "api_gateway_execution_arn" {
   type        = string

@@ -32,15 +32,18 @@ resource "aws_codebuild_project" "api" {
     type = "CODEPIPELINE"
   }
 
+  # CodeBuild curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER (x86_64) 専用。
+  # buildspec.yml 側で `docker buildx build --platform linux/arm64` により
+  # arm64 イメージをクロスビルドする (Lambda 側の architectures = ["arm64"] と整合)。
   environment {
     compute_type    = "BUILD_GENERAL1_SMALL"
     image           = "aws/codebuild/standard:7.0"
-    type            = "ARM_CONTAINER"
+    type            = "LINUX_CONTAINER"
     privileged_mode = true
 
     environment_variable {
       name  = "AWS_DEFAULT_REGION"
-      value = data.aws_region.current.name
+      value = var.region
     }
     environment_variable {
       name  = "ECR_REPOSITORY_URI"
@@ -68,8 +71,6 @@ resource "aws_cloudwatch_log_group" "codebuild_api" {
   name              = "/aws/codebuild/${local.prefix}-api-build"
   retention_in_days = 7
 }
-
-data "aws_region" "current" {}
 
 resource "aws_codepipeline" "api" {
   name     = "${local.prefix}-api-pipeline"
