@@ -24,9 +24,3 @@ variable "api_lambda_invoke_arn" {
   type        = string
   description = "API Lambda invoke ARN (integration target)"
 }
-
-variable "api_lambda_execution_arn" {
-  type        = string
-  description = "API Lambda execution ARN (lambda_permission の source_arn 用、Unit A 内では未使用、整合性のため受け取る)"
-  default     = ""
-}
