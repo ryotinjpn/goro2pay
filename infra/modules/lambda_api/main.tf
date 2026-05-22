@@ -2,17 +2,5 @@
 # unit-of-work.md §4.1 の `infra/modules/lambda_api/` (Unit 横串、API Lambda + ECR) 定義に準拠。
 # 他 Unit (B/C/D/E) は本 module の output (api_lambda_role_arn 等) に
 # 権限を attach する形で機能を追加する。
-
-terraform {
-  required_version = ">= 1.10.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.46"
-    }
-  }
-}
-
-locals {
-  prefix = "gp-${var.env}"
-}
+#
+# resource 定義は機能別ファイル (api_lambda.tf / ecr.tf / codepipeline.tf / iam.tf) に配置。
