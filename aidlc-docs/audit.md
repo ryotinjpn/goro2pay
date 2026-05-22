@@ -479,3 +479,176 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 **Context**: NFR Design ヒアリング完了、成果物生成段階へ
 
 ---
+
+## Infrastructure Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Input**: "マージした次に進んで"
+**AI Response**: PR #68 マージ済みを develop fast-forward 取り込み確認、Infrastructure Design ステージを開始。aidlc-docs/construction/plans/auth-infrastructure-design-plan.md を作成、NFR Design からの引き継ぎ事項 (LC-07/15/16/17) を Terraform 化対象として整理、確認質問 Q-I1〜Q-I13 (13 問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: Infrastructure Design Plan のユーザ承認を待機中
+
+---
+
+## Infrastructure Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-22T01:05:00Z
+**User Input**: "一つづつ質問して"
+**AI Response**: Plan 承認と解釈。Q-I1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## Infrastructure Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Inputs** (Q-I1〜Q-I13、対話形式で順次):
+- Q-I1: "A: 単一モジュール auth/"
+- Q-I2: "lwaはどっちかじゃないとダメじゃないっけ？" → AI LWA Event Source 表提示 → "公式ドキュメントにも書いてる？" → AI WebFetch で公式 README 引用 → "B: HTTP APIに切替（推奨）"
+- Q-I3: "A: Terraform archive_file data source（推奨）"
+- Q-I4: "B: gp-{env}-{resource}"
+- Q-I5: "A: dev のみ実構築、prd は空ディレクトリだけ作成"
+- Q-I6: "BだがDynamoDBは不要" → AI Terraform 公式ドキュメント (use_lockfile = true 機能 + DynamoDB deprecated) 引用 → "Yes: S3 + use_lockfile = true で進める（推奨）"
+- Q-I7: "A: Cognito デフォルト（推奨）"
+- Q-I8: "C: 60 秒（中間、推奨）"
+- Q-I9: "A: CloudWatch Logs 書込のみをインラインポリシーで記述（推奨）"
+- Q-I10: "どこのunitでlambda本体は作るんだっけ？" → AI unit-of-work.md 横串リソース整理 → "A1とA2の違いは？" → AI A1/A2 図解比較 → "Authorizerはトークン認証のlambdad?" → AI Lambda Authorizer vs JWT Authorizer 解説 → "横串 PRのタスクはどこで管理してるの？" → AI 計画上の空白指摘 + A3/A4 提案 → "Logout integrationこれは何のこと？" → AI API Gateway リソース構造図解説 → "A4: A3 + API Lambda 本体 (Gin Hello World) も Unit A で立ち上げ"
+- Q-I11: "A: Project / Env / Unit / ManagedBy の 4 種類（推奨）"
+- Q-I12: "A: 7 日（推奨）"
+- Q-I13: "A: INACTIVE（推奨）"
+
+**AI Response**: 全回答を auth-infrastructure-design-plan.md に [Answer] タグ反映。Q-I2 / Q-I6 / Q-I10 で重要な仕様確認・スコープ拡大あり。次に Infrastructure Design 成果物 2 種 (infrastructure-design.md / deployment-architecture.md) を生成。
+**Context**: Infrastructure Design ヒアリング完了、成果物生成段階へ
+
+---
+
+## Infrastructure Design (Unit A) — Q-I14/Q-I15 追加ヒアリング (PR #69 更新)
+**Timestamp**: 2026-05-22T03:00:00Z
+**User Inputs**:
+- "別 PR (Frontend): AWS Amplify Hosting (Next.js App Router) / Amplify ↔ Cognito 設定連携 (Auth Unit の output を参照) これどこのunit担当？"
+  → AI unit-of-work.md §4.1 確認 + 横串 PR 計画上空白を指摘 → 4 案提示
+- "横串インフラはunitAでやった方がいいかも" → 方針確定
+- Q-I14 (Amplify Hosting デプロイソース): "A: GitHub 連携 (auto deploy from main/develop)"
+- "lambdaのcdどうする？" → AI 5 案比較表提示
+- "API LambdaはCodePipeline / CodeBuildで Pre Sign-up Lambda は archive_file + terraform apply（暗黙的に手動）これはそのまま"
+- Q-I15 確認 (CodePipeline 推奨構成): "推奨構成で OK"
+
+**AI Response**: 横串インフラ全体（Amplify Hosting / CodePipeline / CodeBuild / ECR / CodeStar Connection / S3 artifacts）を Unit A スコープに追加。infrastructure-design.md / deployment-architecture.md / auth-infrastructure-design-plan.md を v1.1 に更新:
+- §1.1 スコープに Amplify / CodePipeline / CodeBuild / ECR / CodeStarConnection を追加
+- §2 ディレクトリ構造に amplify.tf / codepipeline.tf / ecr.tf / buildspec.yml / bootstrap-ecr-initial.sh を追加
+- §3.3 API Lambda に lifecycle.ignore_changes = [image_uri] を追加 (Q-I15)
+- §3.3.3 ECR Repository (force_delete dev/MUTABLE)、§3.7 CodeBuild Log Group、§3.8 Amplify Hosting (CodeStar Connection + amplify_app + branch + ssr role + buildSpec)、§3.9 CodePipeline + CodeBuild + S3 artifacts + IAM Roles を追加
+- §4.1 Variables から api_image_uri を削除し github_owner / github_repo_name / github_branch を追加
+- §4.2 Outputs に amplify_app_id / amplify_default_domain / ecr_repository_url / codepipeline_name を追加
+- §5 backend bootstrap 注意書きを ECR + CodeStar Connection 承認 + tfstate bucket の 3 手順に拡張
+- §7 terraform-test に lambda_lifecycle / amplify_branch / codebuild_iam の 3 ファイルを追加
+- §8 トレーサビリティに Amplify / CodePipeline / CodeBuild / ECR / CodeStar Connection を追加
+- deployment-architecture: 全体図を Amplify Hosting + CD パイプライン込みで再構成、§2.4 CD フロー / §2.5 Pre Sign-up Lambda 更新フローを新規追加、§3.1 module 依存関係を更新、§4 デプロイ手順を bootstrap-ecr-initial.sh + CodeStar 承認込みで 6 ステップに改訂、§7 観測ポイントに Amplify / CodePipeline を追加、§8 コスト見積を $1.66/月 に更新、§9 Code Generation 引き継ぎを 11 項目に拡張、§5.2 prd placeholder に Amplify branch / CodePipeline 切替も追加
+**Context**: 横串インフラ = Unit A 方針確定、PR #69 更新でレビュー再開待ち
+
+---
+
+## Infrastructure Design (Unit A) — BFF パターン採用 + back/ ディレクトリリネーム (PR #69 更新)
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- "NEXT_PUBLIC_API_ENDPOINTだとブラウザから直接apigwに飛ばしてない？ssrなのでamply経由にしたら？"
+  → AI BFF パターン提案 (3 オプション提示) → "Option B: BFF パターン採用（推奨）"
+- "今のPRで各ドキュメントで必要な箇所は全て変更実施"
+- "bff/は影響でかいのでapi/がいいのでそれはそのまま" → BFF Route Handler のパスは `/api/*` のまま透過プロキシ方式に変更
+- "apps/api/ back/apiは？" → AI 質問意図確認 (3 オプション) → "API Lambda のパスも /api/* のまま で golang の配置場所はルート直下に back ディレクトリに配置"
+- "A: 今回 Unit A PR の範囲ですべてリネーム（推奨）"
+
+**AI Response**: PR #69 内で 3 設計ドキュメント横断的に BFF パターン採用 + back/ リネームを反映:
+
+**BFF パターン採用（Q-I14 NEXT_PUBLIC_API_ENDPOINT 問題への対応）**:
+- Functional Design `business-logic-model.md` v1.0 → v1.1: F-3 (認証付き API 呼出) / F-4 (Logout) / F-5 (Session 失効) のシーケンス図に Next.js Server (catch-all Route Handler) を介在、§4.4 catch-all Route Handler 疑似コード追加、§8 データフロー図を BFF パターンに書き換え
+- Functional Design `business-rules.md` v1.0 → v1.1: R-Logout-2 (実装フロー) / R-Logout-3 (API 仕様) を BFF 経由に更新、R-JWT-1 に「Next.js Server は中継のみ、JWT 検証しない」を明記
+- Functional Design `frontend-components.md` v1.0 → v1.1: §10 を Browser 側 apiClient + Server 側 catch-all Route Handler の二段構成に書き換え、X-Id-Token ヘッダ方式採用
+- NFR Design `nfr-design-patterns.md` v1.0 → v1.1: P-RES-01 を BFF パターン Browser/Server 二段構成に書き換え
+- NFR Design `logical-components.md` v1.0 → v1.1: LC-AUTH-09 apiClient を Browser 側のみに限定、新規 LC-AUTH-18 BffProxyRouteHandler を追加、コンポーネント関係図に Next.js Server レイヤを追加、パターン対応表に LC-18 を追加
+- Infrastructure Design `infrastructure-design.md` v1.1: §3.4.1 cors_configuration を未設定（BFF で不要）、§3.8.3 Amplify branch env vars に NEXT_PUBLIC_API_ENDPOINT 削除 + server-only API_ENDPOINT 追加、§10.1 整合性メモに BFF パターン記述追加
+- Infrastructure Design `deployment-architecture.md` v1.1: §1.1 全体図 Amplify env vars セクションを BFF パターン構成に書き換え、§1 凡例に BFF 利点追加、§6.2 Amplify env vars セクション新規追加（NEXT_PUBLIC_ vs server-only の使い分け明示）
+
+**back/ ディレクトリリネーム（apps/api/ → back/api/、apps/scheduler/ → back/scheduler/）**:
+- NFR Design `logical-components.md`: LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ に置換 (replace_all で 6 箇所)
+- Infrastructure Design `infrastructure-design.md`: §2 ディレクトリ構造 / §9 Code Generation 引き継ぎの apps/api/ → back/api/ に置換 (replace_all で 2 箇所)
+- Infrastructure Design `deployment-architecture.md`: §9.1 Code Generation 引き継ぎの apps/api/ → back/api/ に修正、unit-of-work.md §4.1 のリネーム必要を明記
+- Infrastructure Design `infrastructure-design.md` §10.2: unit-of-work.md §4.1 の back/ リネーム必要を「Code Generation 完了後に Inception ドキュメントへ反映」と整合修正メモに追加
+
+**HTTP path 統一**: ブラウザ → Next.js → API Gateway → API Lambda 全層で `/api/*`、unit-interfaces.md §3.3 の path 定義（PR #66 で `/api/...` に統一済み）に影響なし。
+**Context**: BFF パターン + back/ リネーム反映完了、PR #69 再レビュー待ち
+
+---
+
+## Infrastructure Design (Unit A) — API 認証 Token を AccessToken に統一 (PR #69 更新)
+**Timestamp**: 2026-05-22T05:00:00Z
+**User Input**: "apiClient│ ── │ X-Id-Token これってacseccトークンじゃないっけ？"
+**AI Response**: ご指摘は正当。OAuth2 ベストプラクティスでは API 認証は AccessToken を使うべき (IdToken は ID 提示用、PII を含む)。3 設計ドキュメント横断で AccessToken に統一する修正提案 → "Yes: AccessToken に統一（推奨）"
+
+修正内容:
+- Functional Design `business-logic-model.md` v1.2:
+  - F-3 シーケンス図: idToken → accessToken、X-Id-Token ヘッダ廃止 → Authorization: Bearer に統一
+  - F-4 (Logout): API 監査ログ送信を GlobalSignOut **より先に** 実行する順序に変更（accessToken 有効状態で送るため）
+  - F-5 (Session 失効): expired idToken → expired accessToken
+  - §4.4 catch-all Route Handler 疑似コード: X-Id-Token ヘッダ参照を Authorization ヘッダ透過に変更
+  - §6.2.2 BFF Route Handler 疑似コード: 同上
+  - §8 データフロー図: ヘッダ・Token 種・透過動作を明示
+
+- Functional Design `business-rules.md` v1.2:
+  - R-Logout-2 実装フロー: AccessToken 認証、API 送信を先・signOut を後の順序に変更
+  - R-Logout-3 API 仕様: Browser→Server / Server→APIGW 両方で Authorization: Bearer <AccessToken> を透過
+  - R-JWT-1 に「API 認証には AccessToken」明記、IdToken は API 送信に使わない注記
+  - R-JWT-2: AccessToken claims に email がない注記
+  - **R-JWT-2-A 新規追加**: email_hash 取扱の AccessToken 採用調整（認証必須エンドポイントで省略、認証前ハンドラのみ生成）
+
+- Functional Design `frontend-components.md` v1.2:
+  - §10.1 Browser apiClient: idToken → accessToken、X-Id-Token → Authorization: Bearer に変更
+  - §10.2 Server Route Handler: X-Id-Token 参照を Authorization 透過に変更
+  - §10.3 利点に「Authorization: Bearer 標準ヘッダ透過 → Server 側で IdToken→AccessToken 変換不要」「AccessToken 採用で OAuth2 整合 + PII 漏洩リスク低減」追加
+  - §10.4 注意点に「AccessToken に email なし、email_hash は認証前のみ」追加
+
+- NFR Design `nfr-design-patterns.md` v1.2:
+  - P-RES-01 設計責務: Browser apiClient は AccessToken + Authorization ヘッダ、Server Route Handler は Authorization 透過に書き換え
+  - P-SEC-02: 認証必須エンドポイントで email_hash 生成しない（オプション扱い）、認証前のみ生成、サブパターン B-2 のみ運用に変更
+  - P-SEC-03: API 認証は AccessToken を使う旨を明記
+  - P-OBS-01: emailHash は認証前エンドポイントのみオプション扱い
+
+- NFR Design `logical-components.md` v1.2:
+  - LC-AUTH-09 apiClient: AccessToken + Authorization: Bearer ヘッダ付与に責務変更
+  - LC-AUTH-18 BffProxyRouteHandler: Authorization ヘッダ透過に責務変更（X-Id-Token → Authorization 変換廃止）
+  - LC-AUTH-01 AttachUserIDMiddleware: AccessToken claims に email がないため middleware で emailHash 生成しない注記
+  - 関係図の X-Id-Token 表記を Authorization: Bearer <accessToken> に修正
+
+- Infrastructure Design `deployment-architecture.md` v1.2 / `infrastructure-design.md` v1.2:
+  - フロー記述の IdToken → AccessToken 修正、ドキュメントヘッダの version 更新
+**Context**: AccessToken 採用反映完了、PR #69 再レビュー待ち
+
+---
+
+## Infrastructure Design (Unit A) — back/ リネーム案を撤回 (PR #69 更新)
+**Timestamp**: 2026-05-22T06:00:00Z
+**User Inputs**:
+- amplify.yml の議論中 "frontのディレクトリ名ってinceptionフェーズで想定してたっけ？" → AI unit-of-work.md §4.1 で `web/` 確定済みを引用
+- "ごめんそれならapps/ │   ├── api/ # → 今回 PR で back/api/ にリネーム決定 これダメだ他の開発者が困る" → back/ 案撤回の判断
+- "yes" (撤回方針確定)
+
+**AI Response**: back/ リネーム案を撤回し、Inception 確定の apps/api/ / apps/scheduler/ に戻す。理由: unit-of-work.md §4.1 は他 Unit B/C/D/E との合意済みリポジトリ構造であり、Unit A の PR で勝手にリネームすると他 Unit 担当者の Functional Design / NFR Design ドキュメントとも矛盾するため。Wave 1 並列開発前提と不整合。
+
+修正内容:
+- NFR Design `logical-components.md` v1.3:
+  - LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ → apps/api/ に一括置換 (replace_all)
+  - 更新メモに「back/ リネーム撤回」追記
+
+- Infrastructure Design `infrastructure-design.md` v1.3:
+  - §2 ディレクトリ構造の back/ ブロックを apps/ に変更 (apps/api/ + apps/scheduler/ で並列)
+  - §3.9 CodeBuild の source.buildspec / buildspec.yml の docker build path を apps/api/ に修正
+  - §9 Code Generation 引き継ぎの apps/api/ 記述に統一
+  - §10.1 整合性メモから「back/ リネーム」を削除し「apps/api/ / apps/scheduler/ 表記を維持」に修正
+  - §10.2 整合修正メモから unit-of-work.md リネーム必須・各 Unit FD 修正必要の 2 項目を削除
+
+- Infrastructure Design `deployment-architecture.md` v1.3:
+  - §9.1 Code Generation 引き継ぎの back/api/ → apps/api/ 修正
+
+- Functional Design 3 ファイルは back/ 直接参照なしのため修正不要 (確認済み)
+- Plan ファイル auth-infrastructure-design-plan.md は back/ 参照なしのため修正不要
+
+横串インフラ Unit A 包含方針 (Q-I14/Q-I15) と BFF パターン採用 + AccessToken 統一は維持。本撤回は **ディレクトリ名表記のみ**の修正。
+**Context**: back/ 撤回反映完了、Inception §4.1 整合復帰、PR #69 再レビュー待ち
+
+---
