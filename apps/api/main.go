@@ -4,9 +4,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,17 +20,28 @@ import (
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/logging"
 )
 
+const shutdownTimeout = 5 * time.Second
+
 func main() {
 	// 構造化ログ Handler を default logger に設定 (NFR Design P-OBS-01)
 	level := slog.LevelInfo
-	if os.Getenv("LOG_LEVEL") == "debug" {
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel == "debug" {
 		level = slog.LevelDebug
 	}
 	slog.SetDefault(slog.New(logging.NewContextAwareSlogHandler(os.Stdout, level)))
 
-	// Gin Engine
-	gin.SetMode(gin.ReleaseMode)
+	// Gin Engine: LOG_LEVEL=debug 時は Gin の Debug 出力を活かす
+	if logLevel == "debug" {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	r := gin.New()
+
+	// panic を 500 として返す Recovery middleware (gin.New() にはデフォルトで含まれない)。
+	// 後続 Unit B/C/D/E のハンドラ内 panic でコンテナがクラッシュするのを防ぐ。
+	r.Use(gin.Recovery())
 
 	// 全 route で構造化ログ用 context を注入
 	r.Use(logging.RequestContext())
@@ -51,9 +67,33 @@ func main() {
 		Addr:    addr,
 		Handler: r,
 	}
-	slog.Info("api server starting", "addr", addr)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+
+	// SIGTERM / SIGINT を受け取って graceful shutdown する。
+	// LWA は AWS_LWA_GRACEFUL_SHUTDOWN を有効にすると Lambda リサイクル時に
+	// SIGTERM を送るため、ここで in-flight リクエストを完了させる。
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	serverErr := make(chan error, 1)
+	go func() {
+		slog.Info("api server starting", "addr", addr, "log_level", level.String())
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+	}()
+
+	select {
+	case err := <-serverErr:
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
+	case <-ctx.Done():
+		slog.Info("shutdown signal received, draining connections", "timeout", shutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			slog.Error("graceful shutdown failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("server stopped cleanly")
 	}
 }
