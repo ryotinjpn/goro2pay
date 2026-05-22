@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 import { sessionExpiredAtom } from "@/state/auth";
 import { authMessages } from "@/lib/authMessages";
-import { _resetSessionExpiredHandling } from "@/lib/apiClient";
 
 const REDIRECT_DELAY_MS = 1500;
 
@@ -21,8 +20,9 @@ export function SessionExpiredModalHost() {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    // atom を null に戻すと triggerSessionExpired の compare-and-set ガードも
+    // 自動で解除される (もうモジュールフラグは存在せず atom 単一が source of truth)。
     setState(null);
-    _resetSessionExpiredHandling();
     router.push("/login?from=session_expired");
   }
 
