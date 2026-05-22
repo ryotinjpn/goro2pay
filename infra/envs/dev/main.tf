@@ -1,11 +1,12 @@
-# dev env: 4 つの機能別 module を組み合わせて Auth Unit + 横串インフラを構築する。
-# unit-of-work.md §4.1 の機能別 module 構成 (cognito / api_gateway / lambda_api / amplify) に準拠。
+# dev env: 機能別 module を組み合わせて Auth Unit + 横串インフラを構築する。
+# unit-of-work.md §4.1 の機能別 module 構成
+# (codestar_connection / cognito / api_gateway / lambda_api / amplify) に準拠。
 
-# CodeStar Connection (CodePipeline と Amplify で共有、envs 側で作成)
-resource "aws_codestarconnections_connection" "github" {
-  name          = "gp-${local.env}-github-conn"
-  provider_type = "GitHub"
-  # 注意: 作成直後は Pending 状態。AWS Console で手動承認が必要 (1 度だけ)。
+# CodeStar Connection (CodePipeline と Amplify で共有、env ごとに 1 つ)
+# 初回 apply 後は AWS Console で手動承認が必要 (deployment-runbook.md §4)。
+module "codestar_connection" {
+  source = "../../modules/codestar_connection"
+  env    = local.env
 }
 
 # Cognito (Auth Unit 所有)
@@ -31,7 +32,7 @@ module "lambda_api" {
   region                      = local.region
   cognito_user_pool_id        = module.cognito.user_pool_id
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
-  codestar_connection_arn     = aws_codestarconnections_connection.github.arn
+  codestar_connection_arn     = module.codestar_connection.connection_arn
   github_owner                = local.github_owner
   github_repo_name            = local.github_repo
   github_branch               = local.github_branch
@@ -59,4 +60,7 @@ module "amplify" {
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
   api_endpoint                = module.api_gateway.api_endpoint
   amplify_yml_path            = "${path.root}/../../../web/amplify.yml"
+  codestar_connection_arn     = module.codestar_connection.connection_arn
+  # 現状 Amplify 側では Console 手動接続運用のため connection_arn 自体は
+  # tf resource では使わず、変数受け口だけ揃える (将来 Console 操作レス化時用)。
 }

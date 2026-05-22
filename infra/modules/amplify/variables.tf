@@ -43,3 +43,13 @@ variable "amplify_yml_path" {
   type        = string
   description = "Amplify build_spec の YAML ファイル絶対パス (envs 側で path.root 起点で渡すこと)"
 }
+
+variable "codestar_connection_arn" {
+  type        = string
+  description = "GitHub CodeStar Connection ARN (envs で modules/codestar_connection から渡す)"
+  default     = ""
+  # NOTE: default = "" は Console での手動承認後にのみ Amplify が repo を解決する
+  # 現行運用 (oauth_token / access_token と同様) との互換のため。Console 接続を
+  # 完全に terraform 側に取り込む場合は、aws_amplify_app.web に
+  # `connection_arn = var.codestar_connection_arn` を設定して default を外す。
+}
