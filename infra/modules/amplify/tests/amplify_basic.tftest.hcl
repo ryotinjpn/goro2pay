@@ -1,16 +1,34 @@
-# Amplify branch の env vars が必要キーを含むことを確認 (Q-I14 / BFF パターン)
-
 mock_provider "aws" {}
 
 variables {
-  env              = "dev"
-  region           = "ap-northeast-1"
-  github_owner     = "test-owner"
-  github_repo_name = "goro2pay"
-  github_branch    = "develop"
+  env                         = "dev"
+  region                      = "ap-northeast-1"
+  github_owner                = "test-owner"
+  github_repo_name            = "goro2pay"
+  github_branch               = "develop"
+  cognito_user_pool_id        = "ap-northeast-1_TESTPOOL"
+  cognito_user_pool_client_id = "test-client-id"
+  api_endpoint                = "https://example.execute-api.ap-northeast-1.amazonaws.com"
 }
 
-run "amplify_branch_has_required_env_vars" {
+run "plan_succeeds" {
+  command = plan
+}
+
+run "outputs_present" {
+  command = plan
+
+  assert {
+    condition     = output.amplify_app_id != null
+    error_message = "amplify_app_id should not be null"
+  }
+  assert {
+    condition     = output.amplify_default_domain != null
+    error_message = "amplify_default_domain should not be null"
+  }
+}
+
+run "branch_has_required_env_vars_bff_pattern" {
   command = plan
 
   assert {

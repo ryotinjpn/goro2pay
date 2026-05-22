@@ -1,6 +1,4 @@
-# Cognito User Pool (LC-15) と App Client (LC-16)
-# Functional Design business-rules.md / NFR Design logical-components.md §4.1-4.2 の
-# 論理パラメータを Terraform で具現化。
+# Cognito User Pool (LC-15) + App Client (LC-16)
 
 resource "aws_cognito_user_pool" "main" {
   name = "${local.prefix}-userpool"
@@ -8,7 +6,7 @@ resource "aws_cognito_user_pool" "main" {
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
-  # NFR Design A-NFR-SEC-02 / Q-A2=B (8文字、英大小+数字混在)
+  # NFR Design A-NFR-SEC-02 / Q-A2=B (8 文字、英大小+数字混在)
   password_policy {
     minimum_length    = 8
     require_uppercase = true
@@ -30,13 +28,11 @@ resource "aws_cognito_user_pool" "main" {
     allow_admin_create_user_only = false
   }
 
-  # Pre Sign-up Lambda Trigger を連携 (Q-A1=B auto-confirm)
+  # Pre Sign-up Lambda Trigger (Q-A1=B auto-confirm)
   lambda_config {
     pre_sign_up = aws_lambda_function.pre_signup.arn
   }
 
-  # auto-confirm 採用のため verification message は使わないが、
-  # required な箇所はデフォルトで埋める (Cognito 仕様上の都合)
   email_configuration {
     email_sending_account = "COGNITO_DEFAULT"
   }
@@ -74,7 +70,7 @@ resource "aws_cognito_user_pool_client" "web" {
   enable_token_revocation       = true
 }
 
-# Cognito User Pool が Pre Sign-up Lambda を invoke する許可
+# Cognito → Pre Sign-up Lambda の invoke 許可
 resource "aws_lambda_permission" "cognito_invoke_pre_signup" {
   statement_id  = "AllowCognitoInvokePreSignup"
   action        = "lambda:InvokeFunction"

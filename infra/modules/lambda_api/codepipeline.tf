@@ -1,11 +1,8 @@
-# CodePipeline + CodeBuild (Q-I15=D): API Lambda の CD パイプライン
-# Source: GitHub develop branch (CodeStar Connection 経由)
-# Build:  CodeBuild が apps/api/buildspec.yml を実行 (docker build → ECR push → lambda update)
+# CodePipeline + CodeBuild (Q-I15=D): API Lambda CD
 
-# CodePipeline artifact 中間ストレージ
 resource "aws_s3_bucket" "codepipeline_artifacts" {
   bucket        = "${local.prefix}-codepipeline-artifacts"
-  force_destroy = true # dev のみ
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "codepipeline_artifacts" {
@@ -21,14 +18,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "codepipeline_artifacts" {
   rule {
     id     = "expire-old-artifacts"
     status = "Enabled"
-
     expiration {
       days = 30
     }
   }
 }
 
-# CodeBuild project
 resource "aws_codebuild_project" "api" {
   name         = "${local.prefix}-api-build"
   service_role = aws_iam_role.codebuild_api.arn
@@ -41,11 +36,11 @@ resource "aws_codebuild_project" "api" {
     compute_type    = "BUILD_GENERAL1_SMALL"
     image           = "aws/codebuild/standard:7.0"
     type            = "ARM_CONTAINER"
-    privileged_mode = true # docker build に必要
+    privileged_mode = true
 
     environment_variable {
       name  = "AWS_DEFAULT_REGION"
-      value = var.region
+      value = data.aws_region.current.name
     }
     environment_variable {
       name  = "ECR_REPOSITORY_URI"
@@ -69,7 +64,13 @@ resource "aws_codebuild_project" "api" {
   }
 }
 
-# CodePipeline
+resource "aws_cloudwatch_log_group" "codebuild_api" {
+  name              = "/aws/codebuild/${local.prefix}-api-build"
+  retention_in_days = 7
+}
+
+data "aws_region" "current" {}
+
 resource "aws_codepipeline" "api" {
   name     = "${local.prefix}-api-pipeline"
   role_arn = aws_iam_role.codepipeline_api.arn
@@ -91,7 +92,7 @@ resource "aws_codepipeline" "api" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        ConnectionArn    = var.codestar_connection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo_name}"
         BranchName       = var.github_branch
       }

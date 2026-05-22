@@ -1,8 +1,6 @@
-# ECR Repository (Q-I15): API Lambda の Docker image を保存
-
 resource "aws_ecr_repository" "api" {
   name                 = "${local.prefix}-api-image"
-  image_tag_mutability = "MUTABLE" # CodeBuild が :latest を上書き
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -12,8 +10,7 @@ resource "aws_ecr_repository" "api" {
     encryption_type = "AES256"
   }
 
-  # dev のみ。本番化時は false に切替
-  force_delete = true
+  force_delete = true # dev のみ
 }
 
 resource "aws_ecr_lifecycle_policy" "api" {
