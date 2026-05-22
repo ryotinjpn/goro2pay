@@ -1,7 +1,8 @@
 # Auth Unit — Frontend Components
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2026-05-21
+**Updated**: 2026-05-22 (BFF パターン採用: apiClient を Browser/Server 二段化、新規 BFF Route Handler を追加)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -359,28 +360,101 @@ JWT 失効を検出した際に表示するシステムモーダル。`<SessionE
 
 ---
 
-## 10. `apiClient` の 401 interceptor
+## 10. BFF パターンの apiClient（Browser / Server 二段構成、`/api/*` 透過）
+
+BFF パターン採用により、apiClient は以下の **2 段階** に分離する。**ブラウザのリクエスト URL は既存の `/api/*` のまま** で、Next.js の Route Handler (`web/app/api/[...path]/route.ts`) が透過プロキシとして API Gateway に転送する。
+
+このアプローチは [unit-interfaces.md §3.3](../../interfaces/unit-interfaces.md) の API path 定義（`/api/wallet`、`/api/orders`、`/api/auth/logout` 等）に**全く影響しない**。各 Unit (B/C/D/E) の API path もそのまま。
+
+### 10.1 Browser 側 `apiClient` (Client Component から呼ばれる)
 
 ```ts
+// web/lib/apiClient.ts (Client Component / hooks から利用)
 import { fetchAuthSession } from "aws-amplify/auth";
 
 export const apiClient = {
-  async request(input: RequestInit & { url: string }): Promise<Response> {
+  async request(input: RequestInit & { path: string }): Promise<Response> {
+    // idToken を取得（Amplify が必要なら自動 refresh）
     const session = await fetchAuthSession();
     const idToken = session.tokens?.idToken?.toString();
-    const res = await fetch(input.url, {
+
+    // Browser は同一オリジンの /api/* を叩く（Next.js Route Handler が proxy）
+    // path 例: "/api/auth/logout"
+    const res = await fetch(input.path, {
       ...input,
       headers: {
         ...input.headers,
-        Authorization: idToken ? `Bearer ${idToken}` : "",
+        ...(idToken ? { "X-Id-Token": idToken } : {}),
       },
     });
     if (res.status === 401) {
-      triggerSessionExpired();  // §9 と接続
+      triggerSessionExpired();  // §9 sessionExpiredAtom と接続
     }
     return res;
   },
 };
+```
+
+### 10.2 Server 側 catch-all Route Handler (Next.js)
+
+`web/app/api/[...path]/route.ts` で全 `/api/*` リクエストを受けて API Gateway に転送する。`API_ENDPOINT` は server-only env。
+
+```ts
+// web/app/api/[...path]/route.ts (catch-all proxy)
+import { NextRequest } from "next/server";
+
+export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyToApiGateway(request, params.path);
+}
+export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyToApiGateway(request, params.path);
+}
+// (PUT, DELETE, PATCH も同様)
+
+async function proxyToApiGateway(request: NextRequest, pathSegments: string[]): Promise<Response> {
+  const apiEndpoint = process.env.API_ENDPOINT;  // server-only env (NEXT_PUBLIC_ なし)
+  if (!apiEndpoint) {
+    return new Response("API_ENDPOINT not configured", { status: 500 });
+  }
+
+  const idToken = request.headers.get("X-Id-Token");
+  if (!idToken) {
+    return new Response("Missing X-Id-Token header", { status: 401 });
+  }
+
+  // path 例: ["auth", "logout"] → /api/auth/logout
+  const upstreamUrl = `${apiEndpoint}/api/${pathSegments.join("/")}${request.nextUrl.search}`;
+  const upstream = await fetch(upstreamUrl, {
+    method: request.method,
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": request.headers.get("Content-Type") ?? "application/json",
+    },
+    body: ["GET", "HEAD"].includes(request.method)
+      ? undefined
+      : await request.text(),
+  });
+
+  // 401 / その他のステータスを Browser に透過 (Browser 側 interceptor が拾う)
+  return new Response(upstream.body, {
+    status: upstream.status,
+    headers: upstream.headers,
+  });
+}
+```
+
+### 10.3 利点
+
+- **`API_ENDPOINT` がブラウザに露出しない**（server-only env）
+- **CORS が `*` でなく Amplify ドメインだけに絞れる**
+- ブラウザ ↔ Next.js Server は同一オリジンなので CORS 不要
+- **既存の `/api/*` パス定義に影響なし**（unit-interfaces.md / 他 Unit / 既存ドキュメント全て修正不要）
+- `X-Id-Token` 専用ヘッダで Authorization と分離（Server 側で正しく Bearer に変換）
+
+### 10.4 注意点
+
+- Next.js の `app/api/*` 配下に **catch-all Route Handler** を置く以外、各機能ごとの個別 Route Handler を**作らない**（API Gateway 側で実装する責務を二重化しないため）
+- 個別 Route が必要になるケース（リクエスト/レスポンス整形、複数 API 集約等）が出てきたら、`app/api/<feature>/route.ts` を個別作成して catch-all より優先的にマッチさせる
 ```
 
 ---

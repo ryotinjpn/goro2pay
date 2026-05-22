@@ -1,7 +1,8 @@
 # Auth Unit — Business Rules
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Created**: 2026-05-21
+**Updated**: 2026-05-22 (BFF パターン採用: R-Logout-2 / R-JWT-* を Next.js Server 経由フローに更新)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -113,21 +114,42 @@ Q-A2 の決定（標準）に従う。
 - バックエンド API: `POST /api/auth/logout`（path prefix は [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3.3 / §4.3 等の `/api/` 規約に準拠）
 - フロントエンド: ヘッダ右上の「⏏︎ ログアウト」ボタン or 設定画面のメニュー項目
 
-### R-Logout-2: 実装フロー
+### R-Logout-2: 実装フロー（BFF パターン、`/api/*` 透過）
 
 ```
-1. クライアント: ボタン押下
-2. クライアント: Amplify Auth.signOut({ global: true }) を呼ぶ
+1. クライアント (Browser): ボタン押下
+2. クライアント (Browser): fetchAuthSession() で idToken を取得
+3. クライアント (Browser): Amplify Auth.signOut({ global: true }) を呼ぶ
    → 内部で Cognito GlobalSignOut が走り、Refresh Token が無効化
-3. クライアント: ローカルストレージのトークンが Amplify によって除去
-4. クライアント: POST /api/auth/logout を呼ぶ（任意、サーバ側ログ記録のため。`useAuth().logout()` 内で実行）
-5. クライアント: router.push("/") で Landing 表示に戻る
+4. クライアント (Browser): ローカルストレージのトークンが Amplify によって除去
+5. クライアント (Browser): POST /api/auth/logout を呼ぶ（既存パスのまま、X-Id-Token ヘッダ付与）
+6. Next.js Server (catch-all Route Handler): env.API_ENDPOINT を読み出し、API Gateway に転送
+   → POST {API_ENDPOINT}/api/auth/logout (Authorization: Bearer <idToken>)
+7. API Gateway → API Lambda が監査ログを記録 → 204
+8. Next.js Server: 204 を Browser に透過
+9. クライアント (Browser): router.push("/") で Landing 表示に戻る
 ```
 
 ### R-Logout-3: API 仕様
 
+#### Browser → Next.js Server (catch-all proxy 受け口、既存 `/api/*` パス)
+
 ```
 POST /api/auth/logout
+X-Id-Token: <IdToken>
+Body: なし
+
+Response:
+  204 No Content        — 成功（API Gateway 上流が 204 を返した）
+  401 Unauthorized      — IdToken 不正 / 欠落（Next.js or API Gateway が 401 を返した）
+```
+
+ブラウザのリクエスト URL は **既存の `/api/auth/logout` のまま**。Next.js の `app/api/[...path]/route.ts` が catch-all で受けて API Gateway に proxy する。unit-interfaces.md §3.3 の path 定義に影響しない。
+
+#### Next.js Server → API Gateway (上流 API)
+
+```
+POST {API_ENDPOINT}/api/auth/logout
 Authorization: Bearer <IdToken>
 Body: なし
 
@@ -136,7 +158,7 @@ Response:
   401 Unauthorized      — JWT 不正
 ```
 
-サーバ側は GlobalSignOut を再実行する義務はない（Amplify が既に呼出済）。本 API は監査ログ目的のみ。
+サーバ側 API Lambda は GlobalSignOut を再実行する義務はない（Amplify が既に呼出済）。本 API は監査ログ目的のみ。
 
 ### R-Logout-4: 確認ダイアログ
 - ログアウト誤タップを防ぐため、確認モーダルを 1 段挟む
@@ -146,9 +168,11 @@ Response:
 
 ## 6. JWT 検証と userId 注入
 
-### R-JWT-1: 検証主体（Q-A4 = A）
+### R-JWT-1: 検証主体（Q-A4 = A、BFF パターン整合）
+- **ブラウザは API Gateway を直接呼ばず、Next.js Server (BFF) 経由で呼び出す**（BFF パターン採用、Q-I14/I15）
+- Next.js Server は **JWT 検証を行わない**（中継のみ）。Authorization ヘッダを受け取って上流 API Gateway に透過転送
 - API Gateway の **Cognito Authorizer** が JWT 署名・有効期限・発行者を検証
-- Lambda は再検証しない
+- API Lambda は再検証しない（claims を読むだけ）
 
 ### R-JWT-2: claims 抽出
 - Lambda は `event.requestContext.authorizer.claims` から下記を取得:
