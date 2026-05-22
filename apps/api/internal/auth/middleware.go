@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -10,6 +12,15 @@ import (
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/apperrors"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/logging"
 )
+
+// requestContextHeader は Lambda Web Adapter (LWA) が API Gateway イベントの
+// requestContext オブジェクトを Lambda → Gin に転送する HTTP ヘッダ名。
+// LWA は body / path / queryStringParameters は通常の HTTP メッセージに展開するが、
+// requestContext は JSON 文字列として `x-amzn-request-context` ヘッダに格納する
+// (base64 エンコードされる場合あり)。
+//
+// 参考: https://github.com/awslabs/aws-lambda-web-adapter
+const requestContextHeader = "x-amzn-request-context"
 
 // AttachUserID は API Gateway Cognito JWT Authorizer が付与した
 // claims から sub を抽出し、gin.Context および request.Context に
@@ -57,16 +68,83 @@ func UserIDFromContext(c *gin.Context) (string, error) {
 	return sub, nil
 }
 
-// extractClaims は API Gateway Cognito Authorizer が event.requestContext.authorizer.claims
-// として渡す map を gin.Context から取り出す。LWA + API Gateway HTTP API (payload v2) の
-// 場合、Lambda Adapter は claims を request header に flatten する仕様があるため、
-// 環境ごとに実装が異なる可能性がある。本実装は LWA が gin.Context に直接 set する
-// パスを想定し、なければ空の map を返す (テスト時に手動で c.Set できる)。
+// extractClaims は API Gateway Cognito JWT Authorizer が
+// `event.requestContext.authorizer.jwt.claims` として渡す map を取り出す。
+//
+// 取得経路は優先順:
+//  1. テスト用に gin.Context に "authorizer.claims" として直接 set されていれば
+//     それを返す (本番では使わない)
+//  2. LWA が転送する `x-amzn-request-context` HTTP ヘッダから JSON を parse し、
+//     `authorizer.jwt.claims` を取り出す (本番経路、API Gateway HTTP API v2)
+//
+// LWA + API Gateway HTTP API v2 + Cognito JWT Authorizer の組合せでは、
+// claims は必ず `requestContext.authorizer.jwt.claims` (map[string]string) に
+// 入る。この map のキー名は Cognito の標準 (sub, email, token_use, ...) に従う。
 func extractClaims(c *gin.Context) map[string]any {
+	// (1) テスト経路: gin.Context に直接注入されていればそれを使う
 	if v, ok := c.Get("authorizer.claims"); ok {
 		if m, ok := v.(map[string]any); ok {
 			return m
 		}
 	}
+
+	// (2) 本番経路: LWA が転送する x-amzn-request-context ヘッダを parse
+	raw := c.GetHeader(requestContextHeader)
+	if raw == "" {
+		return map[string]any{}
+	}
+
+	payload := decodeRequestContextPayload(raw)
+	if payload == nil {
+		return map[string]any{}
+	}
+
+	return claimsFromRequestContext(payload)
+}
+
+// decodeRequestContextPayload は LWA が x-amzn-request-context ヘッダに載せた
+// requestContext JSON を取り出す。LWA の version によって base64 エンコードを
+// 行う場合と行わない場合があるため、両方をハンドリングする。
+func decodeRequestContextPayload(raw string) map[string]any {
+	// まず生 JSON として parse を試す (LWA v0.8 系以降の挙動)
+	var direct map[string]any
+	if err := json.Unmarshal([]byte(raw), &direct); err == nil {
+		return direct
+	}
+
+	// 失敗したら base64 デコードしてから parse (古い LWA / 互換)
+	decoded, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return nil
+	}
+	var fromB64 map[string]any
+	if err := json.Unmarshal(decoded, &fromB64); err != nil {
+		return nil
+	}
+	return fromB64
+}
+
+// claimsFromRequestContext は requestContext JSON から
+// authorizer.jwt.claims を取り出す。HTTP API v2 (JWT Authorizer) の形式に
+// 準拠。HTTP API v1 (REST API カスタム Authorizer) の `authorizer.claims`
+// 直下にも対応する (互換)。
+func claimsFromRequestContext(rc map[string]any) map[string]any {
+	authorizer, ok := rc["authorizer"].(map[string]any)
+	if !ok {
+		return map[string]any{}
+	}
+
+	// HTTP API v2 + JWT Authorizer: authorizer.jwt.claims
+	if jwt, ok := authorizer["jwt"].(map[string]any); ok {
+		if claims, ok := jwt["claims"].(map[string]any); ok {
+			return claims
+		}
+	}
+
+	// 互換: REST API + カスタム Authorizer: authorizer.claims
+	if claims, ok := authorizer["claims"].(map[string]any); ok {
+		return claims
+	}
+
 	return map[string]any{}
 }
