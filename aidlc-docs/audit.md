@@ -480,6 +480,35 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 ---
 
+## NFR Requirements (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T00:00:00Z
+**User Input**: "unitBのcオンストラクションの続きをすすめたい"
+**AI Response**: `docs/construction-budget-nfr-requirements` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-requirements-plan.md` を作成。Q-N1〜Q-N11（Deduct応答時間 / GetBalance応答時間 / ResetAll実行時間 / DynamoDBキャパシティ / TransactWriteItems / リセット失敗通知 / ログ項目 / PBT適用範囲 / Lambdaメモリ / TanStack Query stale time / コンプライアンス）の 11 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Requirements Plan 承認待ち
+
+---
+
+## NFR Requirements (Unit B) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Inputs** (Q-N1〜Q-N11、対話形式で順次):
+- Q-N1: "c" → 目標値なし、NFR-PERF-01 全体予算（3 秒）内で管理
+- Q-N2: "c" → 目標値なし、NFR-PERF-01/02 全体予算内で管理（Unit A Q-N3 と同方針）
+- Q-N3: "a" → 最大 50 ユーザ、Lambda タイムアウト 30 秒
+- Q-N4: "c" → 全テーブル プロビジョンド（1 RCU/1 WCU）、無料枠内運用
+- Q-N5: "b" → 個別実行（FD 設計通り）、TransactWriteItems 不使用
+- Q-N6: "c" → ログ出力のみ + 手動リカバリ手順を Infrastructure Design に記載
+- Q-N7: "c" → Unit A 8 項目 + amount / newBalance（idempotencyKey は省略）
+- Q-N8: "b" → 残高不変条件 + SetBudget べき等性 + バリデーション境界値
+- Q-N9: "a" → 128MB
+- Q-N10: "a" → stale time 30 秒 + Deduct 成功時に即 invalidate
+- Q-N11: "b" → NFR-COMP-01〜03 引用 + 「仮想ウォレットは実決済データを含まない」を明記
+- 矛盾確認: Q-N3=A（30s タイムアウト）× Q-N4=C（1 WCU）の ResetAll 処理 / Q-B6=A（ConsistentRead）× Q-N4=C（1 RCU）の一貫性リスクを AI が検出。ユーザ「unitAと同じ方針にしたい」→ C（バースト容量前提、設計書に注記）で継続確定。
+
+**AI Response**: 全回答を budget-nfr-requirements-plan.md に反映。nfr-requirements.md / tech-stack-decisions.md を生成。
+**Context**: NFR Requirements 成果物生成完了、ユーザ承認ゲートへ
+
+---
+
 ## Infrastructure Design (Unit A) — Plan 作成
 **Timestamp**: 2026-05-22T01:00:00Z
 **User Input**: "マージした次に進んで"
