@@ -1,0 +1,28 @@
+# checkov 設定 (terraform-module-design 規約 §ディレクトリ構成)
+#
+# ローカル実行: cd infra && checkov -d . --framework terraform
+#
+# 本 MVP は hackathon demo 想定で本番運用しない (requirements.md Q14)。
+# 本番化時に envs/prd/README.md の "IAM 静的解析を CI に統合" タスクで
+# CI に組み込む。
+#
+# checkov-skip-rule-plugin 規約に従い、スキップ理由はインラインコメント
+# (`#checkov:skip=CKV_AWS_XXX: <理由>`) で記載すること。グローバル skip は
+# 環境全体で常に該当する (例: dev では暗号化を弱めたい等) 場合のみ本ファイルに
+# 集約する。
+
+framework:
+  - terraform
+
+# soft-fail: 失敗を warning 扱いにし exit 0 を返す。CI 投入前の段階で
+# 既存違反を一斉に block しないため、まず警告として観測する運用。
+soft-fail: true
+
+# 本 MVP で許容するルール (理由付き)。本番化時は再評価する。
+skip-check:
+  # ECR mutability は本 MVP では MUTABLE (image tag を再利用する CI 経路のため)。
+  # 本番では IMMUTABLE に変える。
+  - CKV_AWS_51
+
+  # CloudWatch Log Group の retention は 7 日 (cost 抑制)。本番では 30 日 +。
+  - CKV_AWS_158

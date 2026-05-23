@@ -856,3 +856,73 @@ aidlc-state.md に Unit C 進捗セクション (Comprehensive、worktree: futur
 **Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
 
 ---
+
+## Code Generation (Unit A) — Plan 作成 (Part 1 Planning)
+**Timestamp**: 2026-05-22T07:00:00Z
+**User Input**: "yes" (Plan 作成への承認)
+**AI Response**: PR #69 マージ済みを develop fast-forward 取り込み確認、Code Generation ステージを開始。aidlc-docs/construction/plans/auth-code-generation-plan.md を作成。
+
+Plan 構成:
+- §1 ストーリー範囲 (US-0-01 / US-0-02 / FR-AUTH-04) と Unit 依存・横串責務 (Q-I10=A4 / Q-I14 / Q-I15)
+- §2 プロジェクト構造 (apps/api/ + web/ + infra/、Inception §4.1 整合、約 70 ファイル想定)
+- §3 作業手順 (Step 1〜Step 20、各ステップ番号付き、checkbox 付き)
+  - Step 1: プロジェクト構造セットアップ
+  - Step 2-4: Backend Business Logic (email.go) + PBT + サマリ
+  - Step 5-7: Backend API Layer (middleware + slog Handler + handlers + main.go) + テスト + サマリ
+  - Step 8: Repository Layer (Unit A はスキップ、サマリのみ)
+  - Step 9-11: Frontend Components (useAuth / apiClient / authMessages / catch-all Route Handler / 7 components 等) + Vitest + サマリ
+  - Step 12: Database Migration (Unit A は対象外、サマリのみ)
+  - Step 13: Pre Sign-up Lambda (Node.js 5 行)
+  - Step 14: Build Artifacts (Dockerfile + buildspec.yml)
+  - Step 15: Bootstrap Scripts (S3 backend + ECR initial push)
+  - Step 16-17: Terraform module + envs/dev
+  - Step 18: terraform-test 6 種
+  - Step 19: Documentation (deployment-runbook.md + README 更新)
+  - Step 20: 完了確認サマリ
+- §4 ストーリー トレーサビリティ
+- §5 後続ステージ引き継ぎ事項
+- §6 工数概算 (約 70 ファイル)
+- §7 承認ゲート
+
+**Context**: ⛔ GATE: Code Generation Plan のユーザ承認を待機中
+
+---
+
+## Code Generation (Unit A) — Plan 承認 & Part 2 Generation 開始
+**Timestamp**: 2026-05-22T07:05:00Z
+**User Input**: "ok" (Plan 承認)
+**AI Response**: Plan 承認と解釈。auth-code-generation-plan.md の Step 1 から順次実行開始。20 ステップ、約 70 ファイル生成予定。
+**Context**: Code Generation Part 2 進行中
+
+---
+
+## Code Generation (Unit A) — Part 2 Generation 完了
+**Timestamp**: 2026-05-22T08:00:00Z
+**User Input**: (Plan 承認後に AI が自律実行) + 途中で "aws-lambda-adapter:0.8.4 は 1.0.0 があると思うので web 検索して確認" → AI が WebFetch で v1.0.0 GA リリース (2024-03-27) を確認 → Dockerfile を 1.0.0 タグに修正
+
+**AI Response**: 全 20 ステップ完了。約 70 ファイル生成。
+
+成果物:
+- Backend (apps/api/): Go コード 8 + テスト 4 + go.mod + Dockerfile + buildspec.yml + README
+- Frontend (web/): TypeScript コード 7 (lib/state/hooks) + Components 7 + App Router 7 + テスト 3 + 設定 4 + README
+- Infra (infra/):
+  - lambdas/pre-signup/index.js (5 行)
+  - scripts/bootstrap-backend.sh + bootstrap-ecr-initial.sh (chmod +x 済み)
+  - modules/auth/: 12 *.tf + README + tests/6 *.tftest.hcl
+  - envs/dev/: backend.tf + providers.tf + main.tf + variables.tf + outputs.tf + terraform.tfvars.example
+  - envs/prd/README.md (placeholder)
+- ルート: .gitignore
+- ドキュメントサマリ: business-logic / api-layer / repository-layer (skip) / frontend / database (skip) / deployment-runbook / code-generation-summary
+
+主要設計判断の反映:
+- BFF パターン: web/app/api/[...path]/route.ts (catch-all proxy)
+- AccessToken 採用: useAuth + apiClient + Authorization: Bearer 透過
+- email_hash は認証前 endpoint 限定 (middleware では生成しない)
+- LWA v1.0.0 GA (公式 README 推奨タグ、ユーザ指摘で 0.8.4 から修正)
+- Inception §4.1 整合: apps/api/ ディレクトリ採用 (back/ リネーム案は撤回済み)
+
+aidlc-state.md を更新し、Unit A 全 5 ステージ (FD / NFR-R / NFR-D / Infra / CG) を [x] に。
+
+**Context**: Unit A Code Generation 完了、Plan のチェックボックス全て [x]、aidlc-state.md 更新済み。承認ゲートへ。
+
+---
