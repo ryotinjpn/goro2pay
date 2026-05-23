@@ -52,8 +52,8 @@
 
 **Unit C `order` 進捗** (worktree: future-unit-c, Comprehensive)
 - [x] Functional Design (Unit C, 2026-05-21, PR #65 マージ済み) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、凍結契約整合修正反映済み
-- [x] NFR Requirements (Unit C, 2026-05-23) — nfr-requirements.md (NFRC-C01〜C25) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N13 全 13 問対話ヒアリング完了、ユーザ承認待ち
-- [ ] NFR Design (Unit C) - **EXECUTE**
+- [x] NFR Requirements (Unit C, 2026-05-23, PR #78 マージ済み) — nfr-requirements.md (NFRC-C01〜C25) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N13 全 13 問対話ヒアリング完了
+- [x] NFR Design (Unit C, 2026-05-24) — nfr-design-patterns.md (P-RETRY-01 / P-PLAN-01 / P-OBS-01〜03 / P-INIT-01 / P-DI-01 / P-MOCK-01 / P-PBT-01 / P-FE-ERR-01 / P-FE-TOAST-01〜02 / P-FE-LOAD-01 / P-FE-LOCK-01 の 14 パターン) / logical-components.md (LC-ORDER-01〜34 の 34 コンポーネント) 生成済み、Q-D1〜Q-D14 全 14 問対話ヒアリング完了、ユーザ承認待ち
 - [ ] Infrastructure Design (Unit C) - **EXECUTE**
 - [ ] Code Generation (Unit C) - **EXECUTE**
 

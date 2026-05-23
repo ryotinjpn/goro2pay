@@ -926,3 +926,55 @@ aidlc-state.md を更新し、Unit A 全 5 ステージ (FD / NFR-R / NFR-D / In
 **Context**: Unit A Code Generation 完了、Plan のチェックボックス全て [x]、aidlc-state.md 更新済み。承認ゲートへ。
 
 ---
+
+## NFR Design (Unit C) — Plan 作成
+**Timestamp**: 2026-05-23T12:00:00Z
+**User Input**: "次を実施して"
+**AI Response**: PR #78 (NFR Requirements) マージ済みを develop fast-forward 取り込み確認、NFR Design ステージを開始。ブランチ `docs/construction-order-nfr-design` を develop ベースで作成。`aidlc-docs/construction/plans/order-nfr-design-plan.md` を作成、Comprehensive 深度で 14 問の確認質問（Q-D1: Bedrock リトライ判定 / Q-D2: フォールバック分岐配置 / Q-D3: レイテンシ計測 / Q-D4: SDK init 配置 / Q-D5: DI パターン / Q-D6: ログ Handler 拡張 / Q-D7: PBT 設計 / Q-D8: Mock パターン / Q-D9: Frontend エラーハンドリング / Q-D10: 自虐トースト / Q-D11: useOrderHistory ローディング / Q-D12: 連打抑制 / Q-D13: 観測性ログ / Q-D14: ToastHost 配置）を埋め込む。NFR Requirements (NFRC-C01〜C25) からの引き継ぎ事項 17 件を §1.1 で整理。
+**Context**: ⛔ GATE: NFR Design Plan のユーザ承認を待機中
+
+---
+
+## NFR Design (Unit C) — Plan 承認 & 対話ヒアリング完了
+**Timestamp**: 2026-05-23T13:00:00Z
+**User Input**: "1 問ずつ対話ヒアリング開始"
+**User Inputs** (Q-D1〜Q-D14、対話形式で順次、各 Q で「推奨は？」サブ問合せを挟みながら):
+- Q-D1: "推奨は？" → AI 横串 Adapter の Unit C/D 共有性 + テスト容易性で D (A+C ハイブリッド: SDK 型 + RetryClassifier interface) を推奨 → "d"
+- Q-D2: "推奨は？" → AI OrderService 認知負荷低減 + PlanBuilder 単体テスト容易性で B (PlanBuilder コンポーネント抽出) を推奨 → "b"
+- Q-D3: "推奨は？" → AI NFRC-C13 アラーム要件との整合 + 書き忘れ不可能性で C (middleware で E2E + measure ヘルパで各ステップ) を推奨 → "c"
+- Q-D4: "推奨は？" → AI Lambda INIT フェーズ burst CPU 活用で A (package-level init() で SDK 初期化) を推奨、AWS 公式推奨パターン → "a"
+- Q-D5: "推奨は？" → AI Unit A/B 完全統一 + デモ規模適合で A (手動 DI) を推奨、wire は過剰 → "A"
+- Q-D6: "推奨は？" → AI Q-D13 サマリログ方針との整合 + PII 防御の構造化で B (LogSummary ラッパ in Unit C) を推奨 → "b"
+- Q-D7: "推奨は？" → AI 状態遷移検証必要性 + Unit B/C 契約双方向保証で C (mock + inmemory ハイブリッド) を推奨 → "c"
+- Q-D8: "推奨は？" → AI Go 慣用句 (httptest 風) + PBT/統合テスト柔軟性で C (function-field closure 注入 mock) を推奨 → "C"
+- Q-D9: "推奨は？" → AI 純関数化によるテスト容易性 + 責務分離で B (errorMappers ユーティリティ) を推奨 → "b"
+- Q-D10: "推奨は" → AI NFRC-C22 連打抑制 1 秒で多重表示構造的防止 + NFR-DEG-05 ランダム性体現で A (純関数 getRandomToast) を推奨 → "続きどうぞ" (A 確定として処理)
+- Q-D11: "推奨はどれ？" → AI NFR-DEG-03 常時可視化 + TanStack v5 idiom で B (A + placeholderData: keepPreviousData) を推奨 → "b"
+- Q-D12: "推奨" → AI Q-D9/D10/D11 の責務分離一貫性 + テスト容易性で B (useDisableLock hook 切り出し) を推奨 → "b"
+- Q-D13: "推奨は？" → AI NFRC-C13 アラーム検知性 + ログ件数最小化で C (3 層ログ戦略: A + WARNING ログ) を推奨 → "C"
+- Q-D14: "推奨は？" → AI 連打抑制 1 秒で多重表示構造的防止 + Jotai 採用整合で A (app/layout.tsx + queue 最大 3 件) を推奨 → "A"
+
+**AI Response**: 全回答を order-nfr-design-plan.md に [Answer] タグ反映。矛盾チェック実施 (Q-D1×Q-D2 / Q-D3×Q-D6 / Q-D4×Q-D5 / Q-D5×Q-D8 / Q-D7×Q-D8 / Q-D9×Q-D10×Q-D14 / Q-D11×Q-D12 / Q-D13×Q-D6 / Q-D6×NFRC-C24 / Q-D14×Q-D10×Q-D12 の 10 観点)、いずれも整合。追加質問なし。
+**Context**: ⛔ GATE: NFR Design 成果物生成への着手承認待機
+
+---
+
+## NFR Design (Unit C) — 成果物生成完了
+**Timestamp**: 2026-05-24T00:00:00Z
+**User Input**: "次へ" / "続き実行"
+**AI Response**: 成果物生成承認として受領、`aidlc-docs/construction/order/nfr-design/` 配下に Comprehensive 深度で 2 ファイルを生成:
+
+- **nfr-design-patterns.md** (14 パターン × 6 セクション):
+  - **Backend パターン (8 種)**: P-RETRY-01 (Bedrock Retry Classification, RetryClassifier interface) / P-PLAN-01 (Plan Construction Strategy, PlanBuilder 抽出) / P-OBS-01 (Latency Measurement, middleware + measure ヘルパ) / P-OBS-02 (Order LogSummary, 11 項目蓄積 + defer LogComplete) / P-OBS-03 (Layered Logging Strategy, 3 層: INFO サマリ + WARN イベント + ERROR) / P-INIT-01 (Lambda Cold Start Optimization, package-level init で SDK 初期化) / P-DI-01 (Manual Dependency Injection, main.go で組み立て) / P-MOCK-01 (Function-Field Mock, closure 注入) / P-PBT-01 (Property-Based Testing, gopter + inmemory ハイブリッド)
+  - **Frontend パターン (5 種)**: P-FE-ERR-01 (Order Error Mapping, mapOrderError 純関数) / P-FE-TOAST-01 (Random Toast Variant, getRandomToast 純関数) / P-FE-TOAST-02 (Toast Host & Queue, app/layout.tsx + Jotai + 最大 3 件) / P-FE-LOAD-01 (Order History Loading State, placeholderData: keepPreviousData) / P-FE-LOCK-01 (Disable Lock Hook, useDisableLock(durationMs))
+  - パターン適用マトリクス（NFR Requirements との対応 18 NFR）+ 後続ステージへの引き継ぎ
+- **logical-components.md** (LC-ORDER-01〜34 の 34 コンポーネント):
+  - **Backend (15 種)**: OrderService / OrderHandler / DTO / OrderHistoryRepository / BedrockAdapter / DeliveryAdapter / RetryClassifier / PlanBuilder / FallbackSuggestProvider / LogSummary / EventLogger / LatencyMiddleware / MeasureHelper / BedrockClientInit / DynamoClientInit
+  - **テスト専用 Backend (5 種)**: MockBedrockAdapter / MockDeliveryAdapter / MockFallbackProvider / WalletStub / InmemoryHistory
+  - **Frontend (14 種)**: GoroButton / useOrder / useOrderHistory / OrderHistoryList / useDisableLock / OrderErrorMapper / ToastVariants / ToastsAtom / useToast / ToastHost / Toast / OrderCompletionScreen / ApiClientOrders / UlidGenerator
+  - Unit A 再利用コンポーネント明記（LC-AUTH-05 / LC-AUTH-09 / LC-AUTH-18 / AttachUserID middleware）+ Unit B 連携（WalletService.Deduct / 凍結契約 §3.1）+ Unit D 連携（SuggestService.ResolveSuggestion）+ クロスユニット query key 契約 + コンポーネント関係図
+
+aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み記載含む）。次は Infrastructure Design ステージへ進行予定。
+**Context**: ⛔ GATE: NFR Design 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
