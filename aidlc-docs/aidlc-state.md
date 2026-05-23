@@ -50,12 +50,19 @@
 - [x] Infrastructure Design (Unit A, 2026-05-22, PR #69) — 横串インフラ Unit A 包含 (Amplify + CodePipeline + CodeBuild + ECR + IAM 5 種) + BFF パターン + AccessToken 統一
 - [x] Code Generation (Unit A, 2026-05-22) — 約 70 ファイル生成、apps/api/ + web/ + infra/、PBT 5 + Vitest 3 + tftest 6、deployment-runbook.md
 
-**他 Unit (worktree 別、Unit C/D/E)**
-- [ ] Functional Design (per-unit, Unit C/D/E) - **EXECUTE**
-- [ ] NFR Requirements (per-unit, Unit C/D/E) - **EXECUTE**
-- [ ] NFR Design (per-unit, Unit C/D/E) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit, Unit C/D/E) - **EXECUTE**
-- [ ] Code Generation (per-unit, Unit C/D/E) - **EXECUTE**
+**Unit C `order` 進捗** (worktree: future-unit-c, Comprehensive)
+- [x] Functional Design (Unit C, 2026-05-21, PR #65 マージ済み) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、凍結契約整合修正反映済み
+- [x] NFR Requirements (Unit C, 2026-05-23) — nfr-requirements.md (NFRC-C01〜C25) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N13 全 13 問対話ヒアリング完了、ユーザ承認待ち
+- [ ] NFR Design (Unit C) - **EXECUTE**
+- [ ] Infrastructure Design (Unit C) - **EXECUTE**
+- [ ] Code Generation (Unit C) - **EXECUTE**
+
+**他 Unit (worktree 別、Unit D/E)**
+- [ ] Functional Design (per-unit, Unit D/E) - **EXECUTE**
+- [ ] NFR Requirements (per-unit, Unit D/E) - **EXECUTE**
+- [ ] NFR Design (per-unit, Unit D/E) - **EXECUTE**
+- [ ] Infrastructure Design (per-unit, Unit D/E) - **EXECUTE**
+- [ ] Code Generation (per-unit, Unit D/E) - **EXECUTE**
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
