@@ -9,4 +9,8 @@ locals {
   github_owner  = "ryotinjpn"
   github_repo   = "goro2pay"
   github_branch = "develop"
+
+  # Unit C 追加: CloudWatch Alarms 通知先メール (Q-I6 = A)。
+  # 本番化時は env ごとの terraform.tfvars 等で個別アドレスを設定する想定。
+  alarm_email = "alerts@example.com"
 }
