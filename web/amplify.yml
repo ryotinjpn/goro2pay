@@ -6,10 +6,9 @@
 # (infra/modules/amplify/amplify.tf 参照)。本ファイルの appRoot: web と
 # 一致させて初めて Amplify がリポジトリの web/ サブディレクトリで build する。
 #
-# Infra (PR feat/unit-a-infra) と Frontend (本 PR) の両方に同一内容の
-# amplify.yml を持つ (Infra 側は modules/amplify/tests/fixtures/amplify.yml)。
-# Infra 側が Frontend ブランチ未マージでも単独 plan できるようにするための
-# ポータブル化。
+# Infra (PR #70 でマージ済) と Frontend (本 PR) で同一内容の amplify.yml を
+# 持つ。Infra 側のテスト fixture (modules/amplify/tests/fixtures/amplify.yml)
+# も同期しておくこと。
 version: 1
 applications:
   - appRoot: web

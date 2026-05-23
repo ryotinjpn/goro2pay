@@ -700,6 +700,20 @@ function useBudgetRaise(): {
 };
 ```
 
+### 9.1 クロスユニット TanStack Query key 契約
+
+Unit C の注文完了後に Unit B の残高表示を即時更新するため、以下の query key 契約を凍結する。
+
+| Query Key | 所有 Unit | 参照 Unit | 用途 |
+|---|---|---|---|
+| `['balance']` | Unit B (`useWallet`) | Unit C (`useOrder`) | 注文完了時に Unit C が `invalidateQueries({ queryKey: ['balance'] })` を呼ぶ |
+
+**Unit C の実装責務**:
+- `useOrder().placeOrder()` が成功したとき、`queryClient.invalidateQueries({ queryKey: ['balance'] })` を呼ぶ
+- この invalidate により Unit B の `useWallet` が即時 refetch し、`BalanceDisplay` に最新残高が反映される
+
+**変更ルール**: `['balance']` の query key を変更する場合、Unit B と Unit C の両方を同時に更新すること。
+
 ---
 
 ## 10. 環境変数 (Unit 横串で参照する設定)
@@ -748,7 +762,20 @@ function useBudgetRaise(): {
 
 ---
 
-## 12. 変更履歴
+## 12. 共有 Frontend インフラ (Unit A 実装 → 全 Unit 再利用)
+
+Unit A が実装する以下のコンポーネントは **Unit B〜E 全て** で共有する。各 Unit は独自の HTTP クライアントや BFF Route Handler を作成しない。
+
+| LC (Unit A) | 共有する Unit | 用途 |
+|---|---|---|
+| **LC-AUTH-09** `apiClient` (`web/lib/apiClient.ts`) | B, C, D, E | `/api/*` への authenticated fetch（`Authorization: Bearer <accessToken>` 自動付与、BFF 経由） |
+| **LC-AUTH-18** `BffProxyRouteHandler` (`web/app/api/[...path]/route.ts`) | B, C, D, E | catch-all proxy — `/api/*` を API Gateway に転送。各 Unit は専用 Route Handler ファイルを新設しない |
+
+**変更ルール**: `apiClient` の公開 IF（`request(input)` シグネチャ）や `BffProxyRouteHandler` を変更する場合、影響を受ける全 Unit（B〜E）に共有すること。
+
+---
+
+## 13. 変更履歴
 
 | Date | Version | 変更内容 | 影響 Unit |
 |---|---|---|---|
