@@ -42,7 +42,7 @@ type OrderRecord struct {
 	Source         string
 }
 
-// Sentinel errors (凍結契約 §4.3)。
+// Sentinel errors (凍結契約 §4.3 + 内部運用エラー)。
 var (
 	// ErrInsufficientFunds は WalletService.Deduct から伝播する残高不足エラー。
 	// Unit C は HTTP 402 にマッピングする (BR-C39 / NFRC-C22)。
@@ -52,4 +52,10 @@ var (
 	// 同一 idempotencyKey に対し異なる payload で再送された場合に発生する。
 	// Unit C は HTTP 409 にマッピングする (BR-C39)。
 	ErrIdempotencyConflict = errors.New("order: idempotency conflict")
+
+	// ErrWalletUnconfigured は WalletService 実装が未配線である運用エラー。
+	// Unit B Code Generation 到達前の暫定 unconfiguredWalletService が返す
+	// (B-C2 修正)。凍結契約 §4.3 のビジネスエラーではなく内部運用エラー。
+	// Handler は HTTP 503 SERVICE_UNAVAILABLE にマッピングする。
+	ErrWalletUnconfigured = errors.New("order: wallet service is not configured")
 )

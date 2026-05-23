@@ -144,6 +144,13 @@ func mapOrderError(c *gin.Context, err error) {
 		c.JSON(http.StatusConflict, errorResponseDTO{
 			Error: errorDetail{Code: "IDEMPOTENCY_CONFLICT", Message: "重複リクエストです"},
 		})
+	case errors.Is(err, order.ErrWalletUnconfigured):
+		// Unit B WalletService 未配線 (B-C2 暫定): 503 SERVICE_UNAVAILABLE。
+		// 402 INSUFFICIENT_FUNDS と区別することで NFRC-C22 の 402 メトリクス
+		// 汚染を避け、Frontend も `/budget-empty` 遷移を起動しない。
+		c.JSON(http.StatusServiceUnavailable, errorResponseDTO{
+			Error: errorDetail{Code: "SERVICE_UNAVAILABLE", Message: "ダメ化サービスは準備中です"},
+		})
 	default:
 		c.JSON(http.StatusInternalServerError, errorResponseDTO{
 			Error: errorDetail{Code: "INTERNAL_ERROR", Message: "ダメ化に失敗しました"},

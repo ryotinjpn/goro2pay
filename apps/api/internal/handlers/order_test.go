@@ -99,6 +99,26 @@ func TestOrderHandler_PlaceOrder_IdempotencyConflict_409(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, w.Code)
 }
 
+// B-C2 修正検証: ErrWalletUnconfigured が 503 SERVICE_UNAVAILABLE にマッピングされる。
+func TestOrderHandler_PlaceOrder_WalletUnconfigured_503(t *testing.T) {
+	svc := &fakeOrderService{
+		placeOrderFn: func(ctx context.Context, userID string, req order.PlaceOrderRequest) (*order.PlaceOrderResult, error) {
+			return nil, order.ErrWalletUnconfigured
+		},
+	}
+	r := setupRouter(svc)
+	body := `{"category":"food","idempotencyKey":"01HZ"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/orders", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusServiceUnavailable, w.Code, "ErrWalletUnconfigured must map to 503")
+	var res errorResponseDTO
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &res))
+	assert.Equal(t, "SERVICE_UNAVAILABLE", res.Error.Code)
+}
+
 func TestOrderHandler_PlaceOrder_InternalError_500(t *testing.T) {
 	svc := &fakeOrderService{
 		placeOrderFn: func(ctx context.Context, userID string, req order.PlaceOrderRequest) (*order.PlaceOrderResult, error) {

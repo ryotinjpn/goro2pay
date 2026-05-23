@@ -2,6 +2,7 @@ package bedrock
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -43,6 +44,57 @@ type BedrockRuntimeAPI interface {
 	Converse(ctx context.Context, params *bedrockruntime.ConverseInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.ConverseOutput, error)
 }
 
+// RetryReporter はリトライ発動時に呼ばれる callback (P-OBS-03 / NFRC-C13-2)。
+//
+// import cycle (bedrock → order) を避けるため、bedrock package 内で型を定義し、
+// main.go の DI 配線で order.LogBedrockRetry を bridge して注入する。
+// 未設定時のデフォルトは NoopRetryReporter。
+type RetryReporter func(ctx context.Context, attempt int, errorClass string, elapsedMs int64)
+
+// NoopRetryReporter は RetryReporter のデフォルト実装。何もしない。
+func NoopRetryReporter(_ context.Context, _ int, _ string, _ int64) {}
+
+// classifyError は AWS SDK / Smithy エラーを分類名 (string) で返す。
+//
+// CloudWatch Logs metric filter (NFRC-C13-2) で `errorClass` キーで集計するため、
+// 安定した文字列ラベルを返すことが要件。
+func classifyError(err error) string {
+	if err == nil {
+		return "Nil"
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "DeadlineExceeded"
+	}
+	if errors.Is(err, context.Canceled) {
+		return "Canceled"
+	}
+	var throttle *types.ThrottlingException
+	if errors.As(err, &throttle) {
+		return "ThrottlingException"
+	}
+	var unavailable *types.ServiceUnavailableException
+	if errors.As(err, &unavailable) {
+		return "ServiceUnavailableException"
+	}
+	var internal *types.InternalServerException
+	if errors.As(err, &internal) {
+		return "InternalServerException"
+	}
+	var validation *types.ValidationException
+	if errors.As(err, &validation) {
+		return "ValidationException"
+	}
+	var accessDenied *types.AccessDeniedException
+	if errors.As(err, &accessDenied) {
+		return "AccessDeniedException"
+	}
+	var notFound *types.ResourceNotFoundException
+	if errors.As(err, &notFound) {
+		return "ResourceNotFoundException"
+	}
+	return "Unknown"
+}
+
 // defaultClient は Lambda INIT フェーズで初期化される Bedrock SDK Client (P-INIT-01)。
 //
 // init() 失敗時は panic で fail-fast し、Lambda 起動失敗を CloudWatch で即検知する。
@@ -65,11 +117,13 @@ func init() {
 // BedrockAdapter implementation。
 //
 // 単一呼出のタイムアウトは 1500ms (NFRC-C07)、リトライ判定は RetryClassifier
-// に委譲する (NFRC-C06、P-RETRY-01)。
+// に委譲する (NFRC-C06、P-RETRY-01)。retryReporter はリトライ発動時に呼ばれ、
+// NFRC-C13-2 の WARN ログ出力 (P-OBS-03) に bridge される。
 type ClaudeBedrockAdapter struct {
-	client     BedrockRuntimeAPI
-	classifier RetryClassifier
-	modelID    string
+	client         BedrockRuntimeAPI
+	classifier     RetryClassifier
+	modelID        string
+	retryReporter  RetryReporter
 }
 
 const (
@@ -97,16 +151,28 @@ func NewClaudeBedrockAdapter() *ClaudeBedrockAdapter {
 // NewClaudeBedrockAdapterWithClient はテスト用に mock client を注入できる constructor。
 //
 // 統合テスト・PBT で SDK 呼出を完全制御するために使う (NFRC-C16 / P-MOCK-01)。
+// retryReporter は NoopRetryReporter で初期化される。
 func NewClaudeBedrockAdapterWithClient(client BedrockRuntimeAPI) *ClaudeBedrockAdapter {
 	modelID := os.Getenv(envInferenceProfileID)
 	if modelID == "" {
 		modelID = defaultInferenceProfileID
 	}
 	return &ClaudeBedrockAdapter{
-		client:     client,
-		classifier: NewBedrockRetryClassifier(),
-		modelID:    modelID,
+		client:        client,
+		classifier:    NewBedrockRetryClassifier(),
+		modelID:       modelID,
+		retryReporter: NoopRetryReporter,
 	}
+}
+
+// SetRetryReporter は retryReporter を差し替える (main.go の DI 配線で
+// order.LogBedrockRetry を bridge する用途)。
+func (a *ClaudeBedrockAdapter) SetRetryReporter(r RetryReporter) {
+	if r == nil {
+		a.retryReporter = NoopRetryReporter
+		return
+	}
+	a.retryReporter = r
 }
 
 // InferOrderPlan は Bedrock Claude を呼んで注文計画を生成する。
@@ -151,18 +217,21 @@ func (a *ClaudeBedrockAdapter) InferOrderPlan(parentCtx context.Context, history
 			if perr != nil {
 				lastErr = perr
 				slog.WarnContext(parentCtx, "bedrock_response_invalid", "attempt", attempt, "error", perr.Error())
-				if !a.classifier.ShouldRetry(perr) {
+				if !a.classifier.ShouldRetry(perr) || attempt >= maxAttempts {
 					break
 				}
+				// レスポンス解釈失敗もリトライ発動 (NFRC-C13-2)
+				a.retryReporter(parentCtx, attempt+1, "ResponseInvalid", elapsed.Milliseconds())
 				continue
 			}
 			plan, perr := ParsePlanResponse(text)
 			if perr != nil {
 				lastErr = perr
 				slog.WarnContext(parentCtx, "bedrock_response_invalid", "attempt", attempt, "error", perr.Error())
-				if !a.classifier.ShouldRetry(perr) {
+				if !a.classifier.ShouldRetry(perr) || attempt >= maxAttempts {
 					break
 				}
+				a.retryReporter(parentCtx, attempt+1, "ResponseInvalid", elapsed.Milliseconds())
 				continue
 			}
 			return &Plan{
@@ -172,14 +241,17 @@ func (a *ClaudeBedrockAdapter) InferOrderPlan(parentCtx context.Context, history
 				Category:         plan.Category,
 				Source:           "bedrock",
 				BedrockLatencyMs: time.Since(overall).Milliseconds(),
-				BedrockAttempt:  attempt,
+				BedrockAttempt:   attempt,
 			}, nil
 		}
 
 		lastErr = err
-		_ = elapsed
 		if !a.classifier.ShouldRetry(err) {
 			return nil, err
+		}
+		// 次の attempt がある場合のみリトライ通知 (NFRC-C13-2 / P-OBS-03)
+		if attempt < maxAttempts {
+			a.retryReporter(parentCtx, attempt+1, classifyError(err), elapsed.Milliseconds())
 		}
 		// 待機なしで即リトライ (NFRC-C06、3 秒予算遵守を優先)
 	}

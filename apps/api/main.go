@@ -60,16 +60,20 @@ func main() {
 	// Unit C 依存コンポーネント (P-DI-01 手動 DI、Unit A 統一)。
 	// Bedrock / DynamoDB SDK は package init() で初期化済み (P-INIT-01)。
 	bedrockAdapter := bedrock.NewClaudeBedrockAdapter()
+	// import cycle (bedrock → order) 回避のため bedrock package で
+	// RetryReporter 型を定義し、main.go 側で order.LogBedrockRetry を bridge
+	// して注入する (P-OBS-03 / NFRC-C13-2)。
+	bedrockAdapter.SetRetryReporter(order.LogBedrockRetry)
 	deliveryAdapter := delivery.NewMockDeliveryAdapter()
 	fallbackProvider := fallback.NewSimpleFallbackProvider()
 	planBuilder := order.NewBedrockPlanBuilder(bedrockAdapter, fallbackProvider)
 	orderHistoryRepo := orderhistory.NewRepository()
 
 	// Unit B WalletService は本 PR では未配線 (Unit B Code Generation 完了後に
-	// ここで実装を注入する)。本 PR では noopWalletService をスタブとして使い、
-	// route 登録の整合だけ確保する。Unit B 実装到達まで POST /api/orders は
-	// ErrInsufficientFunds を返す動作になる (デプロイ時の安全策)。
-	walletStub := newNoopWalletService()
+	// ここで実装を注入する)。本 PR では unconfiguredWalletService をスタブとして
+	// 使い、route 登録の整合だけ確保する。Unit B 実装到達まで POST /api/orders は
+	// 503 SERVICE_UNAVAILABLE を返す (B-C2 修正後、誤 402 を出さないように変更)。
+	walletStub := newUnconfiguredWalletService()
 	orderSvc := order.NewService(orderHistoryRepo, planBuilder, deliveryAdapter, walletStub)
 	orderHandler := handlers.NewOrderHandler(orderSvc)
 
