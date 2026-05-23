@@ -337,41 +337,65 @@ CD なしの暗黙手動運用。
 
 ```
 infra/envs/dev/
-   └─ main.tf
-        └─ module "auth" (= infra/modules/auth/)
-              ├─ aws_cognito_user_pool.main
-              ├─ aws_cognito_user_pool_client.web
-              ├─ aws_lambda_function.pre_signup ─┐
-              ├─ data.archive_file.pre_signup ──┘
-              ├─ aws_apigatewayv2_api.main
-              ├─ aws_apigatewayv2_authorizer.cognito
-              ├─ aws_apigatewayv2_stage.default
-              ├─ aws_apigatewayv2_integration.api_lambda
-              ├─ aws_apigatewayv2_route.logout
-              ├─ aws_ecr_repository.api ─┐
-              ├─ aws_ecr_lifecycle_policy.api ┘
-              ├─ aws_lambda_function.api ─┐
-              │   (lifecycle.ignore_changes = [image_uri])
-              ├─ aws_codestarconnections_connection.github
-              ├─ aws_amplify_app.web ─┐
-              ├─ aws_amplify_branch.develop ┘
-              ├─ aws_codepipeline.api ─┐
-              ├─ aws_codebuild_project.api ─┤
-              ├─ aws_s3_bucket.codepipeline_artifacts ┘
-              ├─ aws_lambda_permission.* ─┘
-              ├─ aws_iam_role.* + aws_iam_role_policy.*
-              └─ aws_cloudwatch_log_group.*
+   ├─ providers.tf  (provider "aws" + default_tags)
+   ├─ versions.tf   (terraform { required_version, required_providers })
+   ├─ locals.tf     (env / region / github_*)
+   ├─ main.tf
+   │   ├─ module "codestar_connection"
+   │   │     └─ aws_codestarconnections_connection.github (Unit=shared)
+   │   ├─ module "cognito"
+   │   │     ├─ aws_cognito_user_pool.main
+   │   │     ├─ aws_cognito_user_pool_client.web
+   │   │     ├─ data.archive_file.pre_signup
+   │   │     ├─ aws_lambda_function.pre_signup
+   │   │     ├─ aws_lambda_permission.cognito_invoke_pre_signup
+   │   │     ├─ aws_iam_role.pre_signup_lambda + policy
+   │   │     └─ aws_cloudwatch_log_group.pre_signup
+   │   ├─ module "api_gateway"
+   │   │     ├─ aws_apigatewayv2_api.main
+   │   │     ├─ aws_apigatewayv2_authorizer.cognito
+   │   │     ├─ aws_apigatewayv2_stage.default (+ access_log_settings)
+   │   │     ├─ aws_apigatewayv2_integration.api_lambda
+   │   │     ├─ aws_apigatewayv2_route.logout
+   │   │     └─ aws_cloudwatch_log_group.apigw_access
+   │   ├─ module "lambda_api"
+   │   │     ├─ aws_ecr_repository.api + aws_ecr_lifecycle_policy.api
+   │   │     ├─ aws_lambda_function.api (lifecycle.ignore_changes=[image_uri])
+   │   │     ├─ aws_codepipeline.api + aws_codebuild_project.api
+   │   │     ├─ aws_s3_bucket.codepipeline_artifacts
+   │   │     ├─ aws_iam_role.api_lambda + aws_iam_role.codepipeline_api + aws_iam_role.codebuild_api
+   │   │     └─ aws_cloudwatch_log_group.api
+   │   ├─ module "amplify"
+   │   │     ├─ aws_amplify_app.web (lifecycle.ignore_changes=[oauth_token, access_token])
+   │   │     ├─ aws_amplify_branch.develop
+   │   │     └─ aws_iam_role.amplify_ssr (managed policy AWSAmplifyServerSideRendering attach)
+   │   └─ aws_lambda_permission.apigw_invoke_api
+   │         (両 module の output を必要とするため envs 側で組立、
+   │          循環依存を避ける)
+   └─ outputs.tf  (各 module 経由の参照を export)
 ```
 
-### 3.2 後続 PR からの参照
+### 3.2 module 間の output → variable 受け渡し
 
 ```
-[Unit A 完結済み: infra/modules/amplify/ も Auth module に同居]
+codestar_connection.connection_arn ─┐
+                                    ├─→ lambda_api.codestar_connection_arn
+                                    └─→ amplify.codestar_connection_arn
+cognito.user_pool_id / client_id ───┬─→ api_gateway / lambda_api / amplify
+api_gateway.api_endpoint ───────────→ amplify.api_endpoint
+api_gateway.api_execution_arn ──────→ envs/dev/aws_lambda_permission.source_arn
+lambda_api.api_lambda_invoke_arn ───→ api_gateway.api_lambda_invoke_arn
+lambda_api.api_lambda_function_name → envs/dev/aws_lambda_permission.function_name
+```
+
+### 3.3 後続 PR からの参照
+
+```
 [各 Unit (B/C/D/E) PR]
-   └─ var.api_id                ← module.auth.api_id
-   └─ var.cognito_authorizer_id ← module.auth.cognito_authorizer_id
-   └─ var.api_lambda_invoke_arn ← module.auth.api_lambda_invoke_arn
-   └─ var.api_lambda_role_arn   ← module.auth.api_lambda_role_arn (DynamoDB 権限を追加)
+   └─ module.api_gateway.api_id                ← 新 route 追加時に参照
+   └─ module.api_gateway.cognito_authorizer_id ← route の authorizer_id
+   └─ module.lambda_api.api_lambda_invoke_arn  ← 新 integration 用 (本 module の Lambda を共用)
+   └─ module.lambda_api.api_lambda_role_name   ← DynamoDB / Bedrock 権限を attach
 ```
 
 ---
@@ -461,8 +485,10 @@ terraform destroy -var="github_owner=<your-github-account>"
 infra/envs/
 ├── dev/
 │   ├── backend.tf      # S3 + use_lockfile (Q-I6)
-│   ├── providers.tf    # default_tags (Q-I11)
-│   ├── main.tf         # module "auth" 呼出
+│   ├── providers.tf    # provider "aws" + default_tags (Q-I11)
+│   ├── versions.tf     # terraform { required_version, required_providers }
+│   ├── locals.tf       # env / region / github_*
+│   ├── main.tf         # 5 module 呼出 + aws_lambda_permission.apigw_invoke_api
 │   ├── variables.tf
 │   └── outputs.tf
 └── prd/
@@ -583,15 +609,20 @@ When productization is decided, the following changes are required:
 5. `web/` の Next.js Frontend 雛形（Auth Unit 担当ページ部分）
 6. `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket 作成)
 7. `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push)
-8. `infra/modules/auth/*.tf` の HCL 本体（cognito.tf / pre_signup_lambda.tf / api_gateway.tf / api_lambda.tf / ecr.tf / logout_route.tf / amplify.tf / codepipeline.tf / iam.tf / log_groups.tf）
-9. `infra/envs/dev/*.tf` の HCL 本体（backend.tf / providers.tf / main.tf）
+8. 機能別 5 module の HCL 本体:
+   - `infra/modules/codestar_connection/` (main.tf / variables.tf / outputs.tf / versions.tf / locals.tf)
+   - `infra/modules/cognito/` (cognito.tf / pre_signup_lambda.tf / iam.tf 他)
+   - `infra/modules/api_gateway/` (api_gateway.tf / routes.tf 他)
+   - `infra/modules/lambda_api/` (api_lambda.tf / ecr.tf / codepipeline.tf / iam.tf 他)
+   - `infra/modules/amplify/` (amplify.tf / iam.tf 他)
+9. `infra/envs/dev/*.tf` の HCL 本体（backend.tf / providers.tf / versions.tf / locals.tf / main.tf / outputs.tf）
 10. `infra/envs/prd/README.md` placeholder
-11. terraform-test の `*.tftest.hcl` テストファイル 6 種
+11. 各 module 配下の `tests/*.tftest.hcl` テストファイル (mock_provider ベース、計 18 run)
 
 ### 9.2 整合性レビュー対象
 
 Code Generation 完了後に確認:
 
 - 既存 [unit-interfaces.md §3.3](../../interfaces/unit-interfaces.md) の `path` 表記と HTTP API での実 route が一致するか
-- 既存 [unit-of-work.md §4.1](../../../inception/application-design/unit-of-work.md) の `lambda_api/` 横串記述に脚注追加が必要か
-- Frontend Amplify 設定（Amplify Hosting 別 PR で構築時）が `module.auth.user_pool_id` / `user_pool_client_id` / `api_endpoint` を正しく参照できるか
+- 既存 [unit-of-work.md §4.1](../../../inception/application-design/unit-of-work.md) の module 名と本書実装が一致 (新設の `codestar_connection` を §4.1 に追記する余地あり)
+- Frontend Amplify 設定（branch env vars）が `module.cognito.user_pool_id` / `user_pool_client_id` / `module.api_gateway.api_endpoint` を正しく参照できるか

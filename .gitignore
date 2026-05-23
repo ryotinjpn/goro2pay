@@ -1,0 +1,39 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Frontend (Next.js / Node)
+web/node_modules/
+web/.next/
+web/out/
+web/.env*.local
+web/coverage/
+web/playwright-report/
+web/test-results/
+
+# Backend (Go)
+apps/api/dist/
+apps/api/bin/
+apps/api/coverage.out
+apps/api/.env*
+
+# Lambda zip 中間
+infra/lambdas/**/dist/
+infra/**/.terraform/tmp/
+
+# Terraform
+# envs 配下の .terraform.lock.hcl はチーム再現性確保のためコミット対象 (Terraform 公式推奨)。
+# modules 配下の lock は単独 init 時の中間生成物なので無視する。
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/*.tfvars
+!**/*.tfvars.example
+**/.terragrunt-cache/
+infra/modules/**/.terraform.lock.hcl
+
+# Misc
+*.log
+node_modules/

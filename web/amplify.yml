@@ -1,0 +1,22 @@
+# Amplify Hosting build spec (monorepo)
+# 公式仕様: https://docs.aws.amazon.com/amplify/latest/userguide/monorepo-configuration.html
+# AMPLIFY_MONOREPO_APP_ROOT 環境変数 (= web) を Amplify branch に設定する。
+version: 1
+applications:
+  - appRoot: web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*
