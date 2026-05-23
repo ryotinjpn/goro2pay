@@ -16,7 +16,12 @@ import (
 )
 
 func TestLogout_HappyPath(t *testing.T) {
-	// 構造化ログを buffer に切替
+	// 構造化ログを buffer に切替。
+	//
+	// NOTE: slog.SetDefault は process global state を書き換える。本テストは
+	// t.Parallel() を使わない前提で動作する。並列化したい場合は logger を
+	// handler に DI する形にリファクタが必要 (logger を引数や struct field で
+	// 受け取る等)。本 MVP では非並列実行で十分。
 	var buf bytes.Buffer
 	prevDefault := slog.Default()
 	slog.SetDefault(slog.New(logging.NewContextAwareSlogHandler(&buf, slog.LevelInfo)))
