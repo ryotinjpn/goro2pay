@@ -16,6 +16,12 @@ import (
 // プロパティ:
 //   - べき等性: Normalize(Normalize(x)) == Normalize(x)
 //   - 大文字小文字不問: Normalize(strings.ToUpper(x)) == Normalize(x)
+//
+// NOTE: 本 MVP では Unicode 正規化 (NFC / NFKC) を行わない。
+// メールアドレスは慣習的に ASCII (RFC 5321 envelope の局所部 ASCII 制限) を
+// 想定し、全角英数字 / Unicode の合字等は呼出側 (Cognito Pre Sign-up) で
+// 弾く想定。仕様 R-Email-1 (RFC 5321/5322) の解釈で Unicode を許可する場合は
+// `golang.org/x/text/unicode/norm` で NFKC を加える拡張余地あり。
 func Normalize(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
