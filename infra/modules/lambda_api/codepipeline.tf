@@ -100,11 +100,15 @@ resource "aws_codepipeline" "api" {
     }
   }
 
+  # NOTE: 本 MVP では Deploy 専用 stage を持たず、CodeBuild の post_build フェーズ
+  # で `aws lambda update-function-code` を実行する (buildspec.yml 参照)。
+  # 「BuildAndDeploy」名でステージとアクションを表記し、Deploy 工程も含まれる
+  # ことを明示する。本番化時は別途 Deploy stage を切り出す予定 (envs/prd/README)。
   stage {
-    name = "Build"
+    name = "BuildAndDeploy"
 
     action {
-      name             = "Build"
+      name             = "BuildAndDeploy"
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
