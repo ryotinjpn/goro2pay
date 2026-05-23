@@ -1,6 +1,14 @@
 # Amplify Hosting build spec (monorepo)
 # 公式仕様: https://docs.aws.amazon.com/amplify/latest/userguide/monorepo-configuration.html
-# AMPLIFY_MONOREPO_APP_ROOT 環境変数 (= web) を Amplify branch に設定する。
+#
+# AMPLIFY_MONOREPO_APP_ROOT (= "web") は Terraform 側で
+# `aws_amplify_branch.develop.environment_variables` として注入される
+# (infra/modules/amplify/amplify.tf 参照)。本ファイルの appRoot: web と
+# 一致させて初めて Amplify がリポジトリの web/ サブディレクトリで build する。
+#
+# Infra (PR #70 でマージ済) と Frontend (本 PR) で同一内容の amplify.yml を
+# 持つ。Infra 側のテスト fixture (modules/amplify/tests/fixtures/amplify.yml)
+# も同期しておくこと。
 version: 1
 applications:
   - appRoot: web
