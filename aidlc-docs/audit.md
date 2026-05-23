@@ -812,3 +812,47 @@ Functional Design ステージを in_progress として開始。
 **Context**: Infrastructure Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
 
 ---
+
+## NFR Requirements (Unit C) — Plan 作成
+**Timestamp**: 2026-05-23T10:00:00Z
+**User Input**: "future-unit-cに切り替えてunit-c続き実行"
+**AI Response**: ブランチ `docs/construction-order-nfr-requirements` を develop ベースで作成。`aidlc-docs/construction/plans/order-nfr-requirements-plan.md` を作成、Comprehensive 深度で 13 問の確認質問（Q-N1: E2E レイテンシ予算配分 / Q-N2: GetHistory 応答時間 / Q-N3: Bedrock スロットリング / Q-N4: 冪等性 TTL SLA / Q-N5: PBT 範囲 / Q-N6: 構造化ログ項目 / Q-N7: アラーム条件 / Q-N8: Bedrock モデル / Q-N9: Lambda メモリ / Q-N10: TanStack Query / Q-N11: エラー UX / Q-N12: コンプライアンス / Q-N13: テストスタブ方針）を埋め込む。Functional Design (Q-1〜Q-12) からの引き継ぎ事項 8 件と requirements.md の Unit C 関連 NFR 13 個を §1.1 / §1.2 で整理。
+**Context**: ⛔ GATE: NFR Requirements Plan のユーザ承認を待機中
+
+---
+
+## NFR Requirements (Unit C) — Plan 承認 & 対話ヒアリング完了
+**Timestamp**: 2026-05-23T10:30:00Z
+**User Input**: "Q-N1 から 1 問ずつ対話ヒアリング開始"
+**User Inputs** (Q-N1〜Q-N13、対話形式で順次、各 Q で「推奨は？」サブ問合せを挟みながら):
+- Q-N1: "推奨を考えて提案して" → AI 数値検証で B 案不可能 / C 案不整合を指摘 / D 案 (p95 3.0s / p99 5.0s + ケース別サブターゲット) を推奨 → "d"
+- Q-N2: "推奨は？" → AI コールドスタート考慮で B (P50 100ms / P95 500ms) を推奨 → "b"
+- Q-N3: "推奨は？" → AI Q-N3 と Q-N7 の連動性 / NFR-OBS-02 整合で B (CloudWatch メトリクスフィルタ) を推奨 → "b"
+- Q-N4: "推奨は？" → AI SLA 設計のベストプラクティスで B (24h 経過後の重複は許容明記) を推奨 → "B 推奨で確定"
+- Q-N5: "推奨は？" → AI Unit B PBT との責務分担で B (P-1 + P-3) を推奨、P-2 は E2E、フォールバック分岐は境界値テスト → "bで"
+- Q-N6: "推奨はどれ？" → AI Q-N3/Q-N7 メトリクスフィルタ要件で D (storeName / menuName / historyCount + source) を推奨 → "d"
+- Q-N7: "推奨は？" → AI Q-N3 整合 + フォールバック発動回数の重要性で D を推奨、E (402 応答率) は責務分離で除外 → "d"
+- Q-N8: "安くていい" → AI Claude 3 Haiku の ap-northeast-1 ネイティブ非対応を指摘し B (Claude 3.5 Haiku, $1.08/月) を推奨 → "続きどうぞ"（B 確定として処理）
+- Q-N9: "推奨は？" → AI Q-N1 予算と整合し B (256MB, arm64) を推奨、D 案 (エンドポイント別) は運用複雑化で除外 → "b"
+- Q-N10: "推奨はどっち" → AI データ特性整合で A (60 秒 + invalidate) を推奨、B (Unit B 統一 30 秒) は適材適所原則違反 → "a"
+- Q-N11: "推奨は？" → AI NFR-DEG-05 体現で C (自虐トースト 3 種ローテーション) を推奨 → "c"
+- Q-N12: "推奨は" → AI Q-N6=D で「Bedrock 本文ログ非記録」宣言の根拠として C (Bedrock プロンプト/レスポンスのログ記録方針) を推奨 → "c"
+- Q-N13: "推奨は？" → AI 環境×方針マトリクス明文化で D (A+B+C フル方針) を推奨 → "d"
+
+**AI Response**: 全回答を order-nfr-requirements-plan.md に [Answer] タグ反映。矛盾チェック実施 (Q-N1×Q-N2/Q-N9/Q-N3×Q-N7/Q-N5×Q-N13/Q-N6×Q-N12/Q-N7 責務分離/Q-N8×Q-N1/Q-N4 凍結契約/Q-N10×Q-N5/Q-N11×Q-N4 の 10 観点)、いずれも整合。追加質問なし。
+**Context**: ⛔ GATE: NFR Requirements 成果物生成への着手承認待機
+
+---
+
+## NFR Requirements (Unit C) — 成果物生成完了
+**Timestamp**: 2026-05-23T11:00:00Z
+**User Input**: "成果物生成へ進む" / "続行"
+**AI Response**: 成果物生成承認として受領、`aidlc-docs/construction/order/nfr-requirements/` 配下に Comprehensive 深度で 2 ファイルを生成:
+
+- **nfr-requirements.md** (NFRC-C01〜C25 の 25 NFR を 12 セクションで網羅): パフォーマンス要件 4 個 (E2E p95 3.0s/p99 5.0s ケース別サブターゲット、GetHistory P95 500ms、親 Context 5s、コールドスタート 600ms) / 信頼性要件 6 個 (冪等性 TTL 24h、Bedrock リトライ 1 回、タイムアウト 1.5s、フォールバック分岐閾値 5 件、History Insert 失敗時 200 応答、Context Cancel 即時伝播) / スケーラビリティ要件 1 個 / 観測性要件 3 個 (構造化ログ 19 項目、CloudWatch アラーム 3 種、NFR-OBS-02 厳密準拠) / テスト要件 3 個 (PBT P-1+P-3 / Bedrock スタブ環境別マトリクス / 統合テスト 9 シナリオ) / インフラ要件 3 個 (Lambda 256MB arm64、TanStack Query 60s+invalidate、Bedrock 3.5 Haiku) / ユーザビリティ要件 3 個 (1 タップ動線、自虐トースト 3 種ローテーション、ダメ化UX 全体方針) / セキュリティ要件 2 個 (Bedrock PII 観点、JWT 認証 Unit A 委譲) + トレーサビリティ表 + 後続ステージへの引き継ぎ
+- **tech-stack-decisions.md**: Backend (Go 1.23 / Gin / AWS SDK v2 / Bedrock Converse API / log/slog + ContextAwareSlogHandler / oklog/ulid v2 / gopter PBT / 手書き mock) / Frontend (Next.js App Router / TanStack Query v5 / Jotai / 手書き fetch ラッパ / Authorization: Bearer AccessToken / BFF Route Handler) / Infrastructure 高レベル方針 / Cross-Unit 統合 (Unit B WalletService、Unit D SuggestService、横串 Adapter) / NFR 整合性チェック表 + 後続ステージへの引き継ぎ
+
+aidlc-state.md に Unit C 進捗セクション (Comprehensive、worktree: future-unit-c) を新設、Functional Design [x] / NFR Requirements [x] / 残り 3 ステージ [ ] で更新。次は NFR Design ステージへ進行予定。
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
