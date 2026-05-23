@@ -54,18 +54,30 @@ func AttachUserID() gin.HandlerFunc {
 // UserIDFromContext は middleware で載せた userId を gin.Context から取り出す。
 // 認証必須 handler はこれを呼んで userId を得る。
 //
+// 取得経路 (どちらに値があっても拾える):
+//  1. gin.Context.Get(CtxKeyUserID) — handler から呼ぶ通常経路
+//  2. fallback: c.Request.Context().Value(CtxKeyUserID) —
+//     gin から外れた goroutine 内で c.Request.Context() を切り出した
+//     非同期処理から呼ぶケース (後続 Unit C/D 想定)
+//
+// どちらにも値が無ければ ErrUnauthorized を返す (防御的)。
 // claims 欠落で middleware が abort していれば、本関数まで到達しない。
-// もし呼ばれて値がなければ ErrUnauthorized を返す (防御的)。
 func UserIDFromContext(c *gin.Context) (string, error) {
-	v, exists := c.Get(string(logging.CtxKeyUserID))
-	if !exists {
-		return "", apperrors.ErrUnauthorized
+	// (1) gin.Context lookup
+	if v, exists := c.Get(string(logging.CtxKeyUserID)); exists {
+		if sub, ok := v.(string); ok && sub != "" {
+			return sub, nil
+		}
 	}
-	sub, ok := v.(string)
-	if !ok || sub == "" {
-		return "", apperrors.ErrUnauthorized
+	// (2) request.Context() fallback (middleware も両方に書いている)
+	if c.Request != nil {
+		if v := c.Request.Context().Value(logging.CtxKeyUserID); v != nil {
+			if sub, ok := v.(string); ok && sub != "" {
+				return sub, nil
+			}
+		}
 	}
-	return sub, nil
+	return "", apperrors.ErrUnauthorized
 }
 
 // extractClaims は API Gateway Cognito JWT Authorizer が
