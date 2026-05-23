@@ -5,7 +5,7 @@ import { Provider as JotaiProvider } from "jotai";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ensureAmplifyConfigured } from "@/lib/amplifyConfig";
-import { setupAuthHubListener } from "@/lib/authHubListener";
+import { setupAuthHubListener, teardownAuthHubListener } from "@/lib/authHubListener";
 import { SessionExpiredModalHost } from "@/components/auth/SessionExpiredModalHost";
 
 // AppProviders は アプリ全体に必要な Provider 群を組み合わせる。
@@ -22,7 +22,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
+    // setupAuthHubListener はモジュール内の registered フラグで二重登録を
+    // 防ぐ。AppProviders unmount や HMR reload 時には teardown して
+    // フラグごと reset し、再 mount で setup が再度動くようにする。
     setupAuthHubListener();
+    return () => {
+      teardownAuthHubListener();
+    };
   }, []);
 
   return (
