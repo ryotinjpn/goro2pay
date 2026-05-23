@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getDefaultStore } from "jotai";
 
 import { apiClient, _resetSessionExpiredHandling } from "@/lib/apiClient";
@@ -19,6 +19,11 @@ describe("apiClient", () => {
     _resetSessionExpiredHandling();
     const store = getDefaultStore();
     store.set(sessionExpiredAtom, null);
+  });
+
+  // 各テストで vi.spyOn(global, "fetch") を使うため、明示的に restore して
+  // 後続テストのスパイ重ね掛けを防ぐ。
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
