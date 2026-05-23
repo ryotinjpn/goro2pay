@@ -13,6 +13,7 @@ module "codestar_connection" {
 module "cognito" {
   source = "../../modules/cognito"
   env    = local.env
+  region = local.region
 }
 
 # API Gateway (Unit 横串)
@@ -40,6 +41,14 @@ module "lambda_api" {
 
 # API Gateway → API Lambda invoke 許可
 # 両 module の output を必要とするため、循環依存を避けるため envs 側に置く。
+#
+# source_arn は `${execution_arn}/*/*` (= 全 stage / 全 route から invoke 可) と
+# 広めに設定する。Auth Unit の Logout / Health route だけなら
+# `${execution_arn}/*/POST/api/auth/logout` 等に絞れるが、後続 Unit B/C/D/E が
+# 同じ API Lambda を再利用して新 route を追加するため、route ごとに
+# permission を増やす方式は煩雑。Lambda 自体は IAM Role で個別権限を絞っており、
+# API Gateway → Lambda 経路は同一 AWS アカウント内で閉じているため、本 MVP では
+# stage / route ワイルドカードで許容する。
 resource "aws_lambda_permission" "apigw_invoke_api" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
