@@ -5,7 +5,7 @@
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild/ECR を Unit A スコープに追加)
 **Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一)
 **Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持)
-**Updated**: 2026-05-22 (Terraform module を機能別 4 module に分割、unit-of-work.md §4.1 整合: cognito / api_gateway / lambda_api / amplify)
+**Updated**: 2026-05-22 (Terraform module を機能別 5 module に分割、unit-of-work.md §4.1 整合: codestar_connection / cognito / api_gateway / lambda_api / amplify)
 **Unit**: A (`auth`)
 **Stage**: Infrastructure Design / Construction
 **Predecessors**: [infrastructure-design.md](./infrastructure-design.md)
@@ -334,7 +334,7 @@ CD なしの暗黙手動運用。
 
 ## 3. Terraform モジュール依存関係
 
-### 3.1 本 PR 内の依存（実装は機能別 4 module 構成、unit-of-work.md §4.1 整合）
+### 3.1 本 PR 内の依存（実装は機能別 5 module 構成、unit-of-work.md §4.1 整合）
 
 ```
 infra/envs/dev/

@@ -5,7 +5,7 @@
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
 **Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一、cors_configuration を未設定化)
 **Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持。他 Unit の合意済みリポジトリ構造尊重)
-**Updated**: 2026-05-22 (Terraform module を機能別 4 module に分割: cognito / api_gateway / lambda_api / amplify、unit-of-work.md §4.1 整合。本書 §3 のリソース内容は変わらず配置 module のみ変更、§10.1 に整合性メモ追記済み)
+**Updated**: 2026-05-22 (Terraform module を機能別 5 module に分割: codestar_connection / cognito / api_gateway / lambda_api / amplify、unit-of-work.md §4.1 整合。本書 §3 のリソース内容は変わらず配置 module のみ変更、§10.1 に整合性メモ追記済み)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction

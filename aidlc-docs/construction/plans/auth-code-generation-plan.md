@@ -267,9 +267,14 @@ goro2pay/
 - [x] `infra/scripts/bootstrap-backend.sh` — S3 tfstate bucket 作成 + 暗号化 + Public access block
 - [x] `infra/scripts/bootstrap-ecr-initial.sh` — Local docker build → ECR `:bootstrap` tag push
 
-### Step 16: Terraform Modules (機能別 4 module、unit-of-work.md §4.1 準拠)
+### Step 16: Terraform Modules (機能別 5 module、unit-of-work.md §4.1 準拠)
 
-レビュー指摘により、当初予定していた単一 `infra/modules/auth/` は撤回し、unit-of-work.md §4.1 通り機能別 4 module に分割する:
+レビュー指摘により、当初予定していた単一 `infra/modules/auth/` は撤回し、unit-of-work.md §4.1 通り機能別 module に分割する。CodeStar Connection は CodePipeline / Amplify の双方が ARN を参照するため、独立した `codestar_connection/` module に切り出した結果、最終的に 5 module 構成 (`codestar_connection` / `cognito` / `api_gateway` / `lambda_api` / `amplify`):
+
+#### `infra/modules/codestar_connection/` (Unit 横串)
+- [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
+- [x] CodeStar Connection (Unit=shared タグ、CodePipeline / Amplify 双方が ARN を参照)
+- [x] `tests/codestar_connection_basic.tftest.hcl` — plan / outputs
 
 #### `infra/modules/cognito/` (Auth Unit 所有)
 - [x] `main.tf` / `variables.tf` / `outputs.tf` / `README.md`
@@ -302,10 +307,11 @@ goro2pay/
 - [x] `backend.tf` — S3 + use_lockfile = true
 - [x] `providers.tf` — default_tags
 - [x] `locals.tf` — env / region / github_owner / github_repo / github_branch (tfvars 方式から locals.tf 方式に変更)
-- [x] `main.tf` — 4 module 呼出 + CodeStar Connection (lambda_api と amplify で共有)
+- [x] `main.tf` — 5 module 呼出 (codestar_connection / cognito / api_gateway / lambda_api / amplify) + `aws_lambda_permission.apigw_invoke_api` (両 module の output を必要とするため envs 側で組立、循環依存回避)
 - [x] `outputs.tf` — 主要 6 種 (各 module の output を再公開)
 
 ### Step 18: Terraform Tests (各 module の tests/ ディレクトリ)
+- [x] `infra/modules/codestar_connection/tests/codestar_connection_basic.tftest.hcl`
 - [x] `infra/modules/cognito/tests/cognito_basic.tftest.hcl`
 - [x] `infra/modules/api_gateway/tests/api_gateway_basic.tftest.hcl`
 - [x] `infra/modules/lambda_api/tests/lambda_api_basic.tftest.hcl`
