@@ -54,8 +54,8 @@
 - [x] Functional Design (Unit C, 2026-05-21, PR #65 マージ済み) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、凍結契約整合修正反映済み
 - [x] NFR Requirements (Unit C, 2026-05-23, PR #78 マージ済み) — nfr-requirements.md (NFRC-C01〜C25) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N13 全 13 問対話ヒアリング完了
 - [x] NFR Design (Unit C, 2026-05-24, PR #79 マージ済み) — nfr-design-patterns.md (P-RETRY-01 / P-PLAN-01 / P-OBS-01〜03 / P-INIT-01 / P-DI-01 / P-MOCK-01 / P-PBT-01 / P-FE-ERR-01 / P-FE-TOAST-01〜02 / P-FE-LOAD-01 / P-FE-LOCK-01 の 14 パターン) / logical-components.md (LC-ORDER-01〜34 の 34 コンポーネント) 生成済み、Q-D1〜Q-D14 全 14 問対話ヒアリング完了
-- [x] Infrastructure Design (Unit C, 2026-05-24) — infrastructure-design.md / deployment-architecture.md 生成済み、Q-I1〜Q-I13 全 13 問推奨案で確定（ユーザ要請の一括回答 + Q-I1/Q-I11/Q-I12 を terraform-module-design 準拠に見直し）。新規 module 3 種（order_history / bedrock / observability）+ 既存 2 module（api_gateway / lambda_api）への追記、ユーザ承認待ち
-- [ ] Code Generation (Unit C) - **EXECUTE**
+- [x] Infrastructure Design (Unit C, 2026-05-24, PR #80 マージ済み) — infrastructure-design.md / deployment-architecture.md 生成済み、Q-I1〜Q-I13 全 13 問推奨案で確定（ユーザ要請の一括回答 + Q-I1/Q-I11/Q-I12 を terraform-module-design 準拠に見直し）。新規 module 3 種（order_history / bedrock / observability）+ 既存 2 module（api_gateway / lambda_api）への追記
+- [x] Code Generation (Unit C, 2026-05-24) — 約 101 ファイル生成 (Backend 41 + Frontend 24 + Infra 28 + Docs 8)、Step 1〜19 全完了。Backend Go テスト全パス、Frontend Vitest 44 全パス、Terraform tftest 12 全パス。ユーザ承認待ち
 
 **他 Unit (worktree 別、Unit D/E)**
 - [ ] Functional Design (per-unit, Unit D/E) - **EXECUTE**

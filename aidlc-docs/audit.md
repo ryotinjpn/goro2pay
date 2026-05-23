@@ -1012,3 +1012,33 @@ aidlc-state.md に Unit C Infrastructure Design を [x] に更新（Q-I1/Q-I11/Q
 **Context**: ⛔ GATE: Infrastructure Design 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
 
 ---
+
+## Code Generation (Unit C) — Plan 作成 (Part 1 Planning)
+**Timestamp**: 2026-05-24T03:00:00Z
+**User Input**: "Code Generation Part 1 (Planning) 着手 — 詳細実装計画を作成"
+**AI Response**: PR #80 (Infrastructure Design) マージ済みを develop fast-forward 取り込み確認、Code Generation ステージを開始。ブランチ `docs/construction-order-code-generation` を develop ベースで作成。`aidlc-docs/construction/plans/order-code-generation-plan.md` を作成。19 ステップの詳細手順 + ストーリー トレーサビリティ + テスト戦略 + Code Generation 段階での確定事項 (自虐トースト最終文言 / Bedrock プロンプトテンプレート / 環境変数 / Mock 4 シナリオ) を埋め込み。生成ファイル数概算 約 80 ファイル (実際は 101 ファイル) と工数を §8 に明記。
+**Context**: ⛔ GATE: Code Generation Plan のユーザ承認を待機中
+
+---
+
+## Code Generation (Unit C) — Part 2 Generation 完了
+**Timestamp**: 2026-05-24T05:00:00Z
+**User Input**: "一括で生成してくださいただしPRは分割します" → "一旦全部生成してからprを分割してあげてね"
+**AI Response**: Plan 承認として受領、Step 1〜19 を順次一括実行。約 101 ファイル生成:
+
+成果物:
+- **Backend (apps/api/, 約 41 ファイル)**: Adapter 層 (bedrock + delivery + fallback、各 implementation + mock + テスト) / Repository 層 (order_history、DynamoDB CRUD + inmemory) / Order 中核 (service / plan_builder / logger / event_logger / types / wallet interface、PBT P-1+P-3 各 100 sample + 統合 9 シナリオ) / 横串観測性 (LatencyMiddleware + Measure ヘルパ) / OrderHandler / main.go 配線 / wallet_stub.go (Unit B 暫定 stub) / Adapter サマリ + Business Logic + API Layer + Repository Layer の 4 サマリ
+- **Frontend (web/, 約 24 ファイル)**: lib (ulid / toasts / errorMappers / api/orders) / state (toastAtoms) / hooks (useDisableLock / useToast / useOrder / useOrderHistory) / components (Toast / ToastHost / GoroButton / OrderHistoryList / Skeleton) / pages (layout 編集 + page 編集 + OrderCompletionScreen) / Vitest 6 ファイル / Frontend サマリ
+- **Infrastructure (infra/, 約 28 ファイル)**: 新規 module 3 種 (order_history / bedrock / observability、各 main.tf / locals.tf / variables.tf / outputs.tf / README + tftest) / 既存 module 編集 5 ファイル (api_gateway/routes.tf / lambda_api/variables.tf / lambda_api/iam.tf / lambda_api/api_lambda.tf / lambda_api/outputs.tf) / envs/dev 編集 3 ファイル (locals.tf / main.tf / outputs.tf) / Infrastructure サマリ
+- **ドキュメント (8 ファイル)**: business-logic-summary / api-layer-summary / repository-layer-summary / adapters-summary / frontend-summary / infrastructure-summary / deployment-runbook / code-generation-summary
+
+主要な実装上の決定:
+- Go SDK の最新版が Go 1.24+ を必須とするため、go.mod を `go 1.22` → `go 1.24` に上げ、Dockerfile も `golang:1.22-alpine` → `golang:1.24-alpine` に変更
+- `apps/api/wallet_stub.go` に `noopWalletService` を暫定実装、Unit B WalletService が未配線のため API は常時 402 を返す (Unit B 完成時に main.go で差し替え)
+- terraform-test (Q-I13=C) は mock_provider で `infra/modules/{order_history,bedrock,observability}/tests/` に 12 テスト実装、全パス
+- 検証結果: Backend Go test 全パス、Frontend Vitest 44 テスト全パス、Terraform validate / test 全パス
+
+aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit ループ全 5 ステージ完了。
+**Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は 5 PR への分割コミット作業。
+
+---
