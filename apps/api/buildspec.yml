@@ -31,6 +31,11 @@ phases:
       - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
       - docker push $ECR_REPOSITORY_URI:latest
       - echo Updating Lambda function...
+      # NOTE: 本 MVP では --publish (バージョン publish) や alias 更新を行わない。
+      # 本番化時は以下を導入する予定 (envs/prd/README.md の productization):
+      #   - aws lambda update-function-code ... --publish (新バージョン番号取得)
+      #   - aws lambda update-alias --function-name ... --name live --function-version <ver>
+      #     で alias を切替えて blue/green / rollback を可能にする
       - aws lambda update-function-code
         --function-name $LAMBDA_FUNCTION_NAME
         --image-uri $ECR_REPOSITORY_URI:$IMAGE_TAG
