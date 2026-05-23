@@ -2,6 +2,12 @@
 # CodePipeline が動作する前に Lambda が起動できるよう、
 # ECR Repository に :bootstrap タグの初期 image を push する。
 # 1 度だけ実行 (それ以降は CodeBuild が image を更新する)。
+#
+# 依存: 本スクリプトは apps/api/Dockerfile を参照する。Dockerfile は
+# Backend 側の PR (feat/unit-a-backend) に含まれるため、両ブランチが
+# develop に揃う (Infra と Backend が両方マージ済み or 同 worktree に
+# checkout 済み) 状態で実行すること。Infra のみマージ済みで Dockerfile が
+# 存在しないと docker build 段階で失敗する。
 
 set -euo pipefail
 
