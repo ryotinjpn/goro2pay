@@ -978,3 +978,37 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 **Context**: ⛔ GATE: NFR Design 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
 
 ---
+
+## Infrastructure Design (Unit C) — Plan 作成
+**Timestamp**: 2026-05-24T01:00:00Z
+**User Input**: "developマージして" → "次を実施して" → "Infrastructure Design に着手"
+**AI Response**: PR #79 (NFR Design) マージ済みを develop fast-forward 取り込み確認、Infrastructure Design ステージを開始。ブランチ `docs/construction-order-infrastructure-design` を develop ベースで作成。`aidlc-docs/construction/plans/order-infrastructure-design-plan.md` を作成、Comprehensive 深度で 13 問の確認質問（Q-I1: Terraform module 構成 / Q-I2: DynamoDB キャパシティ / Q-I3: Bedrock IAM / Q-I4: アラーム実装 / Q-I5: SNS Topic 構成 / Q-I6: SNS 購読 / Q-I7: AWS Budgets 閾値 / Q-I8: PITR / Q-I9: 暗号化 / Q-I10: Bedrock 呼出方法 / Q-I11: API Gateway ルート配置 / Q-I12: Lambda IAM 更新 / Q-I13: terraform-test 範囲）を埋め込む。NFR Design / NFR Requirements からの確定済み前提 13 件と Unit C スコープ 10 項目を §1.1 / §1.2 で整理。
+**Context**: ⛔ GATE: Infrastructure Design Plan のユーザ承認を待機中
+
+---
+
+## Infrastructure Design (Unit C) — Plan 一括推奨案回答 + module 設計見直し
+**Timestamp**: 2026-05-24T01:30:00Z
+**User Input**: "一旦全て推奨で埋めて欲しい。選択したのには理由を記述しておいて" → "Q-I1 この分け方見直し" → "envs配下の書き方も踏襲してね" → "確定"
+**AI Response**: Q-I1〜Q-I13 を推奨案で一括回答、各回答に選定理由を [Answer] タグに記述。Q-I1（Terraform module 構成）はユーザ指摘により terraform-module-design 規約準拠（AWS リソースカテゴリ別機能分割）に見直し:
+- 当初案: Unit 別 `modules/order/` 1 module 集約 → 見直し後: 機能別 3 module 新規 + 既存 2 module 追記
+- 新規 module: `modules/order_history/`（DynamoDB OrderHistory + IAM Policy）/ `modules/bedrock/`（Bedrock IAM Policy、Unit C/D 共有候補）/ `modules/observability/`（CloudWatch Alarms 3 種 + SNS Topic + Budgets、横串）
+- 既存 module 追記: `modules/api_gateway/routes.tf` に Unit C ルート 2 本（Q-I11 = A → B）、`modules/lambda_api/iam.tf` に `additional_policy_arns` 受け取り attach（Q-I12 改定）
+- envs/dev/ 既存パターン踏襲: `local.env` / `local.region` 利用、provider `default_tags` で Project/Env/ManagedBy のみ、Unit タグは module 個別 `merge()`、`alarm_email` を locals に追加
+- 矛盾チェック実施 (Q-I1×Q-I12 / Q-I2×NFRC-C11 / Q-I3×Q-I10 / Q-I4×NFRC-C13 / Q-I5×Q-I6×Q-I7 / Q-I8×Q-I9×Unit B 統一 / Q-I10×NFRC-C20 / Q-I11×Q-I12×Q-I3 / Q-I13×Q-I2/Q-I3/Q-I4/Q-I8/Q-I9 / 全体×凍結契約 §3.2 の 10 観点)、整合確認。
+**Context**: ⛔ GATE: Infrastructure Design 成果物生成への着手承認待機
+
+---
+
+## Infrastructure Design (Unit C) — 成果物生成完了
+**Timestamp**: 2026-05-24T02:00:00Z
+**User Input**: "確定"
+**AI Response**: 成果物生成承認として受領、`aidlc-docs/construction/order/infrastructure-design/` 配下に Comprehensive 深度で 2 ファイルを生成:
+
+- **infrastructure-design.md** (11 セクション): スコープと前提 / ディレクトリ構造（Unit A 機能別 5 module + Unit B + Unit C 新規 3 module）/ リソース詳細（`modules/order_history/` DynamoDB + IAM、`modules/bedrock/` IAM Policy、`modules/observability/` CloudWatch Alarms + SNS + Budgets、既存 `api_gateway/routes.tf` 追記、既存 `lambda_api/iam.tf` 追記）/ 環境変数 / terraform-test 戦略 3 ファイル / デプロイ手順 / コスト見積（月 $1.89〜$11.61）/ トレーサビリティ / NFR 達成根拠 / 整合性メモ + 文書管理。各 module はファイル分割（main.tf / data.tf / locals.tf / variables.tf / outputs.tf）に厳格準拠
+- **deployment-architecture.md** (8 セクション): 全体構成図（ASCII アート）/ リクエストフロー詳細 6 種（通常 / リトライ後成功 / フォールバック発動 / 残高不足 / 冪等命中 / サーバエラー）/ 観測性データフロー（ログ → メトリクス → アラーム → 通知 + コスト監視フロー）/ Lambda INIT/INVOKE フェーズ詳解 / デプロイ手順詳細（初回 dev 構築 + ハッカソン実演チェックリスト + prd 横展開）/ リスクと緩和策 / Code Generation 引き継ぎ事項
+
+aidlc-state.md に Unit C Infrastructure Design を [x] に更新（Q-I1/Q-I11/Q-I12 見直し記載含む）。Plan のチェックボックス全て [x] に更新。次は Code Generation ステージへ進行予定（Unit C per-unit ループ最終ステージ）。
+**Context**: ⛔ GATE: Infrastructure Design 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
