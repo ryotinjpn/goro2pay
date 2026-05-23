@@ -301,6 +301,59 @@ aidlc-state.md を更新し、Units Generation を [x] に変更。これによ�
 
 ---
 
+## Construction Phase — Unit B `budget` 開始
+**Timestamp**: 2026-05-21T00:00:00Z
+**User Input**: "Constructionを実行unitBを担当"
+**AI Response**: Unit B (`budget`) per-unit Construction ループを開始。worktree `future-unit-b` で並行実施。Inception フェーズの全成果物（unit-of-work.md / unit-of-work-story-map.md / components.md / component-methods.md / services.md）から Unit B 担当範囲（US-0-03, US-0-04 残高初期表示, US-1-02, US-1-04, US-1-05, US-1-06, US-3-05）を読み込み、`aidlc-docs/construction/budget/{functional-design,nfr-requirements,nfr-design,infrastructure-design,code}/` および `aidlc-docs/construction/plans/` ディレクトリを作成。
+**Context**: Construction フェーズ Unit B 開始、Functional Design ステージへ
+
+---
+
+## Construction — Unit B Functional Design Plan 作成
+**Timestamp**: 2026-05-21T00:05:00Z
+**User Input**: (N/A)
+**AI Response**: `aidlc-docs/construction/plans/budget-functional-design-plan.md` を作成。Q-B1 〜 Q-B12（予算範囲、SetBudget 即時反映、初回判定、冪等性キー仕様、失敗時冪等レコード、GetBalance 鮮度、残高不足判定主体、月初リセットの実行方式、リセット時予算ソース、前残高扱い、BudgetSetupScreen UI、BalanceDisplay 表示仕様）の 12 問を埋め込み。フィードバックメモリ「対話形式でのヒアリング」に従い、チャットで 1 問ずつ提示する方針。
+**Context**: ⛔ GATE: Q-B1 ヒアリング待ち
+
+---
+
+## Construction — Unit B Functional Design 対話ヒアリング完了
+**Timestamp**: 2026-05-21T00:30:00Z
+**User Inputs** (Q-B1〜Q-B12、対話形式で順次ヒアリング):
+- Q-B1: "a" → 予算範囲 1〜100,000 円（Application Design 通り）
+- Q-B2: "どう違うの？" → 案の違いを軸 1（当月残高変動）/ 軸 2（翌月リセット適用）で説明 → "なんで我慢するのがダメかになるの？" → ダメ化UX = 甘やかし + 消化促進と再整理し B 推奨に修正 → "b" → SetBudget 変更時は当月残高も差分調整
+- Q-B3: "どう違う？" → 4 ケースで比較説明 → "UX優先で開発速度が速いのはどれ？" → B 推奨 → "b" → Wallet 存否で初回判定
+- Q-B4: "推奨はどれ？" → A 推奨説明（キー形式 / TTL / DynamoDB 設計の素直さ） → "a" → `{userID}:{ulid}`、TTL 24h
+- Q-B5: 説明後 "a" → 失敗結果も payload 保存、同一キー再送に保存通り返却
+- Q-B6: 説明後 "a" → ConsistentRead + TanStack Query 30s fresh + 自動 invalidate
+- Q-B7: 説明後 "a" → Unit B 主体、ConditionExpression で race 耐性、Unit C は ErrInsufficientBalance 受信時 402
+- Q-B8: 説明後 "a" → EventBridge Scheduler `cron(0 15 L * ? *)` UTC、1 Lambda 逐次、(ResetDate, UserID) 複合キー
+- Q-B9: 説明後 "a" → `BudgetSettings.MonthlyBudget` 素直適用、`EffectiveFrom` は監査メタデータのみ
+- Q-B10: 説明後 "a" → 完全リセット、前残高は BudgetResetLog 記録のみ
+- Q-B11: 説明後 "a" → クイックボタン（10k/30k/50k/80k/100k） + 数値入力 + リアルタイムバリデーション
+- Q-B11 補足（数値刻み）: 矛盾検出で軽微確認 → "γ" → 1,000 円刻み（モバイル UI 簡素化）
+- Q-B12: 説明後 "a" → ¥XX,XXX 大フォント + 「残りダメ予算」ラベル + リセット日カウントダウン、80% 超で赤
+
+**矛盾検出結果**: 当初の 5 ルールはすべて整合、軽微な刻み未確定のみ追加質問で γ に確定。最終整合性 OK。
+**AI Response**: 全回答を Plan ファイルの `[Answer]:` タグに反映。チェックリストの全 6 項目を [x] 化。Functional Design 成果物の生成へ進行。
+**Context**: Functional Design Plan 完了、Step 6（成果物生成）へ
+
+---
+
+## Construction — Unit B Functional Design 成果物生成完了
+**Timestamp**: 2026-05-21T01:00:00Z
+**User Input**: (N/A - 自動生成)
+**AI Response**: `aidlc-docs/construction/budget/functional-design/` 配下に 4 ドキュメントを生成:
+- domain-entities.md: Wallet / BudgetSettings / IdempotencyRecord / BudgetResetLog の 4 エンティティ + RaiseLog 値オブジェクト、ER 図、ドメインサービス契約 4 種、不変条件サマリ
+- business-rules.md: Validation 6 / Decision 5 / Constraint 5 / Policy 6 = 計 22 ルール、ストーリー × ルール / NFR × ルールトレーサビリティ、HTTP エラーマッピング
+- business-logic-model.md: 6 ユースケース詳細（UC-B-01 〜 UC-B-06）、Wallet / IdempotencyRecord 状態遷移図、シーケンス図 7 本、データフロー図 3 本、ダメ化UX 織り込み、横断的関心事
+- frontend-components.md: 8 コンポーネント仕様（BudgetSetupScreen / BudgetForm / QuickBudgetButtons / BudgetNumberInput / BudgetSubmitButton / BalanceDisplay / BalanceAmount / BalanceLabel / ResetCountdown）、useWallet / useSetBudget フック、ASCII モック、アクセシビリティ、既存設計との差分
+
+aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に変更（ユーザ承認待ち）。
+**Context**: Unit B Functional Design ステージ完了、ユーザ承認ゲートへ
+
+---
+
 ## Construction Phase — Unit A 担当開始
 **Timestamp**: 2026-05-21T00:00:00Z
 **User Input**: "Constructionを実行unitAを担当"
@@ -432,5 +485,330 @@ Functional Design ステージを in_progress として開始。
 
 ### 各ファイル冒頭に "Aligned with: 凍結契約 §X" 表記を追加し、トレーサビリティを向上。Plan ファイル末尾 (§9) に事後追記として差分反映の記録を残した。
 **Context**: ⛔ GATE: 凍結契約整合修正の commit + push 待機 → ユーザ Functional Design 完了承認待機
+
+---
+
+## Functional Design (Unit A) — 凍結 Interface 整合 (PR #66)
+**Timestamp**: 2026-05-21T01:00:00Z
+**User Input**: "Functional Design 側で修正" (Q-A4/Q-A6 等のヒアリング後、PR #64 で凍結された unit-interfaces.md との差分検出への対応指示)
+**AI Response**: PR #66 を作成しマージ。API path を `/api/auth/logout` に統一、useAuth 公開メソッド名を signup/login/logout に統一、Amplify SDK 関数名との区別凡例を追加。
+**Context**: Functional Design 完了、凍結 Interface 契約と完全整合
+
+---
+
+## NFR Requirements (Unit A) — Plan 作成
+**Timestamp**: 2026-05-21T02:00:00Z
+**User Input**: "NFR Requirements実行"
+**AI Response**: aidlc-docs/construction/plans/auth-nfr-requirements-plan.md を作成。Functional Design からの引き継ぎ事項と requirements.md の Unit A 関連 NFR を整理し、確認質問 Q-N1〜Q-N13 (13問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Requirements Plan のユーザ承認を待機中
+
+---
+
+## NFR Requirements (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-21T02:05:00Z
+**User Input**: "1つづつ質問して"
+**AI Response**: Plan 承認と解釈。Q-N1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## NFR Requirements (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-21T02:30:00Z
+**User Inputs** (Q-N1〜Q-N13、対話形式で順次):
+- Q-N1: "B: 8h / 30d (ダメ化UX寄り)"
+- Q-N2: "A: P50 500ms / P95 1.5s"
+- Q-N3: "C: 目標値を定めず NFR-PERF-01 全体予算 (3 秒) 内で OK"
+- Q-N4: "A: デモ最小同時 5 人 / ピーク 10 req/s"
+- Q-N5: "A: Cognito SLA に追従 + エラー表示のみ"
+- Q-N6: "もう一度教えて" → AI 4 案比較表提示 → "C: Stage 全体 100 req/s / Burst 200 (気休め)"
+- Q-N7: "B: 標準 (level/ts/userId/action/traceId/requestId/email_hash/userAgent)"
+- Q-N8: "A: 取得しない (NFR-OBS-02 厳密準拠)"
+- Q-N9: "A: Cognito 標準 + ユーザにエラー表示"
+- Q-N10: "どう違うの？" → AI PBT 概念 + 各案プロパティ例 + 工数比較提示 → "B: メール正規化と email_hash にだけ"
+- Q-N11: "A: モダンブラウザ最新 2 バージョンのみ"
+- Q-N12: "どっちが方針に沿ってる？" → AI Q-A1/Q-A8 整合性比較表提示 → "A: Frontend で日本語マッピング"
+- Q-N13: "Inception フェーズで定義しなかったっけ？" → AI requirements.md §4.6 NFR-COMP-01〜03 引用提示 → "A: NFR-COMP-01〜03 を引用のみ"
+
+**AI Response**: 全回答を auth-nfr-requirements-plan.md に [Answer] タグ反映。矛盾なし。次に NFR Requirements 成果物 2 種 (nfr-requirements.md / tech-stack-decisions.md) を生成。
+**Context**: NFR Requirements ヒアリング完了、成果物生成段階へ
+
+---
+
+## NFR Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-22T00:00:00Z
+**User Input**: "NFR Design go"
+**AI Response**: aidlc-docs/construction/plans/auth-nfr-design-plan.md を作成。NFR Requirements からの引き継ぎ事項を整理、確認質問 Q-D1〜Q-D12 (12 問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Design Plan のユーザ承認を待機中
+
+---
+
+## NFR Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-22T00:05:00Z
+**User Input**: "一問ずつ質問して"
+**AI Response**: Plan 承認と解釈。Q-D1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## NFR Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T00:30:00Z
+**User Inputs** (Q-D1〜Q-D12、対話形式で順次):
+- Q-D1: "推奨はどれ？" → AI 3 案比較表提示 → "A: 手書き fetch ラッパ（推奨）"
+- Q-D2: "推奨はどれ？" → AI 3 案比較表提示 → "B: Jotai atom（推奨）"
+- Q-D3: "ダメかUXに従うとどうなる？" → AI NFR-DEG-01/02/03/05 適合度評価 + 折衷案提示 → "B+α: 300ms まで空白、それ以降スピナー（推奨）"
+- Q-D4: "どれがUX的にいいの？" → AI シナリオ別 UX + セキュリティトレードオフ提示 → "A: finally 句で setState(\"\")（推奨）"
+- Q-D5: "推奨は？" → AI 3 案比較表 + 実装イメージ提示 → "C: middleware + context-based（推奨）"
+- Q-D6: "推奨は？" → AI 3 案比較表 + B のサブパターン B-1/B-2 提示 → "B: middleware/handler 入口で 1 度 → context（推奨）"
+- Q-D7: "推奨は？" → AI 3 案比較表 + Node.js/Go 典型コード提示 → "A: Node.js（推奨）"
+- Q-D8: "どれが推奨？" → AI 3 案比較表 + 実行時間見積もり提示 → "A: 通常の go test の一部として実行（推奨）"
+- Q-D9: "B: A + 推奨項目（推奨）"
+- Q-D10: "どれが推奨？" → AI 3 案比較表 + 実装イメージ提示 → "A: useEffect + setTimeout（推奨）"
+- Q-D11: "推奨は？" → AI 3 案比較表 + 実装イメージ提示 → "A: AuthError.RATE_LIMIT_EXCEEDED にマップ（推奨）"
+- Q-D12: "A: NFR Design では追加で何もしない（推奨）"
+
+**AI Response**: 全回答を auth-nfr-design-plan.md に [Answer] タグ反映。矛盾なし、追加質問なし。次に NFR Design 成果物 2 種 (nfr-design-patterns.md / logical-components.md) を生成。
+**Context**: NFR Design ヒアリング完了、成果物生成段階へ
+
+---
+
+## NFR Requirements (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T00:00:00Z
+**User Input**: "unitBのcオンストラクションの続きをすすめたい"
+**AI Response**: `docs/construction-budget-nfr-requirements` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-requirements-plan.md` を作成。Q-N1〜Q-N11（Deduct応答時間 / GetBalance応答時間 / ResetAll実行時間 / DynamoDBキャパシティ / TransactWriteItems / リセット失敗通知 / ログ項目 / PBT適用範囲 / Lambdaメモリ / TanStack Query stale time / コンプライアンス）の 11 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Requirements Plan 承認待ち
+
+---
+
+## NFR Requirements (Unit B) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Inputs** (Q-N1〜Q-N11、対話形式で順次):
+- Q-N1: "c" → 目標値なし、NFR-PERF-01 全体予算（3 秒）内で管理
+- Q-N2: "c" → 目標値なし、NFR-PERF-01/02 全体予算内で管理（Unit A Q-N3 と同方針）
+- Q-N3: "a" → 最大 50 ユーザ、Lambda タイムアウト 30 秒
+- Q-N4: "c" → 全テーブル プロビジョンド（1 RCU/1 WCU）、無料枠内運用
+- Q-N5: "b" → 個別実行（FD 設計通り）、TransactWriteItems 不使用
+- Q-N6: "c" → ログ出力のみ + 手動リカバリ手順を Infrastructure Design に記載
+- Q-N7: "c" → Unit A 8 項目 + amount / newBalance（idempotencyKey は省略）
+- Q-N8: "b" → 残高不変条件 + SetBudget べき等性 + バリデーション境界値
+- Q-N9: "a" → 128MB
+- Q-N10: "a" → stale time 30 秒 + Deduct 成功時に即 invalidate
+- Q-N11: "b" → NFR-COMP-01〜03 引用 + 「仮想ウォレットは実決済データを含まない」を明記
+- 矛盾確認: Q-N3=A（30s タイムアウト）× Q-N4=C（1 WCU）の ResetAll 処理 / Q-B6=A（ConsistentRead）× Q-N4=C（1 RCU）の一貫性リスクを AI が検出。ユーザ「unitAと同じ方針にしたい」→ C（バースト容量前提、設計書に注記）で継続確定。
+
+**AI Response**: 全回答を budget-nfr-requirements-plan.md に反映。nfr-requirements.md / tech-stack-decisions.md を生成。
+**Context**: NFR Requirements 成果物生成完了、ユーザ承認ゲートへ
+
+---
+
+## NFR Design (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Input**: "mergeしました　次いきましょう　次はこれですね https://github.com/ryotinjpn/goro2pay/issues/26"
+**AI Response**: `docs/construction-budget-nfr-design` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-design-plan.md` を作成。Q-D1〜Q-D8（ConditionalCheckFailedException処理 / SetBudget部分失敗リカバリ / 残高ローディング状態 / 残高枯渇演出 / ログライブラリ / PBTフレームワーク / invalidateパターン / ResetAllエラー収集）の 8 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Design Plan 承認待ち
+
+---
+
+## Infrastructure Design (Unit A) — Plan 作成
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Input**: "マージした次に進んで"
+**AI Response**: PR #68 マージ済みを develop fast-forward 取り込み確認、Infrastructure Design ステージを開始。aidlc-docs/construction/plans/auth-infrastructure-design-plan.md を作成、NFR Design からの引き継ぎ事項 (LC-07/15/16/17) を Terraform 化対象として整理、確認質問 Q-I1〜Q-I13 (13 問) を埋め込み、ユーザ承認待ち。
+**Context**: ⛔ GATE: Infrastructure Design Plan のユーザ承認を待機中
+
+---
+
+## Infrastructure Design (Unit A) — Plan 承認 & 対話ヒアリング開始
+**Timestamp**: 2026-05-22T01:05:00Z
+**User Input**: "一つづつ質問して"
+**AI Response**: Plan 承認と解釈。Q-I1 から 1 問ずつ対話形式でヒアリング開始。
+**Context**: 対話ヒアリング進行中
+
+---
+
+## Infrastructure Design (Unit A) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Inputs** (Q-I1〜Q-I13、対話形式で順次):
+- Q-I1: "A: 単一モジュール auth/"
+- Q-I2: "lwaはどっちかじゃないとダメじゃないっけ？" → AI LWA Event Source 表提示 → "公式ドキュメントにも書いてる？" → AI WebFetch で公式 README 引用 → "B: HTTP APIに切替（推奨）"
+- Q-I3: "A: Terraform archive_file data source（推奨）"
+- Q-I4: "B: gp-{env}-{resource}"
+- Q-I5: "A: dev のみ実構築、prd は空ディレクトリだけ作成"
+- Q-I6: "BだがDynamoDBは不要" → AI Terraform 公式ドキュメント (use_lockfile = true 機能 + DynamoDB deprecated) 引用 → "Yes: S3 + use_lockfile = true で進める（推奨）"
+- Q-I7: "A: Cognito デフォルト（推奨）"
+- Q-I8: "C: 60 秒（中間、推奨）"
+- Q-I9: "A: CloudWatch Logs 書込のみをインラインポリシーで記述（推奨）"
+- Q-I10: "どこのunitでlambda本体は作るんだっけ？" → AI unit-of-work.md 横串リソース整理 → "A1とA2の違いは？" → AI A1/A2 図解比較 → "Authorizerはトークン認証のlambdad?" → AI Lambda Authorizer vs JWT Authorizer 解説 → "横串 PRのタスクはどこで管理してるの？" → AI 計画上の空白指摘 + A3/A4 提案 → "Logout integrationこれは何のこと？" → AI API Gateway リソース構造図解説 → "A4: A3 + API Lambda 本体 (Gin Hello World) も Unit A で立ち上げ"
+- Q-I11: "A: Project / Env / Unit / ManagedBy の 4 種類（推奨）"
+- Q-I12: "A: 7 日（推奨）"
+- Q-I13: "A: INACTIVE（推奨）"
+
+**AI Response**: 全回答を auth-infrastructure-design-plan.md に [Answer] タグ反映。Q-I2 / Q-I6 / Q-I10 で重要な仕様確認・スコープ拡大あり。次に Infrastructure Design 成果物 2 種 (infrastructure-design.md / deployment-architecture.md) を生成。
+**Context**: Infrastructure Design ヒアリング完了、成果物生成段階へ
+
+---
+
+## Infrastructure Design (Unit A) — Q-I14/Q-I15 追加ヒアリング (PR #69 更新)
+**Timestamp**: 2026-05-22T03:00:00Z
+**User Inputs**:
+- "別 PR (Frontend): AWS Amplify Hosting (Next.js App Router) / Amplify ↔ Cognito 設定連携 (Auth Unit の output を参照) これどこのunit担当？"
+  → AI unit-of-work.md §4.1 確認 + 横串 PR 計画上空白を指摘 → 4 案提示
+- "横串インフラはunitAでやった方がいいかも" → 方針確定
+- Q-I14 (Amplify Hosting デプロイソース): "A: GitHub 連携 (auto deploy from main/develop)"
+- "lambdaのcdどうする？" → AI 5 案比較表提示
+- "API LambdaはCodePipeline / CodeBuildで Pre Sign-up Lambda は archive_file + terraform apply（暗黙的に手動）これはそのまま"
+- Q-I15 確認 (CodePipeline 推奨構成): "推奨構成で OK"
+
+**AI Response**: 横串インフラ全体（Amplify Hosting / CodePipeline / CodeBuild / ECR / CodeStar Connection / S3 artifacts）を Unit A スコープに追加。infrastructure-design.md / deployment-architecture.md / auth-infrastructure-design-plan.md を v1.1 に更新:
+- §1.1 スコープに Amplify / CodePipeline / CodeBuild / ECR / CodeStarConnection を追加
+- §2 ディレクトリ構造に amplify.tf / codepipeline.tf / ecr.tf / buildspec.yml / bootstrap-ecr-initial.sh を追加
+- §3.3 API Lambda に lifecycle.ignore_changes = [image_uri] を追加 (Q-I15)
+- §3.3.3 ECR Repository (force_delete dev/MUTABLE)、§3.7 CodeBuild Log Group、§3.8 Amplify Hosting (CodeStar Connection + amplify_app + branch + ssr role + buildSpec)、§3.9 CodePipeline + CodeBuild + S3 artifacts + IAM Roles を追加
+- §4.1 Variables から api_image_uri を削除し github_owner / github_repo_name / github_branch を追加
+- §4.2 Outputs に amplify_app_id / amplify_default_domain / ecr_repository_url / codepipeline_name を追加
+- §5 backend bootstrap 注意書きを ECR + CodeStar Connection 承認 + tfstate bucket の 3 手順に拡張
+- §7 terraform-test に lambda_lifecycle / amplify_branch / codebuild_iam の 3 ファイルを追加
+- §8 トレーサビリティに Amplify / CodePipeline / CodeBuild / ECR / CodeStar Connection を追加
+- deployment-architecture: 全体図を Amplify Hosting + CD パイプライン込みで再構成、§2.4 CD フロー / §2.5 Pre Sign-up Lambda 更新フローを新規追加、§3.1 module 依存関係を更新、§4 デプロイ手順を bootstrap-ecr-initial.sh + CodeStar 承認込みで 6 ステップに改訂、§7 観測ポイントに Amplify / CodePipeline を追加、§8 コスト見積を $1.66/月 に更新、§9 Code Generation 引き継ぎを 11 項目に拡張、§5.2 prd placeholder に Amplify branch / CodePipeline 切替も追加
+**Context**: 横串インフラ = Unit A 方針確定、PR #69 更新でレビュー再開待ち
+
+---
+
+## Infrastructure Design (Unit A) — BFF パターン採用 + back/ ディレクトリリネーム (PR #69 更新)
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- "NEXT_PUBLIC_API_ENDPOINTだとブラウザから直接apigwに飛ばしてない？ssrなのでamply経由にしたら？"
+  → AI BFF パターン提案 (3 オプション提示) → "Option B: BFF パターン採用（推奨）"
+- "今のPRで各ドキュメントで必要な箇所は全て変更実施"
+- "bff/は影響でかいのでapi/がいいのでそれはそのまま" → BFF Route Handler のパスは `/api/*` のまま透過プロキシ方式に変更
+- "apps/api/ back/apiは？" → AI 質問意図確認 (3 オプション) → "API Lambda のパスも /api/* のまま で golang の配置場所はルート直下に back ディレクトリに配置"
+- "A: 今回 Unit A PR の範囲ですべてリネーム（推奨）"
+
+**AI Response**: PR #69 内で 3 設計ドキュメント横断的に BFF パターン採用 + back/ リネームを反映:
+
+**BFF パターン採用（Q-I14 NEXT_PUBLIC_API_ENDPOINT 問題への対応）**:
+- Functional Design `business-logic-model.md` v1.0 → v1.1: F-3 (認証付き API 呼出) / F-4 (Logout) / F-5 (Session 失効) のシーケンス図に Next.js Server (catch-all Route Handler) を介在、§4.4 catch-all Route Handler 疑似コード追加、§8 データフロー図を BFF パターンに書き換え
+- Functional Design `business-rules.md` v1.0 → v1.1: R-Logout-2 (実装フロー) / R-Logout-3 (API 仕様) を BFF 経由に更新、R-JWT-1 に「Next.js Server は中継のみ、JWT 検証しない」を明記
+- Functional Design `frontend-components.md` v1.0 → v1.1: §10 を Browser 側 apiClient + Server 側 catch-all Route Handler の二段構成に書き換え、X-Id-Token ヘッダ方式採用
+- NFR Design `nfr-design-patterns.md` v1.0 → v1.1: P-RES-01 を BFF パターン Browser/Server 二段構成に書き換え
+- NFR Design `logical-components.md` v1.0 → v1.1: LC-AUTH-09 apiClient を Browser 側のみに限定、新規 LC-AUTH-18 BffProxyRouteHandler を追加、コンポーネント関係図に Next.js Server レイヤを追加、パターン対応表に LC-18 を追加
+- Infrastructure Design `infrastructure-design.md` v1.1: §3.4.1 cors_configuration を未設定（BFF で不要）、§3.8.3 Amplify branch env vars に NEXT_PUBLIC_API_ENDPOINT 削除 + server-only API_ENDPOINT 追加、§10.1 整合性メモに BFF パターン記述追加
+- Infrastructure Design `deployment-architecture.md` v1.1: §1.1 全体図 Amplify env vars セクションを BFF パターン構成に書き換え、§1 凡例に BFF 利点追加、§6.2 Amplify env vars セクション新規追加（NEXT_PUBLIC_ vs server-only の使い分け明示）
+
+**back/ ディレクトリリネーム（apps/api/ → back/api/、apps/scheduler/ → back/scheduler/）**:
+- NFR Design `logical-components.md`: LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ に置換 (replace_all で 6 箇所)
+- Infrastructure Design `infrastructure-design.md`: §2 ディレクトリ構造 / §9 Code Generation 引き継ぎの apps/api/ → back/api/ に置換 (replace_all で 2 箇所)
+- Infrastructure Design `deployment-architecture.md`: §9.1 Code Generation 引き継ぎの apps/api/ → back/api/ に修正、unit-of-work.md §4.1 のリネーム必要を明記
+- Infrastructure Design `infrastructure-design.md` §10.2: unit-of-work.md §4.1 の back/ リネーム必要を「Code Generation 完了後に Inception ドキュメントへ反映」と整合修正メモに追加
+
+**HTTP path 統一**: ブラウザ → Next.js → API Gateway → API Lambda 全層で `/api/*`、unit-interfaces.md §3.3 の path 定義（PR #66 で `/api/...` に統一済み）に影響なし。
+**Context**: BFF パターン + back/ リネーム反映完了、PR #69 再レビュー待ち
+
+---
+
+## Infrastructure Design (Unit A) — API 認証 Token を AccessToken に統一 (PR #69 更新)
+**Timestamp**: 2026-05-22T05:00:00Z
+**User Input**: "apiClient│ ── │ X-Id-Token これってacseccトークンじゃないっけ？"
+**AI Response**: ご指摘は正当。OAuth2 ベストプラクティスでは API 認証は AccessToken を使うべき (IdToken は ID 提示用、PII を含む)。3 設計ドキュメント横断で AccessToken に統一する修正提案 → "Yes: AccessToken に統一（推奨）"
+
+修正内容:
+- Functional Design `business-logic-model.md` v1.2:
+  - F-3 シーケンス図: idToken → accessToken、X-Id-Token ヘッダ廃止 → Authorization: Bearer に統一
+  - F-4 (Logout): API 監査ログ送信を GlobalSignOut **より先に** 実行する順序に変更（accessToken 有効状態で送るため）
+  - F-5 (Session 失効): expired idToken → expired accessToken
+  - §4.4 catch-all Route Handler 疑似コード: X-Id-Token ヘッダ参照を Authorization ヘッダ透過に変更
+  - §6.2.2 BFF Route Handler 疑似コード: 同上
+  - §8 データフロー図: ヘッダ・Token 種・透過動作を明示
+
+- Functional Design `business-rules.md` v1.2:
+  - R-Logout-2 実装フロー: AccessToken 認証、API 送信を先・signOut を後の順序に変更
+  - R-Logout-3 API 仕様: Browser→Server / Server→APIGW 両方で Authorization: Bearer <AccessToken> を透過
+  - R-JWT-1 に「API 認証には AccessToken」明記、IdToken は API 送信に使わない注記
+  - R-JWT-2: AccessToken claims に email がない注記
+  - **R-JWT-2-A 新規追加**: email_hash 取扱の AccessToken 採用調整（認証必須エンドポイントで省略、認証前ハンドラのみ生成）
+
+- Functional Design `frontend-components.md` v1.2:
+  - §10.1 Browser apiClient: idToken → accessToken、X-Id-Token → Authorization: Bearer に変更
+  - §10.2 Server Route Handler: X-Id-Token 参照を Authorization 透過に変更
+  - §10.3 利点に「Authorization: Bearer 標準ヘッダ透過 → Server 側で IdToken→AccessToken 変換不要」「AccessToken 採用で OAuth2 整合 + PII 漏洩リスク低減」追加
+  - §10.4 注意点に「AccessToken に email なし、email_hash は認証前のみ」追加
+
+- NFR Design `nfr-design-patterns.md` v1.2:
+  - P-RES-01 設計責務: Browser apiClient は AccessToken + Authorization ヘッダ、Server Route Handler は Authorization 透過に書き換え
+  - P-SEC-02: 認証必須エンドポイントで email_hash 生成しない（オプション扱い）、認証前のみ生成、サブパターン B-2 のみ運用に変更
+  - P-SEC-03: API 認証は AccessToken を使う旨を明記
+  - P-OBS-01: emailHash は認証前エンドポイントのみオプション扱い
+
+- NFR Design `logical-components.md` v1.2:
+  - LC-AUTH-09 apiClient: AccessToken + Authorization: Bearer ヘッダ付与に責務変更
+  - LC-AUTH-18 BffProxyRouteHandler: Authorization ヘッダ透過に責務変更（X-Id-Token → Authorization 変換廃止）
+  - LC-AUTH-01 AttachUserIDMiddleware: AccessToken claims に email がないため middleware で emailHash 生成しない注記
+  - 関係図の X-Id-Token 表記を Authorization: Bearer <accessToken> に修正
+
+- Infrastructure Design `deployment-architecture.md` v1.2 / `infrastructure-design.md` v1.2:
+  - フロー記述の IdToken → AccessToken 修正、ドキュメントヘッダの version 更新
+**Context**: AccessToken 採用反映完了、PR #69 再レビュー待ち
+
+---
+
+## Infrastructure Design (Unit A) — back/ リネーム案を撤回 (PR #69 更新)
+**Timestamp**: 2026-05-22T06:00:00Z
+**User Inputs**:
+- amplify.yml の議論中 "frontのディレクトリ名ってinceptionフェーズで想定してたっけ？" → AI unit-of-work.md §4.1 で `web/` 確定済みを引用
+- "ごめんそれならapps/ │   ├── api/ # → 今回 PR で back/api/ にリネーム決定 これダメだ他の開発者が困る" → back/ 案撤回の判断
+- "yes" (撤回方針確定)
+
+**AI Response**: back/ リネーム案を撤回し、Inception 確定の apps/api/ / apps/scheduler/ に戻す。理由: unit-of-work.md §4.1 は他 Unit B/C/D/E との合意済みリポジトリ構造であり、Unit A の PR で勝手にリネームすると他 Unit 担当者の Functional Design / NFR Design ドキュメントとも矛盾するため。Wave 1 並列開発前提と不整合。
+
+修正内容:
+- NFR Design `logical-components.md` v1.3:
+  - LC-AUTH-01〜LC-AUTH-06 の配置パスを back/api/ → apps/api/ に一括置換 (replace_all)
+  - 更新メモに「back/ リネーム撤回」追記
+
+- Infrastructure Design `infrastructure-design.md` v1.3:
+  - §2 ディレクトリ構造の back/ ブロックを apps/ に変更 (apps/api/ + apps/scheduler/ で並列)
+  - §3.9 CodeBuild の source.buildspec / buildspec.yml の docker build path を apps/api/ に修正
+  - §9 Code Generation 引き継ぎの apps/api/ 記述に統一
+  - §10.1 整合性メモから「back/ リネーム」を削除し「apps/api/ / apps/scheduler/ 表記を維持」に修正
+  - §10.2 整合修正メモから unit-of-work.md リネーム必須・各 Unit FD 修正必要の 2 項目を削除
+
+- Infrastructure Design `deployment-architecture.md` v1.3:
+  - §9.1 Code Generation 引き継ぎの back/api/ → apps/api/ 修正
+
+- Functional Design 3 ファイルは back/ 直接参照なしのため修正不要 (確認済み)
+- Plan ファイル auth-infrastructure-design-plan.md は back/ 参照なしのため修正不要
+
+横串インフラ Unit A 包含方針 (Q-I14/Q-I15) と BFF パターン採用 + AccessToken 統一は維持。本撤回は **ディレクトリ名表記のみ**の修正。
+**Context**: back/ 撤回反映完了、Inception §4.1 整合復帰、PR #69 再レビュー待ち
+
+---
+
+## NFR Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T03:10:00Z
+**User Inputs**:
+- "既存ユニットとの矛盾点をもう一度確認して"
+**AI Response**: Unit A との整合確認で 2 件を明記必須と判断（LC-AUTH-09 再利用 / Unit C invalidate 依存）。以下を生成・更新:
+- `aidlc-docs/construction/budget/nfr-design/nfr-design-patterns.md` (新規): P-REL-01〜03 / P-PERF-01 / P-OBS-01〜02 / P-TEST-01 / P-DEG-01〜03 の 10 パターン。`log/slog` + `ContextAwareSlogHandler` (LC-AUTH-05) 再利用、`gopter` PBT（Unit A と統一）を明記。
+- `aidlc-docs/construction/budget/nfr-design/logical-components.md` (新規): LC-BUDGET-01〜12 定義。Unit A 再利用コンポーネント（LC-AUTH-05 / LC-AUTH-09 / LC-AUTH-18）を §4 に明記。Unit C の `invalidateQueries(['balance'])` 依存を LC-BUDGET-08 に記載。
+- `aidlc-docs/construction/interfaces/unit-interfaces.md` (更新): §9.1「クロスユニット TanStack Query key 契約」追加（`['balance']` query key の Unit B/C 間契約）、§12「共有 Frontend インフラ」追加（LC-AUTH-09 / LC-AUTH-18 の全 Unit 共有を明記）。
+- `aidlc-docs/aidlc-state.md`: Unit B NFR Design を `[x]` に更新。
+- `budget-nfr-design-plan.md`: チェックボックス更新。
+**Context**: NFR Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
+
+---
+
+## Infrastructure Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- Q-I1: "a" → 新規 `infra/modules/budget/` モジュール
+- Q-I2: "a" → zip（aws-lambda-go）、LWA 不要
+- Q-I3: "a" → 手動 terraform apply のみ
+- Q-I4: "a" → AWS マネージド（AES256）
+- Q-I5: "A" → 再試行なし + CloudWatch Logs 記録のみ
+- Q-I6: "a" → PITR 無効
+**AI Response**: 以下を生成・更新:
+- `aidlc-docs/construction/budget/infrastructure-design/infrastructure-design.md` (新規): DynamoDB 4 テーブル / Scheduler Lambda (zip) / API GW ルート 2 本 / IAM 権限追加 / terraform-test 方針
+- `aidlc-docs/construction/budget/infrastructure-design/deployment-architecture.md` (新規): AWS リソース全体図 / リクエストフロー 4 種 / デプロイ手順
+- `aidlc-docs/aidlc-state.md`: Unit B Infrastructure Design を `[x]` に更新
+- `budget-infrastructure-design-plan.md`: チェックボックス更新
+**Context**: Infrastructure Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
 
 ---

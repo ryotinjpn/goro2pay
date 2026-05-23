@@ -1,7 +1,9 @@
 # Auth Unit — Business Rules
 
-**Document Version**: 1.0
+**Document Version**: 1.2
 **Created**: 2026-05-21
+**Updated**: 2026-05-22 (BFF パターン採用: R-Logout-2 / R-JWT-* を Next.js Server 経由フローに更新)
+**Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、Authorization: Bearer ヘッダで透過、email_hash 取扱を更新)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -64,10 +66,11 @@ Q-A2 の決定（標準）に従う。
 ### R-Signup-2: 自動確認（auto-confirm）
 - Q-A1 の決定に従い、メール検証コードフローは採用しない
 - Cognito の **Pre Sign-up Lambda Trigger** を導入し、`autoConfirmUser = true` および `autoVerifyEmail = true` を設定
-- Signup レスポンスには `userConfirmed: true` が返り、その後即座に `signIn` を呼び出してセッション確立
+- Signup レスポンスには `userConfirmed: true` が返り、その後即座に Amplify Auth `signIn`（SDK 関数名）を呼び出してセッション確立。`useAuth` 公開メソッドとしては `signup()` がこの一連の処理をラップする
 
 ### R-Signup-3: 登録後の遷移
-- Signup 成功 → `signIn` 自動実行 → AuthSession 確立 → `router.push("/")`
+- Signup 成功 → Amplify `signIn` 自動実行 → AuthSession 確立 → `router.push("/")`
+- 公開フック呼出: `useAuth().signup(email, password)` 内で完結
 - `/` 側（MainScreen, Unit B/C 横断）が予算未設定なら `/budget` へ遷移する責務を持つ（Q-A10）
 
 ### R-Signup-4: 総タップ数の上限
@@ -109,25 +112,49 @@ Q-A2 の決定（標準）に従う。
 ## 5. ログアウト（Logout）
 
 ### R-Logout-1: 提供範囲（Q-A3 = A）
-- バックエンド API: `POST /auth/logout`
+- バックエンド API: `POST /api/auth/logout`（path prefix は [unit-interfaces.md](../../interfaces/unit-interfaces.md) §3.3 / §4.3 等の `/api/` 規約に準拠）
 - フロントエンド: ヘッダ右上の「⏏︎ ログアウト」ボタン or 設定画面のメニュー項目
 
-### R-Logout-2: 実装フロー
+### R-Logout-2: 実装フロー（BFF パターン、`/api/*` 透過、AccessToken 認証）
 
 ```
-1. クライアント: ボタン押下
-2. クライアント: Amplify Auth.signOut({ global: true }) を呼ぶ
-   → 内部で Cognito GlobalSignOut が走り、Refresh Token が無効化
-3. クライアント: ローカルストレージのトークンが Amplify によって除去
-4. クライアント: POST /auth/logout を呼ぶ（任意、サーバ側ログ記録のため）
-5. クライアント: router.push("/") で Landing 表示に戻る
+1. クライアント (Browser): ボタン押下
+2. クライアント (Browser): fetchAuthSession() で accessToken を取得
+3. クライアント (Browser): POST /api/auth/logout を呼ぶ
+   - 既存パスのまま、Authorization: Bearer <accessToken> ヘッダ付与
+4. Next.js Server (catch-all Route Handler): env.API_ENDPOINT を読み出し、API Gateway に転送
+   - Authorization ヘッダは透過 (POST {API_ENDPOINT}/api/auth/logout)
+5. API Gateway → API Lambda が監査ログを記録 → 204
+6. Next.js Server: 204 を Browser に透過
+7. クライアント (Browser): Amplify Auth.signOut({ global: true }) を呼ぶ
+   - 内部で Cognito GlobalSignOut が走り、Refresh Token が無効化
+   - localStorage のトークンが Amplify によって除去
+8. クライアント (Browser): router.push("/") で Landing 表示に戻る
 ```
+
+**順序のポイント**: API への監査ログ送信を先に行う（accessToken 有効状態で）、その後 GlobalSignOut で全 Token 無効化。
 
 ### R-Logout-3: API 仕様
 
+#### Browser → Next.js Server (catch-all proxy 受け口、既存 `/api/*` パス)
+
 ```
-POST /auth/logout
-Authorization: Bearer <IdToken>
+POST /api/auth/logout
+Authorization: Bearer <AccessToken>
+Body: なし
+
+Response:
+  204 No Content        — 成功（API Gateway 上流が 204 を返した）
+  401 Unauthorized      — AccessToken 不正 / 欠落（Next.js or API Gateway が 401 を返した）
+```
+
+ブラウザのリクエスト URL は **既存の `/api/auth/logout` のまま**。Next.js の `app/api/[...path]/route.ts` が catch-all で受けて API Gateway に proxy する。unit-interfaces.md §3.3 の path 定義に影響しない。
+
+#### Next.js Server → API Gateway (上流 API)
+
+```
+POST {API_ENDPOINT}/api/auth/logout
+Authorization: Bearer <AccessToken>  ← Browser からの Authorization ヘッダを透過
 Body: なし
 
 Response:
@@ -135,7 +162,9 @@ Response:
   401 Unauthorized      — JWT 不正
 ```
 
-サーバ側は GlobalSignOut を再実行する義務はない（Amplify が既に呼出済）。本 API は監査ログ目的のみ。
+Authorization ヘッダは Browser → Server → API Gateway を**透過する**（Server で IdToken に変換するなど不要、OAuth2 ベストプラクティスに準拠）。
+
+サーバ側 API Lambda は GlobalSignOut を再実行する義務はない（Amplify が既に呼出済）。本 API は監査ログ目的のみ。
 
 ### R-Logout-4: 確認ダイアログ
 - ログアウト誤タップを防ぐため、確認モーダルを 1 段挟む
@@ -145,15 +174,23 @@ Response:
 
 ## 6. JWT 検証と userId 注入
 
-### R-JWT-1: 検証主体（Q-A4 = A）
+### R-JWT-1: 検証主体（Q-A4 = A、BFF パターン整合）
+- **ブラウザは API Gateway を直接呼ばず、Next.js Server (BFF) 経由で呼び出す**（BFF パターン採用、Q-I14/I15）
+- Next.js Server は **JWT 検証を行わない**（中継のみ）。Authorization ヘッダを受け取って上流 API Gateway に透過転送
 - API Gateway の **Cognito Authorizer** が JWT 署名・有効期限・発行者を検証
-- Lambda は再検証しない
+- API Lambda は再検証しない（claims を読むだけ）
+- **Token 種**: API 認証には **AccessToken** を使う（OAuth2 ベストプラクティス、PII を含まない）。IdToken は Amplify Auth が内部で保持するが API 送信には用いない
 
 ### R-JWT-2: claims 抽出
 - Lambda は `event.requestContext.authorizer.claims` から下記を取得:
-  - `sub` → `userId` として Gin Context に注入
-  - `email` → 監査ログ用にメモリ上のみ保持（永続化禁止）
+  - `sub` → `userId` として Gin Context に注入（AccessToken / IdToken どちらにも含まれる）
+  - **`email` は AccessToken には含まれない**（IdToken にのみ含まれる）
 - Authorizer が許可しない場合は API Gateway が 401 を返し、Lambda は呼ばれない
+
+### R-JWT-2-A: email_hash 取扱（AccessToken 採用に伴う調整）
+- **認証必須エンドポイント**（Logout 等）: AccessToken の claims に `email` がないため、middleware で `email_hash` を生成しない。ログにも出力しない（オプション扱い）
+- **認証前エンドポイント**（Signup / Login）: request body の `email` から handler 入口で `email_hash` を生成し context に注入（P-SEC-02 サブパターン B-2）
+- A-NFR-OBS-01 の「8 項目構造化ログ」のうち `email_hash` は認証前ハンドラのみ出力、認証必須ハンドラでは省略する
 
 ### R-JWT-3: userId フォーマット検証
 - `sub` は UUID v4 形式（Cognito 仕様）

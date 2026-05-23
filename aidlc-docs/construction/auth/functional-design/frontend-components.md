@@ -1,7 +1,9 @@
 # Auth Unit — Frontend Components
 
-**Document Version**: 1.0
+**Document Version**: 1.2
 **Created**: 2026-05-21
+**Updated**: 2026-05-22 (BFF パターン採用: apiClient を Browser/Server 二段化、新規 BFF Route Handler を追加)
+**Updated**: 2026-05-22 (API 認証 Token を IdToken → AccessToken に統一、Authorization: Bearer ヘッダで透過、X-Id-Token カスタムヘッダ廃止)
 **Unit**: A (`auth`)
 **Stage**: Functional Design / Construction
 
@@ -100,26 +102,28 @@ export interface UseAuthReturn {
   status: AuthStatus;
   user: { userId: string; email: string } | null;
   isAuthenticated: boolean;
-  signUp(email: string, password: string): Promise<void>;
-  signIn(email: string, password: string): Promise<void>;
-  signOut(): Promise<void>;
+  signup(email: string, password: string): Promise<void>;
+  login(email: string, password: string): Promise<void>;
+  logout(): Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn;
 ```
+
+> **メソッド名規約**: 公開メソッド名は [unit-interfaces.md §9](../../interfaces/unit-interfaces.md) の凍結契約に合わせ `signup` / `login` / `logout` を採用する。Amplify SDK 内部関数（`Auth.signUp` / `Auth.signIn` / `Auth.signOut`）はあくまで実装ディテールとして区別する。
 
 ### 3.2 内部実装方針
 
 - `status` は内部 state、初期値 `"loading"`
 - `useEffect` で `getCurrentUser()` を呼んで現在のセッションを判定
 - Auth Hub の `signedIn` / `signedOut` / `tokenRefresh_failure` を購読し state を更新
-- `signUp` は `Auth.signUp` → `Auth.signIn` の連鎖で実装（[business-logic-model.md F-1](./business-logic-model.md)）
-- `signOut` は `Auth.signOut({ global: true })` → `apiClient.post("/auth/logout")` → `router.push("/")`
+- `signup` は内部で `Auth.signUp` → `Auth.signIn` の連鎖で実装（[business-logic-model.md F-1](./business-logic-model.md)）
+- `logout` は `Auth.signOut({ global: true })` → `apiClient.post("/api/auth/logout")` → `router.push("/")`
 - メソッドは Promise を返し、呼び出し側でエラーハンドリング可能
 
 ### 3.3 エラーハンドリング契約
 
-`signUp` / `signIn` は失敗時に `AuthErrorWithCode` 型を throw する:
+`signup` / `login` は失敗時に `AuthErrorWithCode` 型を throw する:
 
 ```ts
 export class AuthErrorWithCode extends Error {
@@ -206,7 +210,7 @@ type SignupState = {
 
 | 操作 | 呼出先 |
 |---|---|
-| 登録ボタン | `useAuth().signUp(email, password)` |
+| 登録ボタン | `useAuth().signup(email, password)` |
 
 成功時:
 1. `clearPasswordState()` を実行
@@ -256,7 +260,7 @@ type LoginState = {
 
 | 操作 | 呼出先 |
 |---|---|
-| 「ログイン」ボタン | `useAuth().signIn(email, password)` |
+| 「ログイン」ボタン | `useAuth().login(email, password)` |
 
 成功時: `clearPasswordState()` → `router.push("/")` 。
 
@@ -315,7 +319,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 ### 8.1 構造
 
 ```
-[ヘッダ右上 LogoutButton] ── クリック ──► [LogoutConfirmModal] ── 確定 ──► useAuth().signOut()
+[ヘッダ右上 LogoutButton] ── クリック ──► [LogoutConfirmModal] ── 確定 ──► useAuth().logout()
                                               │
                                               └── キャンセル ──► モーダル閉じる
 ```
@@ -357,28 +361,104 @@ JWT 失効を検出した際に表示するシステムモーダル。`<SessionE
 
 ---
 
-## 10. `apiClient` の 401 interceptor
+## 10. BFF パターンの apiClient（Browser / Server 二段構成、`/api/*` 透過）
+
+BFF パターン採用により、apiClient は以下の **2 段階** に分離する。**ブラウザのリクエスト URL は既存の `/api/*` のまま** で、Next.js の Route Handler (`web/app/api/[...path]/route.ts`) が透過プロキシとして API Gateway に転送する。
+
+このアプローチは [unit-interfaces.md §3.3](../../interfaces/unit-interfaces.md) の API path 定義（`/api/wallet`、`/api/orders`、`/api/auth/logout` 等）に**全く影響しない**。各 Unit (B/C/D/E) の API path もそのまま。
+
+### 10.1 Browser 側 `apiClient` (Client Component から呼ばれる)
 
 ```ts
+// web/lib/apiClient.ts (Client Component / hooks から利用)
 import { fetchAuthSession } from "aws-amplify/auth";
 
 export const apiClient = {
-  async request(input: RequestInit & { url: string }): Promise<Response> {
+  async request(input: RequestInit & { path: string }): Promise<Response> {
+    // accessToken を取得（Amplify が必要なら自動 refresh）
+    // ※ API 認証は AccessToken を使う（OAuth2 ベストプラクティス、PII を含まない）
     const session = await fetchAuthSession();
-    const idToken = session.tokens?.idToken?.toString();
-    const res = await fetch(input.url, {
+    const accessToken = session.tokens?.accessToken?.toString();
+
+    // Browser は同一オリジンの /api/* を叩く（Next.js Route Handler が proxy）
+    // path 例: "/api/auth/logout"
+    const res = await fetch(input.path, {
       ...input,
       headers: {
         ...input.headers,
-        Authorization: idToken ? `Bearer ${idToken}` : "",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
     });
     if (res.status === 401) {
-      triggerSessionExpired();  // §9 と接続
+      triggerSessionExpired();  // §9 sessionExpiredAtom と接続
     }
     return res;
   },
 };
+```
+
+### 10.2 Server 側 catch-all Route Handler (Next.js)
+
+`web/app/api/[...path]/route.ts` で全 `/api/*` リクエストを受けて API Gateway に転送する。`API_ENDPOINT` は server-only env。`Authorization` ヘッダは Browser → Server → API Gateway を透過する（Server で変換しない）。
+
+```ts
+// web/app/api/[...path]/route.ts (catch-all proxy)
+import { NextRequest } from "next/server";
+
+export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyToApiGateway(request, params.path);
+}
+export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyToApiGateway(request, params.path);
+}
+// (PUT, DELETE, PATCH も同様)
+
+async function proxyToApiGateway(request: NextRequest, pathSegments: string[]): Promise<Response> {
+  const apiEndpoint = process.env.API_ENDPOINT;  // server-only env (NEXT_PUBLIC_ なし)
+  if (!apiEndpoint) {
+    return new Response("API_ENDPOINT not configured", { status: 500 });
+  }
+
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response("Missing Authorization header", { status: 401 });
+  }
+
+  // path 例: ["auth", "logout"] → /api/auth/logout
+  const upstreamUrl = `${apiEndpoint}/api/${pathSegments.join("/")}${request.nextUrl.search}`;
+  const upstream = await fetch(upstreamUrl, {
+    method: request.method,
+    headers: {
+      Authorization: authHeader,  // 透過、Server で変換しない
+      "Content-Type": request.headers.get("Content-Type") ?? "application/json",
+    },
+    body: ["GET", "HEAD"].includes(request.method)
+      ? undefined
+      : await request.text(),
+  });
+
+  // 401 / その他のステータスを Browser に透過 (Browser 側 interceptor が拾う)
+  return new Response(upstream.body, {
+    status: upstream.status,
+    headers: upstream.headers,
+  });
+}
+```
+
+### 10.3 利点
+
+- **`API_ENDPOINT` がブラウザに露出しない**（server-only env）
+- **CORS が `*` でなく Amplify ドメインだけに絞れる**
+- ブラウザ ↔ Next.js Server は同一オリジンなので CORS 不要
+- **既存の `/api/*` パス定義に影響なし**（unit-interfaces.md / 他 Unit / 既存ドキュメント全て修正不要）
+- **`Authorization: Bearer <accessToken>` 標準ヘッダ**で透過 → Server 側で IdToken → AccessToken 変換などの追加責務不要
+- **AccessToken 採用**で OAuth2 ベストプラクティス整合、ログ出力時の PII 漏洩リスク低減
+
+### 10.4 注意点
+
+- Next.js の `app/api/*` 配下に **catch-all Route Handler** を置く以外、各機能ごとの個別 Route Handler を**作らない**（API Gateway 側で実装する責務を二重化しないため）
+- 個別 Route が必要になるケース（リクエスト/レスポンス整形、複数 API 集約等）が出てきたら、`app/api/<feature>/route.ts` を個別作成して catch-all より優先的にマッチさせる
+- AccessToken の claims には `email` が含まれないため、サーバ側ログの `email_hash` は認証前エンドポイント（Signup/Login）でのみ出力する。認証必須エンドポイントでは省略する（A-NFR-OBS-01 / R-JWT-2-A）
 ```
 
 ---
@@ -412,7 +492,7 @@ export const authMessages: Record<AuthErrorCode, string> = {
      ┌────────────────┐        ┌─────────────────┐
      │ unauthenticated│        │  authenticated  │
      └────┬───────────┘        └────┬────────────┘
-          │  signIn / signUp 成功    │ signOut
+          │  login / signup 成功    │ logout
           └──────────────────────────┤
                                      │
                                      │ tokenRefresh_failure
@@ -431,7 +511,7 @@ export const authMessages: Record<AuthErrorCode, string> = {
 
 | テスト種別 | 対象 | 観点 |
 |---|---|---|
-| 単体 | `useAuth` のメソッド | signUp/signIn/signOut の各 happy path / error path |
+| 単体 | `useAuth` のメソッド | signup/login/logout の各 happy path / error path |
 | 単体 | パスワード強度判定 | R-Pwd-1 の境界値 |
 | 単体 | `apiClient` 401 interceptor | `triggerSessionExpired` が呼ばれること |
 | 統合 | `<SignupScreen>` | フォーム検証、ボタン disabled 制御、API 呼出 |
