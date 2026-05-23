@@ -1,9 +1,10 @@
 // LC-24 OrderHistoryList (P-FE-LOAD-01)
 //
 // 注文履歴のリスト表示。
-//   - 初回ロード中    : OrderHistorySkeleton
-//   - 再 fetch 中     : 前回データを opacity 0.5 で表示 (placeholderData 経由)
-//   - 0 件            : ダメ化文言「履歴がまだありません」
+//   - 初回ロード中           : OrderHistorySkeleton
+//   - 初回ロード失敗 (data なし): エラーバナー (F-I1 修正)
+//   - 再 fetch 中            : 前回データを opacity 0.5 + aria-busy=true (F-I2)
+//   - 0 件                   : ダメ化文言「履歴がまだありません」
 "use client";
 
 import { useOrderHistory } from "@/hooks/useOrderHistory";
@@ -14,6 +15,28 @@ export function OrderHistoryList() {
 
   if (isLoading) {
     return <OrderHistorySkeleton />;
+  }
+
+  // F-I1 修正: 初回ロード失敗時 (data === undefined && isError) は
+  // 「履歴がまだありません」ではなくエラーバナーを表示。
+  // エラーを空状態として誤表示するのはユーザ認知を歪めるため明示。
+  if (isError && !data) {
+    return (
+      <div
+        role="alert"
+        data-testid="order-history-error"
+        style={{
+          background: "#fdecea",
+          color: "#a33",
+          padding: 12,
+          borderRadius: 6,
+          textAlign: "center",
+          fontSize: 14,
+        }}
+      >
+        履歴の取得に失敗しました…再読込でやり直してください
+      </div>
+    );
   }
 
   const items = data ?? [];
@@ -32,6 +55,8 @@ export function OrderHistoryList() {
   return (
     <div
       data-testid="order-history-list"
+      // F-I2 修正: aria-busy で refetch 状態を screen reader に伝える
+      aria-busy={isFetching}
       style={{
         display: "flex",
         flexDirection: "column",

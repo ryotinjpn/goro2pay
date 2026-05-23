@@ -50,6 +50,12 @@ export function useOrder() {
     onError: (err) => {
       triggerLock();
       const action = mapOrderError(err);
+      // F-I4 修正: action.refresh = true の場合は履歴/残高を invalidate。
+      // 409 冪等性衝突時に履歴を最新化することで「もう注文済み」状態を反映。
+      if (action.refresh) {
+        queryClient.invalidateQueries({ queryKey: ["orderHistory"] });
+        queryClient.invalidateQueries({ queryKey: ["balance"] });
+      }
       switch (action.type) {
         case "navigate":
           startTransition(() => router.push(action.path));
