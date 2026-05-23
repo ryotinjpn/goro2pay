@@ -24,10 +24,21 @@ FROM public.ecr.aws/lambda/provided:al2023-arm64
 # LWA を /opt/extensions/lambda-adapter に配置
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.0 /lambda-adapter /opt/extensions/lambda-adapter
 
-# Gin の listen ポートを LWA のデフォルトに合わせる
+# LWA 起動時必須の環境変数 (アプリ全体で共通、Dockerfile 側で固定):
+#   AWS_LWA_PORT          : LWA → 内部 HTTP server の listen port (Gin と一致)
+#   PORT                  : Gin が listen する port (AWS_LWA_PORT と同じ値)
+#   READINESS_CHECK_PATH  : LWA が起動完了判定で叩く path
+#   AWS_LWA_INVOKE_MODE   : buffered (= デフォルト、Lambda の同期 invoke と等価)。
+#                           response streaming を使う場合のみ "response_stream" にする
+#
+# 一方、Lambda env (実行時注入、Terraform 側で設定) で渡すべきもの:
+#   COGNITO_USER_POOL_ID / COGNITO_APP_CLIENT_ID  : 環境ごとに異なる ID
+#   LOG_LEVEL                                     : 運用調整したい
+#   BUILD_SHA                                     : デプロイごとの commit sha
 ENV AWS_LWA_PORT=8080
 ENV PORT=8080
 ENV READINESS_CHECK_PATH=/health
+ENV AWS_LWA_INVOKE_MODE=buffered
 
 # Gin バイナリを Lambda エントリ名 (bootstrap) としてコピー。
 # provided.al2023 では LAMBDA_TASK_ROOT (= /var/task) 配下の bootstrap を実行する。
