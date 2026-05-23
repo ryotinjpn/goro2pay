@@ -38,6 +38,11 @@ async function proxy(request: NextRequest, pathSegments: string[]): Promise<Resp
     return new Response("API_ENDPOINT not configured", { status: 500 });
   }
 
+  // CSRF: 本 BFF は Authorization: Bearer 必須なので、cookie 自動送信に
+  // 依存する古典的 CSRF 攻撃には脆弱でない (Bearer は cookie ではなく
+  // header 必須で、ブラウザが他 origin から自動付与しない)。
+  // 将来 cookie ベース認証へ切り替える場合は、ここで Origin / Referer の
+  // ホワイトリスト検証を追加する (例: Amplify ドメインのみ許容)。
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return new Response("Missing Authorization header", { status: 401 });
