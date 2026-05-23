@@ -43,12 +43,19 @@
 - [x] Infrastructure Design (Unit B, 2026-05-22) — infrastructure-design.md / deployment-architecture.md 生成済み
 - [ ] Code Generation (Unit B) - **EXECUTE**
 
-**他 Unit (worktree 別)**
-- [ ] Functional Design (per-unit, Unit A/C/D/E) - **EXECUTE**
-- [ ] NFR Requirements (per-unit, Unit A/C/D/E) - **EXECUTE**
-- [ ] NFR Design (per-unit, Unit A/C/D/E) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit, Unit A/C/D/E) - **EXECUTE**
-- [ ] Code Generation (per-unit, Unit A/C/D/E) - **EXECUTE**
+**Unit A `auth` 進捗** (worktree: future-unit-a)
+- [x] Functional Design (Unit A, 2026-05-21, PR #61, #66) — Cognito + Pre Sign-up + JWT 検証戦略確定
+- [x] NFR Requirements (Unit A, 2026-05-21, PR #67) — Token 8h/30d、PBT Partial、Stage Throttling 100 req/s 等
+- [x] NFR Design (Unit A, 2026-05-22, PR #68) — 18 パターン + 17 論理コンポーネント (LC-AUTH-01〜18)
+- [x] Infrastructure Design (Unit A, 2026-05-22, PR #69) — 横串インフラ Unit A 包含 (Amplify + CodePipeline + CodeBuild + ECR + IAM 5 種) + BFF パターン + AccessToken 統一
+- [x] Code Generation (Unit A, 2026-05-22) — 約 70 ファイル生成、apps/api/ + web/ + infra/、PBT 5 + Vitest 3 + tftest 6、deployment-runbook.md
+
+**他 Unit (worktree 別、Unit C/D/E)**
+- [ ] Functional Design (per-unit, Unit C/D/E) - **EXECUTE**
+- [ ] NFR Requirements (per-unit, Unit C/D/E) - **EXECUTE**
+- [ ] NFR Design (per-unit, Unit C/D/E) - **EXECUTE**
+- [ ] Infrastructure Design (per-unit, Unit C/D/E) - **EXECUTE**
+- [ ] Code Generation (per-unit, Unit C/D/E) - **EXECUTE**
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**

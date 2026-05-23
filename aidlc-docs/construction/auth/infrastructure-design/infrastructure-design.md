@@ -1,10 +1,11 @@
 # Auth Unit — Infrastructure Design
 
-**Document Version**: 1.3
+**Document Version**: 1.4
 **Created**: 2026-05-22
 **Updated**: 2026-05-22 (Q-I14/Q-I15 追加: Amplify Hosting + CodePipeline/CodeBuild を Unit A スコープに追加、横串インフラ = Unit A 方針)
 **Updated**: 2026-05-22 (BFF パターン採用 + API 認証を AccessToken に統一、cors_configuration を未設定化)
 **Updated**: 2026-05-22 (back/ ディレクトリリネーム案を撤回、Inception 確定の apps/api/ / apps/scheduler/ 表記を維持。他 Unit の合意済みリポジトリ構造尊重)
+**Updated**: 2026-05-22 (Terraform module を機能別 5 module に分割: codestar_connection / cognito / api_gateway / lambda_api / amplify、unit-of-work.md §4.1 整合。本書 §3 のリソース内容は変わらず配置 module のみ変更、§10.1 に整合性メモ追記済み)
 **Unit**: A (`auth`)
 **Construction Depth**: Standard
 **Stage**: Infrastructure Design / Construction
@@ -789,6 +790,14 @@ Access Analyzer 等の静的解析で補う方針 (envs/prd/README.md の produc
 - **CodeStar Connection 共有 module 化**: 当初 envs/dev/main.tf 直書きだったが、CodePipeline / Amplify の双方が ARN を参照するため `modules/codestar_connection/` に切り出し、`Unit = "shared"` タグを付与
 - **BFF パターン採用**: NEXT_PUBLIC_API_ENDPOINT でブラウザに API URL を露出する設計を取りやめ、`/api/*` パスは Next.js の catch-all Route Handler (`web/app/api/[...path]/route.ts`) が受けて API Gateway に proxy する BFF パターンを採用。`API_ENDPOINT` は server-only env、CORS allow_origins を Amplify ドメインだけに絞れる
 - **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を維持（他 Unit B/C/D/E と合意済みのリポジトリ構造を尊重）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
+- **Terraform module 構成 (Code Generation で確定)**: 本書では §3 で `infra/modules/auth/` (単一 module) として記述しているが、実装時はレビュー指摘により unit-of-work.md §4.1 通り **機能別 5 module** (`codestar_connection/` / `cognito/` / `api_gateway/` / `lambda_api/` / `amplify/`) に分割した。本書 §3 のリソース内容は変わらず、配置 module だけが変更:
+    - `infra/modules/codestar_connection/`: CodeStar Connection (Unit 横串、CodePipeline / Amplify が共有)
+    - `infra/modules/cognito/`: Cognito User Pool + App Client + Pre Sign-up Lambda + 関連 IAM (Auth Unit 所有)
+    - `infra/modules/api_gateway/`: HTTP API + JWT Authorizer + Stage + Logout route + 共通 integration (Unit 横串)
+    - `infra/modules/lambda_api/`: API Lambda + ECR + CodePipeline + CodeBuild + S3 artifacts + 関連 IAM (Unit 横串)
+    - `infra/modules/amplify/`: Amplify App + Branch + SSR Role (Unit 横串)
+    - `envs/dev/main.tf` で 5 module を組み合わせて呼出、`aws_lambda_permission.apigw_invoke_api` のみ envs 側で組立 (両 module の output を必要とするため、循環依存を避ける)
+    - 他 Unit (B/C/D/E) は `module.lambda_api.api_lambda_role_name` に権限 attach、`module.api_gateway.api_id` / `cognito_authorizer_id` を参照して route 追加 する形で機能を拡張
 - **CodeBuild compute type**: 設計初稿想定の `ARM_CONTAINER` を **`LINUX_CONTAINER`** に修正。curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER 専用のため、arm64 イメージは `docker buildx build --platform linux/arm64` のクロスビルドで生成する
 - **Amplify SSR Role**: §3.8.4 を参照。AWS managed policy `AWSAmplifyServerSideRendering` を採用 (Amplify Hosting WEB_COMPUTE 公式要件)
 - **Amplify SPA fallback**: WEB_COMPUTE では `custom_rule "/<*>" → /index.html` を **設定しない** (Next.js Server がルーティングするため SSR と干渉する)
@@ -797,6 +806,6 @@ Access Analyzer 等の静的解析で補う方針 (envs/prd/README.md の produc
 
 本書改訂と同時または後続で以下の整合を取る:
 
-- `aidlc-docs/construction/auth/infrastructure-design/deployment-architecture.md` の module 図を 5 module 構成に書き換え (本 PR スコープ)
+- `aidlc-docs/construction/auth/infrastructure-design/deployment-architecture.md` の module 図を 5 module 構成に書き換え (本 PR スコープ、反映済み)
 - `unit-interfaces.md` §3.3 の API path prefix 確認 (`/api/...` で統一済み、PR #66 経由)
 - `unit-of-work.md` §4.1 の module 名は本書実装と既に一致 (`api_gateway` / `lambda_api` / `amplify` / `cognito`)、新設の `codestar_connection` を後続 PR で追記
