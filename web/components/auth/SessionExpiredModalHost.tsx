@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +15,7 @@ export function SessionExpiredModalHost() {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function navigateToLogin() {
+  const navigateToLogin = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -24,7 +24,7 @@ export function SessionExpiredModalHost() {
     // 自動で解除される (もうモジュールフラグは存在せず atom 単一が source of truth)。
     setState(null);
     router.push("/login?from=session_expired");
-  }
+  }, [router, setState]);
 
   useEffect(() => {
     if (state === null) return;
@@ -35,8 +35,7 @@ export function SessionExpiredModalHost() {
         timerRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state, navigateToLogin]);
 
   if (state === null) return null;
 
