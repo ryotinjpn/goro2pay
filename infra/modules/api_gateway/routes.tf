@@ -8,7 +8,8 @@ resource "aws_apigatewayv2_integration" "api_lambda" {
   integration_type       = "AWS_PROXY"
   integration_uri        = var.api_lambda_invoke_arn
   payload_format_version = "2.0"
-  integration_method     = "POST"
+  # NOTE: AWS_PROXY (Lambda) integration では integration_method は AWS API 側で
+  # 無視される (Lambda invoke は常に POST)。冗長指定を排し DRY を保つ。
 }
 
 resource "aws_apigatewayv2_route" "logout" {
