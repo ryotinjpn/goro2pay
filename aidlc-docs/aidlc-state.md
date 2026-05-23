@@ -38,9 +38,9 @@
 
 **Unit B `budget` 進捗** (worktree: future-unit-b)
 - [x] Functional Design (Unit B, 2026-05-21) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認待ち
-- [ ] NFR Requirements (Unit B) - **EXECUTE**
-- [ ] NFR Design (Unit B) - **EXECUTE**
-- [ ] Infrastructure Design (Unit B) - **EXECUTE**
+- [x] NFR Requirements (Unit B, 2026-05-22) — nfr-requirements.md / tech-stack-decisions.md 生成済み、ユーザ承認待ち
+- [x] NFR Design (Unit B, 2026-05-22) — nfr-design-patterns.md / logical-components.md 生成済み、unit-interfaces.md 更新済み
+- [x] Infrastructure Design (Unit B, 2026-05-22) — infrastructure-design.md / deployment-architecture.md 生成済み
 - [ ] Code Generation (Unit B) - **EXECUTE**
 
 **Unit A `auth` 進捗** (worktree: future-unit-a)

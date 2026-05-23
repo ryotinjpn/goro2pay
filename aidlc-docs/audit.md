@@ -397,6 +397,97 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 ---
 
+## Construction Phase 開始 — Unit C 担当
+**Timestamp**: 2026-05-21T00:00:00Z
+**User Input**: "Constructionを実行unitCを担当"
+**AI Response**: 本 worktree (future-unit-c) で Unit C (`order`, Comprehensive 深度) の Construction を担当することを認識。aidlc-state.md / unit-of-work.md / unit-of-work-story-map.md / services.md / component-methods.md を確認し、Construction フェーズの per-unit ループを以下の順序で実施することを計画:
+1. Functional Design (Comprehensive)
+2. NFR Requirements (Comprehensive)
+3. NFR Design (Comprehensive)
+4. Infrastructure Design (Comprehensive)
+5. Code Generation (Plan + Generation 2-Part)
+
+各ステージは 2-option 完了メッセージ（Request Changes / Continue to Next Stage）でユーザ承認ゲートを設ける。
+
+aidlc-docs/construction/ 配下のディレクトリ構造を作成 (plans/, order/{functional-design,nfr-requirements,nfr-design,infrastructure-design,code}/)。
+
+Functional Design ステージを in_progress として開始。
+**Context**: ⛔ GATE: Functional Design Plan のユーザ回答を待機予定
+
+---
+
+## Functional Design — Plan 作成（Unit C）
+**Timestamp**: 2026-05-21T00:10:00Z
+**User Input**: (N/A)
+**AI Response**: aidlc-docs/construction/plans/order-functional-design-plan.md を作成。Comprehensive 深度に必要な 12 問の確認質問（Q-1: Bedrock リトライ戦略 / Q-2: タイムアウト / Q-3: フォールバック優先順位 / Q-4: Default プランの中身 / Q-5: suggestionId 経由の Bedrock 再検証 / Q-6: suggestionId 失効時挙動 / Q-7: idempotencyKey 発行元 / Q-8: idempotencyKey 有効範囲 / Q-9: DeliveryAdapter 失敗時補償 / Q-10: 履歴 Insert 失敗時挙動 / Q-11: GetHistory 取得件数 / Q-12: Frontend エラー UX）を埋め込む。memory `feedback_interview_style.md` に従い、チャット上で 1 問ずつ対話形式でヒアリングを開始。
+**Context**: ⛔ GATE: Functional Design Plan の Q-1 回答を待機中
+
+---
+
+## Functional Design — Plan 全 12 問 回答完了
+**Timestamp**: 2026-05-21T00:30:00Z
+**User Inputs** (対話形式ヒアリング、Q-1〜Q-12 を 1 問ずつチャット提示):
+- Q-1: "b" → Bedrock 失敗時 1 回リトライ → フォールバック
+- Q-2: "b" → Bedrock タイムアウト 1.5 秒
+- Q-3: "a" → 履歴 5 件以上 → BuildFromHistory、それ未満 → Default
+- Q-4: "ゴロゴロ食堂みたいに架空のお店を複数選択できるようにしておいて" → サブ質問 3 つで詳細化
+  - Q-4-1: "ok" → 5 店舗ラインナップ（ゴロゴロ食堂/ぐうたら亭/ダメ屋/怠惰キッチン/ふぬけ食堂）
+  - Q-4-2: "a" → ランダム選択
+  - Q-4-3: "a" → コード内定数配列
+- Q-5: "a" → suggestionId 経由は保存値そのまま使用（Bedrock 再呼び出しなし）
+- Q-6: "b" → suggestionId 失効時は透過的に通常 Bedrock フローへフォールバック
+- Q-7: "a" → idempotencyKey は Frontend 発行 ULID
+- Q-8: "a" → idempotencyKey TTL 24 時間 / userId 単位
+- Q-9: "a" → DeliveryAdapter 失敗時は log.Error のみ（補償は将来対応）
+- Q-10: "a" → OrderHistory Insert 失敗時も 200/201 成功応答（ユーザ体験 > データ完全性）
+- Q-11: "a" → GetHistory: デフォルト 20 / 最大 100 / 降順 / TTL 90 日内
+- Q-12: "a" → Frontend: 402 → BudgetEmpty 遷移 / 500 → 自虐トースト
+
+**AI Response**: 全回答を order-functional-design-plan.md に反映。矛盾チェック実施、いずれも整合（Q-1+Q-2 のワースト 3.0 秒が NFR-PERF-01 ぎりぎり、Q-9+Q-10 と NFR-REL-01 のギャップは business-rules.md に明文化予定）。Plan ユーザ承認を待機中、承認後に Functional Design Artifacts 4 ファイル（business-logic-model.md / business-rules.md / domain-entities.md / frontend-components.md）を生成する。
+**Context**: ⛔ GATE: Functional Design Plan のユーザ承認を待機中
+
+---
+
+## Functional Design — Artifacts 4 ファイル生成完了
+**Timestamp**: 2026-05-21T01:00:00Z
+**User Input**: "ファイル生成"
+**AI Response**: Plan 承認として受領、aidlc-docs/construction/order/functional-design/ 配下に Comprehensive 深度で 4 ファイルを生成（合計 1,840 行）:
+
+- **business-logic-model.md** (480 行): UC-C-01 PlaceOrder の擬似コード / 5 シナリオシーケンス図（ハッピーパス / Bedrock リトライ成功 / フォールバック発動 / 連打 / 残高不足）/ 状態遷移図 / Unit 境界整理
+- **business-rules.md** (428 行): 業務ルール 38 個（BR-C01 〜 BR-C38）を Inception 由来 / Plan Q&A 由来 / Comprehensive 補完で分類、リトライ・フォールバック・冪等性・残高・履歴・Adapter・カテゴリ・コピー文言・ログ・性能の各カテゴリを網羅
+- **domain-entities.md** (471 行): OrderRecord / Plan / PlaceOrderRequest / PlaceOrderResult / OrderHistoryBrief / Adapter DTO / Errors の構造とフィールド制約、ER 図、DynamoDB スキーマ詳細（PK/SK/GSI_IdempotencyKey）、整合性ルール (INV-X-1〜INV-X-6)
+- **frontend-components.md** (461 行): GoroButton / OrderCompletionScreen / useOrder hook / lib/ulid.ts / lib/api/orders.ts の Comprehensive 設計、コンポーネント階層 / 状態遷移図 / API 統合契約 / 状態所属マトリクス / アクセシビリティ / テスト戦略
+
+ユーザ承認ゲート（2-option: Request Changes / Continue to Next Stage）を提示予定。承認後は aidlc-state.md の Functional Design を [x] に更新し、NFR Requirements ステージへ進行。
+**Context**: ⛔ GATE: Functional Design 完了承認を待機中
+
+---
+
+## Functional Design — 凍結 Interface 契約への整合修正（Unit C）
+**Timestamp**: 2026-05-21T01:30:00Z
+**User Input**: "developを取り込んで" → "今修正して"
+**AI Response**: develop マージで取り込んだ `aidlc-docs/construction/interfaces/unit-interfaces.md`（PR #64、Unit 間 Interface 凍結契約）と Unit C Functional Design Artifacts の差分を以下のとおり Unit C 側で追従修正:
+
+### 修正項目（凍結契約を正として追従）
+
+1. **`idempotencyKey` テーブル設計** (BR-C13): PK は `key` 単独でグローバルユニーク。`(userId, key)` 複合の誤った設計を修正。payload に userID を保存し衝突検知を行う方式に変更
+2. **冪等命中時の OrderID 取得** (BR-C15): 旧版で `GSI_IdempotencyKey` を新設して取得する設計を破棄。Wallet payload から `orderID` を取得し、OrderHistoryRepository の通常 Get で復元する方式に変更
+3. **OrderHistory GSI** (domain-entities.md §7.4): 凍結契約に合わせ `gsi_byCreatedAt` のみ保持。`GSI_IdempotencyKey` の不採用理由を明文化
+4. **TTL 属性名** (BR-C20 / BR-C22 / domain-entities.md §2.1 / §7.1): `TTL` → `expiresAt` に統一
+5. **409 IDEMPOTENCY_CONFLICT** (新規 BR-C39): 凍結契約のエラー一覧に従い、`wallet.ErrIdempotencyConflict` 受信時に 409 を返すルールを新設。状態遷移図 / ログイベント / Frontend ハンドラに反映
+6. **カテゴリ表現** (BR-C27): MVP は `"food"` のみ受理だが、凍結契約の `"food" \| "errand" \| ..."` 拡張余地に整合する注記を追加
+7. **属性名規約**: DynamoDB 属性は camelCase（`userId`, `orderId`, `orderedAt`, `expiresAt`）、Go 型は PascalCase で統一
+8. **OrderRecord フィールド分離** (domain-entities.md §2.1): 凍結契約 §4.1 の公開フィールド 7 個と Unit C 内部の追加属性 4 個（idempotencyKey/dayOfWeek/source/expiresAt）を §2.1.1 / §2.1.2 で明確に分離
+
+### 影響しなかった事項
+- Q-1〜Q-12 のヒアリング結論（リトライ 1 回 / タイムアウト 1.5 秒 / フォールバック / suggestionId 透過 / Frontend エラー UX 等）には影響なし
+- ユーザ向けの操作・体験仕様には影響なし
+
+### 各ファイル冒頭に "Aligned with: 凍結契約 §X" 表記を追加し、トレーサビリティを向上。Plan ファイル末尾 (§9) に事後追記として差分反映の記録を残した。
+**Context**: ⛔ GATE: 凍結契約整合修正の commit + push 待機 → ユーザ Functional Design 完了承認待機
+
+---
+
 ## Functional Design (Unit A) — 凍結 Interface 整合 (PR #66)
 **Timestamp**: 2026-05-21T01:00:00Z
 **User Input**: "Functional Design 側で修正" (Q-A4/Q-A6 等のヒアリング後、PR #64 で凍結された unit-interfaces.md との差分検出への対応指示)
@@ -477,6 +568,43 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 **AI Response**: 全回答を auth-nfr-design-plan.md に [Answer] タグ反映。矛盾なし、追加質問なし。次に NFR Design 成果物 2 種 (nfr-design-patterns.md / logical-components.md) を生成。
 **Context**: NFR Design ヒアリング完了、成果物生成段階へ
+
+---
+
+## NFR Requirements (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T00:00:00Z
+**User Input**: "unitBのcオンストラクションの続きをすすめたい"
+**AI Response**: `docs/construction-budget-nfr-requirements` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-requirements-plan.md` を作成。Q-N1〜Q-N11（Deduct応答時間 / GetBalance応答時間 / ResetAll実行時間 / DynamoDBキャパシティ / TransactWriteItems / リセット失敗通知 / ログ項目 / PBT適用範囲 / Lambdaメモリ / TanStack Query stale time / コンプライアンス）の 11 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Requirements Plan 承認待ち
+
+---
+
+## NFR Requirements (Unit B) — 対話ヒアリング完了
+**Timestamp**: 2026-05-22T01:00:00Z
+**User Inputs** (Q-N1〜Q-N11、対話形式で順次):
+- Q-N1: "c" → 目標値なし、NFR-PERF-01 全体予算（3 秒）内で管理
+- Q-N2: "c" → 目標値なし、NFR-PERF-01/02 全体予算内で管理（Unit A Q-N3 と同方針）
+- Q-N3: "a" → 最大 50 ユーザ、Lambda タイムアウト 30 秒
+- Q-N4: "c" → 全テーブル プロビジョンド（1 RCU/1 WCU）、無料枠内運用
+- Q-N5: "b" → 個別実行（FD 設計通り）、TransactWriteItems 不使用
+- Q-N6: "c" → ログ出力のみ + 手動リカバリ手順を Infrastructure Design に記載
+- Q-N7: "c" → Unit A 8 項目 + amount / newBalance（idempotencyKey は省略）
+- Q-N8: "b" → 残高不変条件 + SetBudget べき等性 + バリデーション境界値
+- Q-N9: "a" → 128MB
+- Q-N10: "a" → stale time 30 秒 + Deduct 成功時に即 invalidate
+- Q-N11: "b" → NFR-COMP-01〜03 引用 + 「仮想ウォレットは実決済データを含まない」を明記
+- 矛盾確認: Q-N3=A（30s タイムアウト）× Q-N4=C（1 WCU）の ResetAll 処理 / Q-B6=A（ConsistentRead）× Q-N4=C（1 RCU）の一貫性リスクを AI が検出。ユーザ「unitAと同じ方針にしたい」→ C（バースト容量前提、設計書に注記）で継続確定。
+
+**AI Response**: 全回答を budget-nfr-requirements-plan.md に反映。nfr-requirements.md / tech-stack-decisions.md を生成。
+**Context**: NFR Requirements 成果物生成完了、ユーザ承認ゲートへ
+
+---
+
+## NFR Design (Unit B) — Plan 作成
+**Timestamp**: 2026-05-22T02:00:00Z
+**User Input**: "mergeしました　次いきましょう　次はこれですね https://github.com/ryotinjpn/goro2pay/issues/26"
+**AI Response**: `docs/construction-budget-nfr-design` ブランチを作成。`aidlc-docs/construction/plans/budget-nfr-design-plan.md` を作成。Q-D1〜Q-D8（ConditionalCheckFailedException処理 / SetBudget部分失敗リカバリ / 残高ローディング状態 / 残高枯渇演出 / ログライブラリ / PBTフレームワーク / invalidateパターン / ResetAllエラー収集）の 8 問を埋め込み。ユーザ承認待ち。
+**Context**: ⛔ GATE: NFR Design Plan 承認待ち
 
 ---
 
@@ -650,6 +778,38 @@ aidlc-state.md を更新し、Unit B Functional Design ステージを [x] に�
 
 横串インフラ Unit A 包含方針 (Q-I14/Q-I15) と BFF パターン採用 + AccessToken 統一は維持。本撤回は **ディレクトリ名表記のみ**の修正。
 **Context**: back/ 撤回反映完了、Inception §4.1 整合復帰、PR #69 再レビュー待ち
+
+---
+
+## NFR Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T03:10:00Z
+**User Inputs**:
+- "既存ユニットとの矛盾点をもう一度確認して"
+**AI Response**: Unit A との整合確認で 2 件を明記必須と判断（LC-AUTH-09 再利用 / Unit C invalidate 依存）。以下を生成・更新:
+- `aidlc-docs/construction/budget/nfr-design/nfr-design-patterns.md` (新規): P-REL-01〜03 / P-PERF-01 / P-OBS-01〜02 / P-TEST-01 / P-DEG-01〜03 の 10 パターン。`log/slog` + `ContextAwareSlogHandler` (LC-AUTH-05) 再利用、`gopter` PBT（Unit A と統一）を明記。
+- `aidlc-docs/construction/budget/nfr-design/logical-components.md` (新規): LC-BUDGET-01〜12 定義。Unit A 再利用コンポーネント（LC-AUTH-05 / LC-AUTH-09 / LC-AUTH-18）を §4 に明記。Unit C の `invalidateQueries(['balance'])` 依存を LC-BUDGET-08 に記載。
+- `aidlc-docs/construction/interfaces/unit-interfaces.md` (更新): §9.1「クロスユニット TanStack Query key 契約」追加（`['balance']` query key の Unit B/C 間契約）、§12「共有 Frontend インフラ」追加（LC-AUTH-09 / LC-AUTH-18 の全 Unit 共有を明記）。
+- `aidlc-docs/aidlc-state.md`: Unit B NFR Design を `[x]` に更新。
+- `budget-nfr-design-plan.md`: チェックボックス更新。
+**Context**: NFR Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
+
+---
+
+## Infrastructure Design (Unit B) — 成果物生成完了
+**Timestamp**: 2026-05-22T04:00:00Z
+**User Inputs**:
+- Q-I1: "a" → 新規 `infra/modules/budget/` モジュール
+- Q-I2: "a" → zip（aws-lambda-go）、LWA 不要
+- Q-I3: "a" → 手動 terraform apply のみ
+- Q-I4: "a" → AWS マネージド（AES256）
+- Q-I5: "A" → 再試行なし + CloudWatch Logs 記録のみ
+- Q-I6: "a" → PITR 無効
+**AI Response**: 以下を生成・更新:
+- `aidlc-docs/construction/budget/infrastructure-design/infrastructure-design.md` (新規): DynamoDB 4 テーブル / Scheduler Lambda (zip) / API GW ルート 2 本 / IAM 権限追加 / terraform-test 方針
+- `aidlc-docs/construction/budget/infrastructure-design/deployment-architecture.md` (新規): AWS リソース全体図 / リクエストフロー 4 種 / デプロイ手順
+- `aidlc-docs/aidlc-state.md`: Unit B Infrastructure Design を `[x]` に更新
+- `budget-infrastructure-design-plan.md`: チェックボックス更新
+**Context**: Infrastructure Design (Unit B) 成果物生成完了。承認ゲート提示待ち。
 
 ---
 

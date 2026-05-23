@@ -56,41 +56,86 @@
 
 ## 2. ディレクトリ構造
 
+実装は Inception の `unit-of-work.md §4.1` に従い、機能別 module 構成を採用する
+(設計初稿の単一 `modules/auth/` から **機能別 5 module** へ変更):
+
 ```
 infra/
 ├── envs/
 │   ├── dev/
 │   │   ├── backend.tf            # S3 + use_lockfile (Q-I6)
-│   │   ├── providers.tf          # default_tags
-│   │   ├── main.tf               # auth module 呼出
+│   │   ├── providers.tf          # default_tags (Project / Env / ManagedBy)
+│   │   ├── locals.tf             # env / region / github_*
+│   │   ├── main.tf               # 5 module + lambda_permission を組み立て
 │   │   ├── variables.tf
 │   │   └── outputs.tf
 │   └── prd/
 │       └── README.md             # placeholder (Q-I5)
 ├── modules/
-│   └── auth/                     # Q-I1=A 単一モジュール（横串インフラ含む）
+│   ├── codestar_connection/      # GitHub 接続 (CodePipeline + Amplify で共有)
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── tests/
+│   ├── cognito/                  # Auth Unit 所有 (User Pool + App Client + Pre Sign-up)
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   ├── cognito.tf
+│   │   ├── pre_signup_lambda.tf
+│   │   ├── iam.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── tests/
+│   ├── api_gateway/              # Unit 横串 (HTTP API + Authorizer + Stage + Routes)
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   ├── api_gateway.tf
+│   │   ├── routes.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── tests/
+│   ├── lambda_api/               # Unit 横串 (API Lambda + ECR + CodePipeline + CodeBuild + IAM)
+│   │   ├── README.md
+│   │   ├── main.tf
+│   │   ├── api_lambda.tf
+│   │   ├── ecr.tf
+│   │   ├── codepipeline.tf
+│   │   ├── iam.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── tests/
+│   └── amplify/                  # Unit 横串 (Amplify Hosting + Branch + SSR Role)
 │       ├── README.md
-│       ├── main.tf               # メイン定義
-│       ├── cognito.tf            # User Pool + App Client
-│       ├── pre_signup_lambda.tf  # Pre Sign-up Lambda (Node.js, archive_file)
-│       ├── api_gateway.tf        # HTTP API + Authorizer + Stage
-│       ├── api_lambda.tf         # API Lambda (Go + Gin + LWA, ECR image)
-│       ├── ecr.tf                # ECR Repository (API Lambda image, Q-I15)
-│       ├── logout_route.tf       # POST /api/auth/logout route + integration
-│       ├── amplify.tf            # Amplify Hosting (Next.js App Router) (Q-I14)
-│       ├── codepipeline.tf       # CodePipeline + CodeBuild (API Lambda CD) (Q-I15)
-│       ├── iam.tf                # 全 IAM Role / Policy
-│       ├── log_groups.tf         # CloudWatch Log Groups
+│       ├── main.tf
+│       ├── amplify.tf
+│       ├── iam.tf
 │       ├── variables.tf
-│       └── outputs.tf
+│       ├── outputs.tf
+│       └── tests/
+│           ├── amplify_basic.tftest.hcl
+│           └── fixtures/amplify.yml      # テスト用 build_spec
 ├── lambdas/
 │   └── pre-signup/
-│       └── index.js              # 5 行 auto-confirm 実装 (Code Generation)
+│       └── index.js              # 5 行 auto-confirm 実装
 │                                  # ※ archive_file の source_dir 都合で infra/ 配下
 └── scripts/
-    ├── bootstrap-backend.sh      # S3 tfstate bucket 作成 (Code Generation)
-    └── bootstrap-ecr-initial.sh  # ECR 初回 image push (Code Generation)
+    ├── bootstrap-backend.sh      # S3 tfstate bucket 作成
+    └── bootstrap-ecr-initial.sh  # ECR 初回 image push
 ```
+
+**Module 責務:**
+
+| Module | 所有 Unit | 主な責務 |
+|---|---|---|
+| `codestar_connection` | shared | GitHub 接続 ARN を CodePipeline / Amplify に提供 |
+| `cognito` | Unit A (auth) | User Pool / App Client / Pre Sign-up Lambda Trigger |
+| `api_gateway` | shared (Unit 横串) | HTTP API + Cognito JWT Authorizer + Stage + 各 Unit の routes |
+| `lambda_api` | shared (Unit 横串) | API Lambda + ECR + CodePipeline + CodeBuild。後続 Unit が IAM Role に DynamoDB / Bedrock 権限を attach |
+| `amplify` | shared (Unit 横串) | Amplify Hosting (WEB_COMPUTE) + Branch + SSR Role |
+
+API Gateway → API Lambda の `aws_lambda_permission` は両 module の output を必要とする
+ため、循環依存を避けるべく **envs 側で組み立てる**。
 
 加えて、Inception unit-of-work.md §4.1 の確定構造に従い、リポジトリルート直下の `apps/` ディレクトリに API Lambda 関連の Go コードと Docker build 資材を配置:
 
@@ -110,13 +155,34 @@ apps/
     └── (将来 Unit B 担当)
 ```
 
-`modules/auth/` の内訳は責務別にファイル分割し、1 ファイル ~100 行以内を目安。
+各 module の内訳は terraform-module-design 規約に従ったファイル分割を行う:
+- `versions.tf` ← `terraform { required_version, required_providers }`
+- `locals.tf` ← `locals { ... }`
+- `main.tf` ← module の責務サマリ (コメント) と必要に応じた resource 集約。
+  ただし resource は機能別ファイル (例: `cognito.tf`, `pre_signup_lambda.tf`,
+  `iam.tf`) に分けて配置する
+- `variables.tf` / `outputs.tf` / `tests/` は規約通り
 
 ---
 
 ## 3. リソース詳細
 
-以下、`infra/modules/auth/` 配下に置く Terraform リソースを論理仕様で記述する（HCL の細かいコード本体は Code Generation で書く）。
+以下、各機能別 module 配下に置く Terraform リソースを論理仕様で記述する
+(HCL の細かいコード本体は Code Generation で書く)。各セクションのリソースが
+どの module に属するかは下記マッピングに従う:
+
+| セクション | 配置先 module |
+|---|---|
+| 3.1 Cognito | `modules/cognito/` |
+| 3.2 Pre Sign-up Lambda | `modules/cognito/` (Auth Unit が Trigger ごと所有) |
+| 3.3 API Lambda | `modules/lambda_api/` |
+| 3.4 API Gateway HTTP API | `modules/api_gateway/` |
+| 3.5 Logout Route | `modules/api_gateway/` (routes.tf) |
+| 3.6 IAM Roles & Policies | 各機能別 module 内に分散 (cognito/iam.tf, lambda_api/iam.tf, amplify/iam.tf) |
+| 3.7 CloudWatch Log Groups | 各機能別 module (cognito/, lambda_api/, api_gateway/) 内に分散 |
+| 3.8 Amplify Hosting | `modules/amplify/` |
+| 3.9 CodePipeline + CodeBuild | `modules/lambda_api/` |
+| (新) CodeStar Connection | `modules/codestar_connection/` (env で 1 つだけ作成し、CodePipeline / Amplify 双方が参照) |
 
 ### 3.1 Cognito (LC-15 / LC-16)
 
@@ -389,14 +455,24 @@ GitHub と AWS の接続を提供。Amplify と CodePipeline の両方が参照�
 
 #### 3.8.4 `aws_iam_role.amplify_ssr`
 
-Amplify Hosting の SSR Compute role。
+Amplify Hosting (WEB_COMPUTE) の SSR Compute role。
 
 | 設定 | 値 |
 |---|---|
 | `name` | `gp-${var.env}-amplify-ssr-role` |
 | `assume_role_policy` | `amplify.amazonaws.com` service principal |
+| 権限 | AWS managed policy `AWSAmplifyServerSideRendering` を attach |
 
-インラインポリシー: CloudWatch Logs 書込のみ。Amplify SSR が他 AWS サービスを呼ぶ必要は本 MVP では無し（Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由）。
+`AWSAmplifyServerSideRendering` は Amplify Hosting WEB_COMPUTE で SSR Lambda が
+deployment artifact (S3) 取得・SSM Parameter Store / Secrets Manager 参照・
+CloudWatch Logs 出力等を行うために必要な公式 managed policy。
+本 MVP では Amplify SSR が他 AWS サービスを直接呼ぶ業務ロジックは無いが
+(Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由)、Amplify Hosting
+の内部動作 (deployment / runtime) が同 policy を必須とするため attach する。
+
+NOTE: 設計の初稿では「インラインポリシーで CloudWatch Logs 書込のみ」としていたが、
+それでは Amplify Hosting WEB_COMPUTE の SSR が起動できないことが実装時に判明したため、
+公式要件に揃える形で managed policy 採用に変更した。
 
 #### 3.8.5 buildSpec（YAML 文字列を Terraform 内で）
 
@@ -530,22 +606,33 @@ CodePipeline の中間アーティファクト保存用。
 
 ## 4. Variables / Outputs
 
-### 4.1 Module Variables (`infra/modules/auth/variables.tf`)
+### 4.1 Module Variables
 
-| 名前 | 型 | デフォルト | 説明 |
+機能別 module ごとに変数を分散配置する。代表的な変数:
+
+| 配置 module | 名前 | 型 | 用途 |
 |---|---|---|---|
-| `env` | string | — | 環境識別子 (例: `dev`) |
-| `region` | string | `ap-northeast-1` | AWS Region |
-| `github_owner` | string | — | GitHub オーナー (例: `ryotinjpn`) |
-| `github_repo_name` | string | `goro2pay` | リポジトリ名 |
-| `github_branch` | string | `develop` | Frontend / API CD のソースブランチ |
-| `tags` | map(string) | (default_tags で代替可) | 追加タグ |
+| 全 module 共通 | `env` | string | 環境識別子 (例: `dev`)、リソース名 prefix `gp-${env}-` に使う |
+| `api_gateway` / `lambda_api` / `amplify` | `region` | string | AWS Region (CodeBuild env / Amplify branch env 注入用) |
+| `lambda_api` / `amplify` | `github_owner` / `github_repo_name` / `github_branch` | string | CD ソース |
+| `lambda_api` / `amplify` | `codestar_connection_arn` | string | `module.codestar_connection.connection_arn` を envs/dev で受け渡す |
+| `api_gateway` | `cognito_user_pool_id` / `cognito_user_pool_client_id` | string | `module.cognito` の output |
+| `api_gateway` | `api_lambda_invoke_arn` | string | `module.lambda_api` の output |
+| `lambda_api` | `cognito_user_pool_id` / `cognito_user_pool_client_id` | string | API Lambda env として注入 |
+| `amplify` | `cognito_user_pool_id` / `cognito_user_pool_client_id` / `api_endpoint` | string | branch env vars |
+| `amplify` | `amplify_yml_path` | string | build_spec ファイル絶対パス (envs から path.root 起点で渡す) |
 
-**注意**: `api_image_uri` 変数は不要となった（ECR を Unit A で構築、初期 image は bootstrap-ecr-initial.sh で push、以降は CodeBuild が更新するため Lambda の image_uri は `lifecycle.ignore_changes`）。
+**注意**: `api_image_uri` 変数は不要 (ECR を Unit A で構築、初期 image は
+bootstrap-ecr-initial.sh で push、以降は CodeBuild が更新するため Lambda の
+image_uri は `lifecycle.ignore_changes`)。
 
-### 4.2 Module Outputs (`infra/modules/auth/outputs.tf`)
+**注意**: `aws_lambda_permission.apigw_invoke_api` は両 module の output を
+必要とするため、`lambda_api` module ではなく envs/dev/main.tf で組み立てる
+(module 間循環依存の回避)。
 
-他 module / 後続 Unit が参照する値:
+### 4.2 Module Outputs
+
+各 module の outputs.tf で他 module / envs / 後続 Unit が参照する値を export:
 
 | 名前 | 値 | 用途 |
 |---|---|---|
@@ -592,7 +679,7 @@ terraform {
 
 ---
 
-## 6. providers.tf (Q-I11)
+## 6. providers.tf / versions.tf (Q-I11)
 
 `infra/envs/dev/providers.tf`:
 
@@ -604,29 +691,58 @@ provider "aws" {
     tags = {
       Project   = "goro2pay"
       Env       = "dev"
-      Unit      = "auth"
       ManagedBy = "terraform"
     }
   }
 }
 ```
 
-`Unit` タグは Unit A の責任範囲を示すために `auth` を default に置くが、他 Unit が後続で別の dev env から module 呼出を追加する場合は `Unit` を override する設計とする（または各 module 内で `tags` 引数を受けて override）。
+`infra/envs/dev/versions.tf`:
+
+```hcl
+terraform {
+  required_version = ">= 1.10.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.46"
+    }
+  }
+}
+```
+
+**Unit タグ運用方針**:
+`Unit` タグは provider の `default_tags` に **入れない**。後続 Unit B/C/D/E
+のリソースが同じ envs/dev に追加された際、provider レベルの default が
+override されないと「Unit=auth」が全リソースに伝播してコスト集計が壊れるため、
+Unit タグは各 module 内で個別に `tags = merge({Unit = "..."}, ...)` で付ける
+方針とする (codestar_connection module は `Unit = "shared"` を付与)。
 
 ---
 
 ## 7. terraform-test 統合
 
-A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテストを `infra/modules/auth/tests/` に配置（Code Generation で実装）:
+A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、各機能別 module の
+`tests/` ディレクトリに mock_provider ベースのテストを配置する:
 
-| テストファイル | 目的 |
-|---|---|
-| `auth_basic.tftest.hcl` | mock_provider で `terraform plan` がエラーなく成立することを確認 |
-| `auth_outputs.tftest.hcl` | 主要 output が空文字でないことを確認 |
-| `auth_cognito_password_policy.tftest.hcl` | password_policy が A-NFR-SEC-02 と一致することを確認 |
-| `auth_lambda_lifecycle.tftest.hcl` | API Lambda の `lifecycle.ignore_changes = ["image_uri"]` が設定されていることを確認 (Q-I15) |
-| `auth_amplify_branch.tftest.hcl` | Amplify branch の env vars に `NEXT_PUBLIC_USER_POOL_ID` 等が含まれることを確認 (Q-I14) |
-| `auth_codebuild_iam.tftest.hcl` | CodeBuild IAM Role が Lambda UpdateFunctionCode 権限を最小限で持つことを確認 (Q-I15) |
+| 配置先 | テストファイル | 目的 |
+|---|---|---|
+| `modules/cognito/tests/` | `cognito_basic.tftest.hcl` | plan 成立 / resource non-computed 属性確認 / password_policy が A-NFR-SEC-02 と一致 / token_validity が A-NFR-SEC-03 と一致 |
+| `modules/api_gateway/tests/` | `api_gateway_basic.tftest.hcl` | plan 成立 / resource 名 / Authorizer JWT type / access_log_settings 有効 / throttling A-NFR-SEC-04 / Authorizer TTL Q-I8 |
+| `modules/lambda_api/tests/` | `lambda_api_basic.tftest.hcl` | plan 成立 / Lambda function_name / package_type Image / architectures arm64 / CodeBuild type LINUX_CONTAINER + privileged_mode (Q-I15) |
+| `modules/amplify/tests/` | `amplify_basic.tftest.hcl` (+ `fixtures/amplify.yml`) | plan 成立 / app name / platform WEB_COMPUTE / branch env vars (NEXT_PUBLIC_*) (Q-I14) |
+| `modules/codestar_connection/tests/` | `codestar_connection_basic.tftest.hcl` | plan 成立 / 名前 / provider_type GitHub / Unit=shared タグ |
+
+Output 経由の assert は mock_provider 環境では `(known after apply)` で
+unknown となり `!= null` 比較が常に true (false positive) になるため、
+resource の non-computed 属性 (name / protocol_type / authorizer_type 等) を
+直接 assert する方針で揃えている。
+
+IAM policy 文字列内容の最小権限テスト (例: `lambda:UpdateFunctionCode` の
+Resource が単一 ARN に絞られていること) は mock_provider では attribute
+unknown / invalid ARN で評価困難なため、CI 側で tflint / checkov / IAM
+Access Analyzer 等の静的解析で補う方針 (envs/prd/README.md の productization
+タスクとして明示)。
 
 ---
 
@@ -657,7 +773,7 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 | 引き継ぎ先 | 内容 |
 |---|---|
 | **Code Generation** | `infra/lambdas/pre-signup/index.js` (5 行) / `apps/api/Dockerfile` (LWA arm64) / `apps/api/buildspec.yml` (CodeBuild) / `apps/api/` の Go コード本体 (Gin + LWA + middleware + handlers) / `web/` の Next.js Frontend / `infra/scripts/bootstrap-backend.sh` (S3 tfstate bucket) / `infra/scripts/bootstrap-ecr-initial.sh` (ECR 初回 image push) / Terraform `*.tf` の HCL 本体 / mock_provider テスト |
-| **将来の横串改善 PR** | Auth module から `api_lambda.tf` / `amplify.tf` / `codepipeline.tf` / `ecr.tf` を独立 module へ切り出し（`lambda_api/` / `amplify/` / `cicd/`）。本 MVP では Auth module 内に集約 |
+| **将来の運用改善 PR** | (1) ECR `image_tag_mutability = IMMUTABLE` への変更 (改ざん防止)。(2) CodePipeline に Deploy stage を追加 (現状は CodeBuild post_build で update-function-code、本来 Deploy stage で表現)。(3) IAM policy 静的解析 (tflint / checkov / IAM Access Analyzer) を CI に統合。(4) Amplify の GitHub 接続を Console 手動接続から `aws_amplify_app.connection_arn = var.codestar_connection_arn` の terraform 管理に切替 (現状 amplify module は変数受け口のみ用意済み、接続情報を tf 側に取り込む際は lifecycle.ignore_changes [oauth_token, access_token] を解除) |
 
 ---
 
@@ -666,21 +782,30 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、以下のテス
 ### 10.1 Application Design / NFR Design との差分
 
 - **API Gateway 種類**: 既存ドキュメント「REST」表記 → 本書で **HTTP API** に変更（Q-I2=B）。`unit-interfaces.md` §3.3 の「path」表記は HTTP API でも同じ動作。`A-NFR-SEC-04 Stage Throttling` は HTTP API では default_route_settings として表現される
-- **API Lambda 構築タイミング**: unit-of-work.md §4.1 では `lambda_api/` を「Unit 横串」と記載 → 本書で **Unit A PR で先行構築する**（横串 PR の所在不明確のため、Q-I10=A4）。後続 PR で必要なら独立 module への切り出しを検討
-- **Amplify Hosting / CodePipeline / ECR の所属**: unit-of-work.md §4.1 では `amplify/` / `lambda_api/` を「Unit 横串」と記載していたが、横串 PR タスク管理が計画上空白だったため、本書で **横串インフラを全て Unit A スコープに包含する** 方針に確定（Q-I14 / Q-I15）。これにより Unit A PR 単体で Frontend と API の auto deploy 環境まで構築可能
+- **モジュール構成**: 設計初稿では「単一 `modules/auth/` に集約 (Q-I1=A)」としていたが、実装段階で **機能別 5 module 構成 (`codestar_connection` / `cognito` / `api_gateway` / `lambda_api` / `amplify`)** に変更。理由:
+  - `unit-of-work.md` §4.1 と整合 (5 Unit 全体で合意済みの構造)
+  - terraform-module-design 規約「関連リソースごとに分割」に準拠
+  - 後続 Unit B/C/D/E が `lambda_api` の Lambda Role への DynamoDB 権限 attach や `api_gateway` への route 追加など、機能単位で拡張しやすい
+- **Lambda permission の配置**: `aws_lambda_permission.apigw_invoke_api` は両 module の output を必要とするため、`lambda_api` module ではなく envs/dev/main.tf 側に配置する (module 間循環依存を避ける定石)
+- **CodeStar Connection 共有 module 化**: 当初 envs/dev/main.tf 直書きだったが、CodePipeline / Amplify の双方が ARN を参照するため `modules/codestar_connection/` に切り出し、`Unit = "shared"` タグを付与
 - **BFF パターン採用**: NEXT_PUBLIC_API_ENDPOINT でブラウザに API URL を露出する設計を取りやめ、`/api/*` パスは Next.js の catch-all Route Handler (`web/app/api/[...path]/route.ts`) が受けて API Gateway に proxy する BFF パターンを採用。`API_ENDPOINT` は server-only env、CORS allow_origins を Amplify ドメインだけに絞れる
 - **Go ソース配置**: unit-of-work.md §4.1 の `apps/api/` / `apps/scheduler/` 表記を維持（他 Unit B/C/D/E と合意済みのリポジトリ構造を尊重）。各層 (Browser / Next.js / API Gateway / API Lambda) の URL は全て `/api/*` で統一
-- **Terraform module 構成 (Code Generation で確定)**: 本書では §3 で `infra/modules/auth/` (単一 module) として記述しているが、実装時はレビュー指摘により unit-of-work.md §4.1 通り **機能別 4 module** (`cognito/` / `api_gateway/` / `lambda_api/` / `amplify/`) に分割した。本書 §3 のリソース内容は変わらず、配置 module だけが変更:
+- **Terraform module 構成 (Code Generation で確定)**: 本書では §3 で `infra/modules/auth/` (単一 module) として記述しているが、実装時はレビュー指摘により unit-of-work.md §4.1 通り **機能別 5 module** (`codestar_connection/` / `cognito/` / `api_gateway/` / `lambda_api/` / `amplify/`) に分割した。本書 §3 のリソース内容は変わらず、配置 module だけが変更:
+    - `infra/modules/codestar_connection/`: CodeStar Connection (Unit 横串、CodePipeline / Amplify が共有)
     - `infra/modules/cognito/`: Cognito User Pool + App Client + Pre Sign-up Lambda + 関連 IAM (Auth Unit 所有)
-    - `infra/modules/api_gateway/`: HTTP API + JWT Authorizer + Stage + Logout/Health route + 共通 integration (Unit 横串)
+    - `infra/modules/api_gateway/`: HTTP API + JWT Authorizer + Stage + Logout route + 共通 integration (Unit 横串)
     - `infra/modules/lambda_api/`: API Lambda + ECR + CodePipeline + CodeBuild + S3 artifacts + 関連 IAM (Unit 横串)
     - `infra/modules/amplify/`: Amplify App + Branch + SSR Role (Unit 横串)
-    - `envs/dev/main.tf` で 4 module を組み合わせて呼出、CodeStar Connection は envs 側で 1 つ作成し lambda_api と amplify で共有
-    - 他 Unit (B/C/D/E) は `module.lambda_api.api_lambda_role_name` に権限 attach、`module.api_gateway.api_lambda_integration_id` を target に route 追加 する形で機能を拡張
+    - `envs/dev/main.tf` で 5 module を組み合わせて呼出、`aws_lambda_permission.apigw_invoke_api` のみ envs 側で組立 (両 module の output を必要とするため、循環依存を避ける)
+    - 他 Unit (B/C/D/E) は `module.lambda_api.api_lambda_role_name` に権限 attach、`module.api_gateway.api_id` / `cognito_authorizer_id` を参照して route 追加 する形で機能を拡張
+- **CodeBuild compute type**: 設計初稿想定の `ARM_CONTAINER` を **`LINUX_CONTAINER`** に修正。curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER 専用のため、arm64 イメージは `docker buildx build --platform linux/arm64` のクロスビルドで生成する
+- **Amplify SSR Role**: §3.8.4 を参照。AWS managed policy `AWSAmplifyServerSideRendering` を採用 (Amplify Hosting WEB_COMPUTE 公式要件)
+- **Amplify SPA fallback**: WEB_COMPUTE では `custom_rule "/<*>" → /index.html` を **設定しない** (Next.js Server がルーティングするため SSR と干渉する)
 
 ### 10.2 整合修正メモ
 
-本 PR では既存ドキュメントは変更しないが、Code Generation 完了後にレビューで以下の調整を検討:
+本書改訂と同時または後続で以下の整合を取る:
 
-- `unit-interfaces.md` §3.3 の API path prefix 確認（`/api/...` で統一済み、PR #66）
-- `unit-of-work.md` §4.1 の `lambda_api/` / `amplify/` / `api_gateway/` 横串記述に「Unit A PR で先行構築」の脚注追加（任意）。本実装で機能別 4 module 構成を採用済みのため、unit-of-work.md §4.1 との整合は維持されている
+- `aidlc-docs/construction/auth/infrastructure-design/deployment-architecture.md` の module 図を 5 module 構成に書き換え (本 PR スコープ、反映済み)
+- `unit-interfaces.md` §3.3 の API path prefix 確認 (`/api/...` で統一済み、PR #66 経由)
+- `unit-of-work.md` §4.1 の module 名は本書実装と既に一致 (`api_gateway` / `lambda_api` / `amplify` / `cognito`)、新設の `codestar_connection` を後続 PR で追記
