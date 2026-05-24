@@ -22,7 +22,8 @@ phases:
       - echo "Image tag is $IMAGE_TAG"
   build:
     commands:
-      - echo Building Docker image (linux/arm64)...
+      # echo の引数に () を含めると dash がサブシェル開始と誤認するためクォート必須。
+      - echo "Building Docker image (linux/arm64)..."
       - docker buildx create --use
       - docker buildx build --platform linux/arm64 --load
         -t $ECR_REPOSITORY_URI:$IMAGE_TAG
