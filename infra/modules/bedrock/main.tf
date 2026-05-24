@@ -21,4 +21,12 @@ resource "aws_iam_policy" "bedrock_inference" {
   })
 
   tags = { Unit = "bedrock" }
+
+  # description は AWS Provider 仕様で ForceNew となり、文言変更だけで
+  # destroy → create の replace が走る。本 policy は Lambda Role に attach
+  # 済みのため、replace 時に DeleteConflict (409) で apply が失敗する。
+  # description は表示用で運用影響が無いため、tf 側で diff を無視する。
+  lifecycle {
+    ignore_changes = [description]
+  }
 }
