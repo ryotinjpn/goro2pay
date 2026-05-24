@@ -24,7 +24,7 @@
 Unit C Construction の Infrastructure Design として、以下を構築する:
 
 1. **DynamoDB `OrderHistory` テーブル**（PK / SK / TTL 90 日 / GSI なし）← LC-ORDER-04
-2. **Bedrock IAM Policy**（Claude 3.5 Haiku Foundation Model + Inference Profile ARN 限定）← LC-ORDER-05 / NFRC-C20
+2. **Bedrock IAM Policy**（Claude Haiku 4.5 Foundation Model + Inference Profile ARN 限定）← LC-ORDER-05 / NFRC-C20
 3. **DynamoDB IAM Policy**（OrderHistory CRUD 権限）
 4. **API Gateway routes 2 本追加**（`POST /api/orders` / `GET /api/orders`）← 既存 `modules/api_gateway/routes.tf` 拡張
 5. **CloudWatch Logs metric filter 3 種**（`bedrock_retry` / `fallback_triggered` / `place_order_complete` p95）← NFRC-C13
@@ -55,7 +55,7 @@ Unit C Construction の Infrastructure Design として、以下を構築する:
 | Tags | `Project=goro2pay` / `Env={env}` / `Unit=order` or `Unit=observability` / `ManagedBy=terraform` | Unit A Q-I11 |
 | Module 規約 | terraform-module-design / terraform-coding-rule / terraform-test 準拠 | チームベースライン |
 | API Lambda Memory | 256MB / arm64 / Timeout 10s | NFRC-C18 / Q-N9 = B |
-| Bedrock モデル | `apac.anthropic.claude-3-5-haiku-20241022-v1:0`（Inference Profile） | NFRC-C20 / Q-N8 = B / Q-I10 = A |
+| Bedrock モデル | `jp.anthropic.claude-haiku-4-5-20251001-v1:0`（Inference Profile） | NFRC-C20 / Q-N8 = B / Q-I10 = A |
 | OrderHistory PK / SK | `PK=USER#{userID}` / `SK=ORDER#{orderedAt}#{orderID}` | unit-interfaces.md §3.2 |
 | TTL 属性名 | `expiresAt`（90 日） | NFRC-C12 / 凍結契約整合修正済み |
 | OrderHistory キャパシティ | プロビジョンド 1 RCU / 1 WCU | Q-I2 = A / Unit B 統一 |
@@ -274,7 +274,7 @@ output "dynamodb_policy_arn" {
 ```hcl
 resource "aws_iam_policy" "bedrock_inference" {
   name        = local.policy_name
-  description = "Bedrock Claude 3.5 Haiku inference (InvokeModel + Converse, Foundation Model + Inference Profile ARN limited)"
+  description = "Bedrock Claude Haiku 4.5 inference (InvokeModel + Converse, Foundation Model + Inference Profile ARN limited)"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -305,8 +305,8 @@ data "aws_region" "current" {}
 
 ```hcl
 locals {
-  model_id            = "anthropic.claude-3-5-haiku-20241022-v1:0"
-  inference_profile_id = "apac.anthropic.claude-3-5-haiku-20241022-v1:0"
+  model_id            = "anthropic.claude-haiku-4-5-20251001-v1:0"
+  inference_profile_id = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
   policy_name          = "gp-${var.env}-bedrock-inference-policy"
   account_id           = data.aws_caller_identity.current.account_id
 
@@ -694,7 +694,7 @@ resource "aws_lambda_function" "api" {
       COGNITO_CLIENT_ID    = var.cognito_user_pool_client_id
       # Unit C 追加
       ORDER_HISTORY_TABLE_NAME       = var.order_history_table_name
-      BEDROCK_INFERENCE_PROFILE_ID   = "apac.anthropic.claude-3-5-haiku-20241022-v1:0"
+      BEDROCK_INFERENCE_PROFILE_ID   = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
     }
   }
 }
@@ -795,7 +795,7 @@ API Lambda に注入される環境変数の Unit C 関連（既存に追加）:
 | 環境変数 | 値 | 用途 |
 |---|---|---|
 | `ORDER_HISTORY_TABLE_NAME` | `gp-{env}-order-history` | LC-ORDER-04 OrderHistoryRepository |
-| `BEDRCOK_INFERENCE_PROFILE_ID` | `apac.anthropic.claude-3-5-haiku-20241022-v1:0` | LC-ORDER-05 BedrockAdapter |
+| `BEDRCOK_INFERENCE_PROFILE_ID` | `jp.anthropic.claude-haiku-4-5-20251001-v1:0` | LC-ORDER-05 BedrockAdapter |
 | `AWS_REGION` | `ap-northeast-1`（Lambda 標準注入） | P-INIT-01 init() で利用 |
 
 `AWS_REGION` は AWS Lambda が自動注入するため Terraform 側では明示的に設定不要。
@@ -821,7 +821,7 @@ mock_provider を使用し、AWS API 呼出なしのオフラインテストを 
 検証項目:
 - `aws_iam_policy.bedrock_inference` の Statement に `bedrock:InvokeModel` と `bedrock:Converse` のみ含まれる
 - `bedrock:*` や `bedrock:InvokeModelWithResponseStream` が含まれない
-- `Resource` が `arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0` と Inference Profile ARN の 2 つに限定されている
+- `Resource` が `arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0` と Inference Profile ARN の 2 つに限定されている
 - 他モデル ARN を含まない
 
 ### 5.3 `modules/observability/tests/cloudwatch_alarms.tftest.hcl`
@@ -847,7 +847,7 @@ mock_provider を使用し、AWS API 呼出なしのオフラインテストを 
 5. **SNS 購読確認メール承認**（5 分以内）
    - 受信メール本文の `Confirm subscription` リンクをクリック
 6. AWS Console で Bedrock モデルアクセス申請（リージョン `ap-northeast-1`）が完了済みであることを確認
-   - Bedrock Console → Model access → Anthropic Claude 3.5 Haiku を有効化
+   - Bedrock Console → Model access → Anthropic Claude Haiku 4.5 を有効化
 7. `terraform output order_history_table_name` で DynamoDB テーブル名を確認
 8. CodePipeline で API Lambda の最新 image を deploy（Code Generation 完了後）
 
@@ -867,7 +867,7 @@ mock_provider を使用し、AWS API 呼出なしのオフラインテストを 
 |---|---|---|
 | DynamoDB OrderHistory | プロビジョンド 1 RCU + 1 WCU + AES256 + PITR 無効 | ~$0.50 |
 | DynamoDB ストレージ | TTL 90 日 / 想定 27,000 records × 2KB = 54MB | ~$0.01 |
-| Bedrock Claude 3.5 Haiku | NFRC-C20 で月 $1.08 想定（負荷 10 倍で $10.80） | $1.08 ~ $10.80 |
+| Bedrock Claude Haiku 4.5 | NFRC-C20 で月 $1.08 想定（負荷 10 倍で $10.80） | $1.08 ~ $10.80 |
 | CloudWatch Logs | API Lambda ログ + metric filter 抽出 | 無料枠内（5GB/月） |
 | CloudWatch Alarms | 3 alarms × $0.10 / month | $0.30 |
 | SNS Topic | 標準トピック / email 購読 | 無料枠内（1,000 通知 / 月） |

@@ -26,7 +26,7 @@
 | API Lambda | Unit A が構築済み (`gp-{env}-api-fn`、Go + Gin + LWA、ECR + CodePipeline) | Unit A Infrastructure Design |
 | API Lambda IAM Role | Unit A が作成済み（Unit C で DynamoDB + Bedrock 権限を追加） | Unit A Infrastructure Design |
 | API Lambda Memory | **256MB** / arm64 / タイムアウト 10s | NFRC-C18、Unit C Q-N9=B |
-| Bedrock モデル | `apac.anthropic.claude-3-5-haiku-20241022-v1:0`（ap-northeast-1 inference profile） | NFRC-C20、Unit C Q-N8=B |
+| Bedrock モデル | `jp.anthropic.claude-haiku-4-5-20251001-v1:0`（ap-northeast-1 inference profile） | NFRC-C20、Unit C Q-N8=B |
 | 構造化ログ | `log/slog` + `ContextAwareSlogHandler`（Unit A LC-AUTH-05 再利用） | NFRC-C12、Unit B 統一 |
 | OrderHistory PK/SK | unit-interfaces.md §3.2 で凍結済み（PK=`USER#{userID}` / SK=`ORDER#{orderedAt}#{orderID}`） | unit-interfaces.md |
 | TTL 属性名 | `expiresAt`（90 日） | NFRC-C12 / 凍結契約整合修正済み |
@@ -35,7 +35,7 @@
 ### 1.2 Unit C Infrastructure Design のスコープ
 
 1. **DynamoDB テーブル** 1 本（`OrderHistory`、TTL 90 日、GSI なし）
-2. **Bedrock 権限**（API Lambda Role に Claude 3.5 Haiku モデル ARN 限定で追加）
+2. **Bedrock 権限**（API Lambda Role に Claude Haiku 4.5 モデル ARN 限定で追加）
 3. **API Gateway ルート** 2 本（`POST /api/orders` / `GET /api/orders`）— 既存 API Gateway に追加
 4. **IAM 権限追加**（API Lambda Role に DynamoDB OrderHistory + Bedrock InvokeModel/Converse + WalletService 利用のための Unit B テーブル参照権限）
 5. **CloudWatch Logs メトリクスフィルタ** 3 種（NFRC-C13）
@@ -126,15 +126,15 @@ NFRC-C11 でオンデマンドスケーリング前提。`OrderHistory` テー�
 
 ### Q-I3: Bedrock IAM ポリシー設計
 
-NFRC-C20 で Claude 3.5 Haiku 確定。API Lambda Role に Bedrock 権限を追加する範囲。
+NFRC-C20 で Claude Haiku 4.5 確定。API Lambda Role に Bedrock 権限を追加する範囲。
 
 | 案 | パターン | 特徴 |
 |---|---|---|
-| A | **`bedrock:InvokeModel` + `bedrock:Converse` を `apac.anthropic.claude-3-5-haiku-*` モデル ARN 限定で許可** | 最小権限原則、PoLP 厳守 |
+| A | **`bedrock:InvokeModel` + `bedrock:Converse` を `apac.anthropic.claude-haiku-4-5-*` モデル ARN 限定で許可** | 最小権限原則、PoLP 厳守 |
 | B | **A + `bedrock:InvokeModelWithResponseStream` も許可**（将来のストリーミング対応の余地） | 拡張余地、ただし MVP では未使用 |
 | C | **`bedrock:*` を全モデル ARN で許可**（開発容易性） | 最低限の制約、本番化時に見直し前提 |
 
-[Answer]: **A（`bedrock:InvokeModel` + `bedrock:Converse` を Claude 3.5 Haiku モデル ARN 限定）**
+[Answer]: **A（`bedrock:InvokeModel` + `bedrock:Converse` を Claude Haiku 4.5 モデル ARN 限定）**
 
 **選定理由**:
 - 最小権限原則 (Principle of Least Privilege) を厳守、AWS Well-Architected Framework Security Pillar 準拠
@@ -142,7 +142,7 @@ NFRC-C20 で Claude 3.5 Haiku 確定。API Lambda Role に Bedrock 権限を追�
 - B 案の `InvokeModelWithResponseStream` は MVP では未使用で、必要になった時点で追加すればよい（YAGNI）
 - C 案の `bedrock:*` はセキュリティ的に NG、本番化時の見直し前提だと忘れるリスクあり
 - 許可するアクション: `bedrock:InvokeModel` / `bedrock:Converse`（NFRC-C20 で Converse API 確定）
-- リソース ARN: `arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-3-5-haiku-*` + Inference Profile ARN（Q-I10 連動）
+- リソース ARN: `arn:aws:bedrock:ap-northeast-1::foundation-model/anthropic.claude-haiku-4-5-*` + Inference Profile ARN（Q-I10 連動）
 - terraform-test で IAM Policy のリソース ARN 制限を自動検証（Q-I13=B/C 連動）
 
 ### Q-I4: CloudWatch Logs メトリクスフィルタ + Alarms 実装方針
@@ -259,21 +259,21 @@ NFRC-C20 で月次予算 $10、Q-D 段階で「AWS Budgets で Bedrock 月 $5 �
 
 ### Q-I10: Bedrock のモデル呼出方法（Inference Profile vs 直接呼出）
 
-NFRC-C20 で `apac.anthropic.claude-3-5-haiku-20241022-v1:0` 確定。ap-northeast-1 では inference profile 経由が推奨。
+NFRC-C20 で `jp.anthropic.claude-haiku-4-5-20251001-v1:0` 確定。ap-northeast-1 では inference profile 経由が推奨。
 
 | 案 | パターン | 特徴 |
 |---|---|---|
-| A | **Inference Profile 経由**（`apac.anthropic.claude-3-5-haiku-20241022-v1:0`） | ap-northeast-1 含むアジア太平洋リージョンで自動的に最適なリージョンを選択、AWS 推奨 |
-| B | **直接呼出**（`anthropic.claude-3-5-haiku-20241022-v1:0`） | 単一リージョン固定、IAM Policy のリソース ARN がシンプル |
+| A | **Inference Profile 経由**（`jp.anthropic.claude-haiku-4-5-20251001-v1:0`） | ap-northeast-1 含むアジア太平洋リージョンで自動的に最適なリージョンを選択、AWS 推奨 |
+| B | **直接呼出**（`anthropic.claude-haiku-4-5-20251001-v1:0`） | 単一リージョン固定、IAM Policy のリソース ARN がシンプル |
 | C | **A + Bedrock model availability の Terraform data source で動的取得** | 将来モデルバージョンアップ時の保守性向上、過剰 |
 
-[Answer]: **A（Inference Profile 経由 `apac.anthropic.claude-3-5-haiku-20241022-v1:0`）**
+[Answer]: **A（Inference Profile 経由 `jp.anthropic.claude-haiku-4-5-20251001-v1:0`）**
 
 **選定理由**:
 - NFRC-C20 で Inference Profile 経由が確定済み（Plan §1.1 確定済み前提）
 - ap-northeast-1 含むアジア太平洋リージョンで自動的に最適なリージョン（東京・ソウル・ムンバイ等）を選択、AWS 推奨パターン
 - リージョン障害時の自動フェイルオーバー、可用性向上
-- IAM Policy のリソース ARN: `arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0` + `arn:aws:bedrock:ap-northeast-1:{account}:inference-profile/apac.anthropic.claude-3-5-haiku-20241022-v1:0` の 2 つを許可
+- IAM Policy のリソース ARN: `arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0` + `arn:aws:bedrock:ap-northeast-1:{account}:inference-profile/jp.anthropic.claude-haiku-4-5-20251001-v1:0` の 2 つを許可
 - B 案の直接呼出は単一リージョン固定でリージョン障害に脆弱
 - C 案の data source 動的取得は MVP では過剰、モデルバージョンアップは Terraform 変数で対応可能
 
@@ -329,7 +329,7 @@ Unit B Infrastructure Design では Code Generation 段階で terraform-test を
 | 案 | パターン | 特徴 |
 |---|---|---|
 | A | **DynamoDB OrderHistory のスキーマ検証**（PK/SK/TTL 属性、暗号化、PITR） | 凍結契約 §3.2 整合確認 |
-| B | **A + Bedrock IAM Policy のリソース ARN 制限検証**（`bedrock:InvokeModel` が Claude 3.5 Haiku モデル ARN 限定） | 最小権限原則の自動検証 |
+| B | **A + Bedrock IAM Policy のリソース ARN 制限検証**（`bedrock:InvokeModel` が Claude Haiku 4.5 モデル ARN 限定） | 最小権限原則の自動検証 |
 | C | **A + B + CloudWatch Alarms 3 種の閾値検証**（p95 / リトライ / フォールバック） | NFRC-C13 整合確認、テストカバレッジ最大 |
 
 [Answer]: **C（A + B + CloudWatch Alarms 3 種の閾値検証）**
@@ -339,7 +339,7 @@ Unit B Infrastructure Design では Code Generation 段階で terraform-test を
 - Unit C は MVP の心臓部（unit-of-work.md §3.3）で、Infrastructure の不具合がビジネス全体に直撃するため検証範囲を広く取る
 - terraform-test ファイル構成（`infra/modules/order/tests/`）:
   - `dynamodb_schema.tftest.hcl`: PK/SK/TTL 属性、暗号化（AES256）、PITR 無効、キャパシティ 1 RCU/1 WCU を検証（Q-I2/Q-I8/Q-I9 整合）
-  - `bedrock_iam_least_privilege.tftest.hcl`: IAM Policy のリソース ARN が Claude 3.5 Haiku モデル ARN + Inference Profile ARN に限定されていること、`bedrock:*` でないことを検証（Q-I3/Q-I10 整合）
+  - `bedrock_iam_least_privilege.tftest.hcl`: IAM Policy のリソース ARN が Claude Haiku 4.5 モデル ARN + Inference Profile ARN に限定されていること、`bedrock:*` でないことを検証（Q-I3/Q-I10 整合）
   - `cloudwatch_alarms.tftest.hcl`: 3 アラームの閾値（p95 3000ms / リトライ 5/5min / フォールバック 3/5min）、評価期間、SNS Topic 紐付けを検証（Q-I4/Q-I5 整合、NFRC-C13 整合）
 - mock_provider 利用で AWS API 呼出なしのオフラインテスト、CI で実行可能（terraform-test 規約準拠）
 - A/B 単独だと Comprehensive 深度の名に相応しくない、Unit B Standard 深度との差別化

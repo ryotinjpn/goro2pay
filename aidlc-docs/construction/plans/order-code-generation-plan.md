@@ -546,7 +546,7 @@ food
 | 環境変数 | デフォルト値 | 由来 |
 |---|---|---|
 | `ORDER_HISTORY_TABLE_NAME` | `gp-dev-order-history`（Terraform output 経由） | Step 15.2 |
-| `BEDROCK_INFERENCE_PROFILE_ID` | `apac.anthropic.claude-3-5-haiku-20241022-v1:0` | NFRC-C20 |
+| `BEDROCK_INFERENCE_PROFILE_ID` | `jp.anthropic.claude-haiku-4-5-20251001-v1:0` | NFRC-C20 |
 | `AWS_REGION` | `ap-northeast-1`（Lambda 標準注入） | P-INIT-01 |
 
 ### 7.4 Bedrock Mock の 4 シナリオ

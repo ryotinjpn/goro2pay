@@ -82,7 +82,7 @@
 
 ### LC-ORDER-05: BedrockAdapter
 
-- **責務**: Bedrock Claude 3.5 Haiku Converse API 呼出。プロンプト組み立て、レスポンスパース、エラー伝播。
+- **責務**: Bedrock Claude Haiku 4.5 Converse API 呼出。プロンプト組み立て、レスポンスパース、エラー伝播。
 - **配置**: `apps/api/internal/adapters/bedrock/adapter.go`（横串、Unit C / D 共有）
 - **公開 interface**: `BedrockAdapter`
 - **公開メソッド**: `InferOrderPlan(ctx, history []OrderRecord) (*Plan, error)`

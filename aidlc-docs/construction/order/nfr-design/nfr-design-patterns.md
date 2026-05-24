@@ -922,7 +922,7 @@ function GoroButton() {
 | NFRC-C17 (統合テスト 9 シナリオ) | P-MOCK-01 + P-DI-01 |
 | NFRC-C18 (Lambda 256MB / arm64 / 600ms cold) | P-INIT-01 |
 | NFRC-C19 (TanStack Query 60s + invalidate) | P-FE-LOAD-01 |
-| NFRC-C20 (Bedrock 3.5 Haiku Converse) | P-INIT-01 + P-PLAN-01 |
+| NFRC-C20 (Bedrock Haiku 4.5 Converse) | P-INIT-01 + P-PLAN-01 |
 | NFRC-C22 (エラー UX) | P-FE-ERR-01 + P-FE-TOAST-01 + P-FE-TOAST-02 + P-FE-LOCK-01 |
 | NFRC-C24 (Bedrock 本文ログ非記録) | P-OBS-02 (LogSummary 構造的に PII 排除) |
 

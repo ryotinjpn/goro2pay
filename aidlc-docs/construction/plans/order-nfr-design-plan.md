@@ -31,7 +31,7 @@
 | NFRC-C16 | Bedrock スタブ環境別マトリクス | mock 設計（4 シナリオ）、interface 抽出パターン |
 | NFRC-C18 | Lambda 256MB / arm64 / 10s タイムアウト | コールドスタート最適化（init 関数、SDK 初期化遅延化） |
 | NFRC-C19 | TanStack Query 60s + invalidate | `useOrder` / `useOrderHistory` の Loading / Error / Success state パターン |
-| NFRC-C20 | Bedrock Claude 3.5 Haiku Converse API | プロンプト組み立てパターン、モデル ID 環境別切替 |
+| NFRC-C20 | Bedrock Claude Haiku 4.5 Converse API | プロンプト組み立てパターン、モデル ID 環境別切替 |
 | NFRC-C22 | 自虐トースト 3 種ローテーション、402 → 0.3s 遷移 | エラー UX 実装パターン（toast / router / disable） |
 | NFRC-C24 | Bedrock 本文ログ非記録、PII 境界 | ログマスキング・除外パターン |
 
