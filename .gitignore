@@ -37,3 +37,6 @@ infra/modules/**/.terraform.lock.hcl
 # Misc
 *.log
 node_modules/
+
+# Superpowers brainstorming session files
+.superpowers/
