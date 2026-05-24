@@ -2,13 +2,14 @@
 # 公式仕様: https://docs.aws.amazon.com/amplify/latest/userguide/monorepo-configuration.html
 #
 # AMPLIFY_MONOREPO_APP_ROOT (= "web") は Terraform 側で
-# `aws_amplify_branch.develop.environment_variables` として注入される
+# `aws_amplify_app.web.environment_variables` (App-level) として注入される
 # (infra/modules/amplify/amplify.tf 参照)。本ファイルの appRoot: web と
 # 一致させて初めて Amplify がリポジトリの web/ サブディレクトリで build する。
+# App-level に置く理由: framework auto-detection は clone 直後 (build phase
+# より前) に動き、この段階では Branch-level の env var は読まれないため。
 #
-# Infra (PR #70 でマージ済) と Frontend (本 PR) で同一内容の amplify.yml を
-# 持つ。Infra 側のテスト fixture (modules/amplify/tests/fixtures/amplify.yml)
-# も同期しておくこと。
+# Infra と Frontend で同一内容の amplify.yml を持つ。Infra 側のテスト fixture
+# (modules/amplify/tests/fixtures/amplify.yml) も同期しておくこと。
 version: 1
 applications:
   - appRoot: web
