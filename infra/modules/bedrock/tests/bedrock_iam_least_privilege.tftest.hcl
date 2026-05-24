@@ -6,7 +6,6 @@ mock_provider "aws" {}
 variables {
   env    = "dev"
   region = "ap-northeast-1"
-  tags   = { Project = "goro2pay", Env = "dev", ManagedBy = "terraform" }
 }
 
 run "policy_name" {

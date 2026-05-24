@@ -12,6 +12,4 @@ locals {
     "arn:aws:bedrock:*::foundation-model/${local.model_id}",
     "arn:aws:bedrock:${var.region}:${local.account_id}:inference-profile/${local.inference_profile_id}",
   ]
-
-  tags = var.tags
 }

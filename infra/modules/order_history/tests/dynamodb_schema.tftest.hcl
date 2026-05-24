@@ -4,8 +4,7 @@
 mock_provider "aws" {}
 
 variables {
-  env  = "dev"
-  tags = { Project = "goro2pay", Env = "dev", ManagedBy = "terraform" }
+  env = "dev"
 }
 
 run "dynamodb_table_basic" {

@@ -7,7 +7,6 @@ variables {
   env                = "dev"
   alarm_email        = "alerts@example.com"
   api_log_group_name = "/aws/lambda/gp-dev-api-fn"
-  tags               = { Project = "goro2pay", Env = "dev", ManagedBy = "terraform" }
 }
 
 run "sns_topic_basic" {
@@ -28,6 +27,12 @@ run "sns_topic_basic" {
     error_message = "Subscription endpoint must come from var.alarm_email"
   }
 }
+
+# 注: I-C1 修正で aws_sns_topic_policy.alarms を追加したが、その policy 属性は
+# SNS Topic ARN (= computed) を参照する jsonencode(...) のため、`command = plan`
+# 段階では policy 文字列も arn 属性も unknown となり assertion で評価できない。
+# Policy の論理内容 (Budgets / CloudWatch publish 許可) は static analysis
+# (=コードレビュー) と本書で確認する責務とする (terraform-test の制約による)。
 
 run "alarm_thresholds_default" {
   command = plan

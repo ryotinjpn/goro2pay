@@ -37,7 +37,7 @@ resource "aws_dynamodb_table" "order_history" {
     enabled = false
   }
 
-  tags = merge(local.tags, { Unit = "order" })
+  tags = { Unit = "order" }
 }
 
 # Unit C: API Lambda Role に attach する DynamoDB CRUD Policy
@@ -62,5 +62,5 @@ resource "aws_iam_policy" "dynamodb_order_history" {
     ]
   })
 
-  tags = merge(local.tags, { Unit = "order" })
+  tags = { Unit = "order" }
 }

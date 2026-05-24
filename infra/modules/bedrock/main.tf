@@ -20,5 +20,5 @@ resource "aws_iam_policy" "bedrock_inference" {
     ]
   })
 
-  tags = merge(local.tags, { Unit = "bedrock" })
+  tags = { Unit = "bedrock" }
 }

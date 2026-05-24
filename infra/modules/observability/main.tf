@@ -2,11 +2,40 @@
 # NFRC-C13 (3 アラーム) / NFRC-C20 (Budgets) / Q-I4 〜 Q-I7
 
 # ----------------------------------------------------------------------------
-# SNS Topic + Email Subscription (Q-I5 = C / Q-I6 = A)
+# SNS Topic + Topic Policy + Email Subscription (Q-I5 = C / Q-I6 = A)
 # ----------------------------------------------------------------------------
 resource "aws_sns_topic" "alarms" {
   name = local.sns_topic_name
-  tags = merge(local.tags, { Unit = "observability" })
+  tags = { Unit = "observability" }
+}
+
+# I-C1 修正: Budgets / CloudWatch から本 SNS Topic への publish を明示的に許可。
+#
+# AWS Budgets は同一アカウントでも `sns:Publish` の明示許可が必須で、
+# Topic Policy が無いと NFRC-C20 の月 $5 アラート通知がサイレントに失敗する。
+# CloudWatch Alarms は同一アカウント・同一リージョンなら暗黙許可で動くケースが
+# 多いが、KMS 暗号化を将来導入する際に同 Statement を流用できるよう明示する。
+resource "aws_sns_topic_policy" "alarms" {
+  arn = aws_sns_topic.alarms.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowBudgetsPublish"
+        Effect    = "Allow"
+        Principal = { Service = "budgets.amazonaws.com" }
+        Action    = "sns:Publish"
+        Resource  = aws_sns_topic.alarms.arn
+      },
+      {
+        Sid       = "AllowCloudWatchPublish"
+        Effect    = "Allow"
+        Principal = { Service = "cloudwatch.amazonaws.com" }
+        Action    = "sns:Publish"
+        Resource  = aws_sns_topic.alarms.arn
+      },
+    ]
+  })
 }
 
 resource "aws_sns_topic_subscription" "alarm_email" {
@@ -88,7 +117,7 @@ resource "aws_cloudwatch_metric_alarm" "place_order_p95_breach" {
 
   alarm_actions = [aws_sns_topic.alarms.arn]
   ok_actions    = [aws_sns_topic.alarms.arn]
-  tags          = merge(local.tags, { Unit = "observability", Severity = "High" })
+  tags          = { Unit = "observability", Severity = "High" }
 }
 
 resource "aws_cloudwatch_metric_alarm" "bedrock_retry_burst" {
@@ -105,7 +134,7 @@ resource "aws_cloudwatch_metric_alarm" "bedrock_retry_burst" {
 
   alarm_actions = [aws_sns_topic.alarms.arn]
   ok_actions    = [aws_sns_topic.alarms.arn]
-  tags          = merge(local.tags, { Unit = "observability", Severity = "Medium" })
+  tags          = { Unit = "observability", Severity = "Medium" }
 }
 
 resource "aws_cloudwatch_metric_alarm" "fallback_triggered_burst" {
@@ -122,7 +151,7 @@ resource "aws_cloudwatch_metric_alarm" "fallback_triggered_burst" {
 
   alarm_actions = [aws_sns_topic.alarms.arn]
   ok_actions    = [aws_sns_topic.alarms.arn]
-  tags          = merge(local.tags, { Unit = "observability", Severity = "High" })
+  tags          = { Unit = "observability", Severity = "High" }
 }
 
 # ----------------------------------------------------------------------------
