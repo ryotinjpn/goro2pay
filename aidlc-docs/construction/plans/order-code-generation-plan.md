@@ -326,7 +326,7 @@ goro2pay/
   8. `handlers.NewOrderHandler(orderSvc)` 生成
   9. `LatencyMiddleware()` を Gin の middleware chain 最初に登録
   10. `r.POST("/api/orders", orderHandler.PlaceOrder)` / `r.GET("/api/orders", orderHandler.GetHistory)` 登録
-- [x] `main_test.go`（既存に追記、ヘルスチェック等で Unit C component 配線が壊れていないことを確認）
+- [ ] `main_test.go`（既存に追記、ヘルスチェック等で Unit C component 配線が壊れていないことを確認） — **Build & Test ステージへ繰越**（D-I1: 配線テストは E2E (Playwright) と統合してまとめて実装）
 
 **ストーリー対応**: 凍結契約 §4.1 / FD § 全般 / P-DI-01
 
@@ -373,8 +373,8 @@ goro2pay/
 - [x] `web/tests/errorMappers.test.ts` — 全エラーケース（402 / 409 / 500 / NetworkError / その他）の純関数検証
 - [x] `web/tests/useDisableLock.test.tsx` — `vi.useFakeTimers()` + `renderHook` + `act` で 999ms / 1000ms / 1001ms 境界検証
 - [x] `web/tests/useToast.test.tsx` — `showToast` で atom 更新 + setTimeout 消去検証
-- [x] `web/tests/useOrder.test.tsx` — msw + React Testing Library で `onError` callback 起動検証
-- [x] `web/tests/useOrderHistory.test.tsx` — msw で 2 回目 fetch 遅延 → `placeholderData` 動作検証
+- [ ] `web/tests/useOrder.test.tsx` — msw + React Testing Library で `onError` callback 起動検証 — **Build & Test ステージへ繰越**（D-I1: msw 導入は本 PR スコープ外、`web/tests/OrderHistoryList.test.tsx` で render-level 検証は実装済み）
+- [ ] `web/tests/useOrderHistory.test.tsx` — msw で 2 回目 fetch 遅延 → `placeholderData` 動作検証 — **Build & Test ステージへ繰越**（D-I1: 同上、msw 環境整備とセットで実装）
 - [x] `web/tests/orders-api.test.ts` — `apiClient.placeOrder` + `fetchOrderHistory` の HTTP 呼出検証
 - [x] `web/tests/ToastHost.test.tsx` — 4 件追加で 3 件のみ表示、4 件目はキューイング検証
 
@@ -413,14 +413,14 @@ goro2pay/
 
 #### Step 15.1: `infra/modules/api_gateway/routes.tf` 追記
 - [x] Unit C ルート 2 本（`POST /api/orders` / `GET /api/orders`）の `aws_apigatewayv2_integration` + `aws_apigatewayv2_route` 追加
-- [x] tests/api_gateway_basic.tftest.hcl に Unit C routes 検証ケース追加
+- [ ] tests/api_gateway_basic.tftest.hcl に Unit C routes 検証ケース追加 — **Build & Test ステージへ繰越**（D-I1: 既存 Unit A tftest を不変としたため Unit C 側の `aws_apigatewayv2_route` リソース追加検証は次ステージで対応）
 
 #### Step 15.2: `infra/modules/lambda_api/`
 - [x] `variables.tf` — `additional_policy_arns: list(string)`（default `[]`）+ `order_history_table_name: string` 追加
 - [x] `iam.tf` — `aws_iam_role_policy_attachment.additional` を `for_each = toset(var.additional_policy_arns)` で追加
 - [x] `api_lambda.tf` — `environment.variables` に `ORDER_HISTORY_TABLE_NAME` + `BEDROCK_INFERENCE_PROFILE_ID` 追加
 - [x] `outputs.tf` — `api_log_group_name` output 追加
-- [x] tests/lambda_api_basic.tftest.hcl に additional_policy_arns 検証ケース追加
+- [ ] tests/lambda_api_basic.tftest.hcl に additional_policy_arns 検証ケース追加 — **Build & Test ステージへ繰越**（D-I1: 既存 Unit A tftest を不変としたため、追加 attach の検証は次ステージで対応）
 
 ### Step 16: Infrastructure - envs/dev/ への追記
 
@@ -434,7 +434,7 @@ goro2pay/
 ### Step 18: Documentation 更新
 
 - [x] `aidlc-docs/construction/order/code/deployment-runbook.md` — Unit C 初回 apply 手順、SNS 購読確認、Bedrock モデルアクセス申請、CodePipeline トリガー、Frontend Amplify 自動デプロイ手順、ハッカソン実演チェックリスト
-- [x] ルート `README.md` 更新（Unit C 完了後の利用手順を追記）
+- [ ] ルート `README.md` 更新（Unit C 完了後の利用手順を追記） — **Build & Test ステージへ繰越**（D-I1: ルート README は Unit B/D/E 完了後にまとめて全 Unit 視点で更新する方が情報の一貫性が保たれる）
 
 ### Step 19: 完了確認とサマリ
 

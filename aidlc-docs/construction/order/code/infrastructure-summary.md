@@ -80,6 +80,6 @@ tests/cloudwatch_alarms.tftest.hcl
 ## 後続ステージへの引き継ぎ
 
 - 初回 apply 時に SNS 購読確認メール (5 分以内、Unit A の deployment-runbook と同じ手順)
-- AWS Console で Bedrock Claude 3.5 Haiku モデルアクセス申請が必要 (deployment-runbook.md §6)
+- AWS Console で Bedrock Claude 3.5 Haiku モデルアクセス申請が必要 (deployment-runbook.md §2.1)
 - Unit B / D / E は同 `additional_policy_arns` パターンで Policy 追加可能
 - 本番環境構築時は `infra/envs/prd/` を `dev` の構造を踏襲して作成、`alarm_email` / `bedrock_budget_limit_usd` を本番値で上書き
