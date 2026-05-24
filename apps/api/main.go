@@ -15,9 +15,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/adapters/bedrock"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/adapters/delivery"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/adapters/fallback"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/auth"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/handlers"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/logging"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/middleware"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/order"
+	orderhistory "github.com/ryotinjpn/goro2pay/apps/api/internal/repo/order_history"
 )
 
 const shutdownTimeout = 5 * time.Second
@@ -46,6 +52,31 @@ func main() {
 	// 全 route で構造化ログ用 context を注入
 	r.Use(logging.RequestContext())
 
+	// E2E レイテンシ計測 (NFRC-C13-1 アラーム検知用、Unit C P-OBS-01)
+	// LatencyMiddleware は logging.RequestContext の後に登録することで、
+	// `request_complete` イベントに traceId / requestId / userAgent が付与される。
+	r.Use(middleware.Latency())
+
+	// Unit C 依存コンポーネント (P-DI-01 手動 DI、Unit A 統一)。
+	// Bedrock / DynamoDB SDK は package init() で初期化済み (P-INIT-01)。
+	bedrockAdapter := bedrock.NewClaudeBedrockAdapter()
+	// import cycle (bedrock → order) 回避のため bedrock package で
+	// RetryReporter 型を定義し、main.go 側で order.LogBedrockRetry を bridge
+	// して注入する (P-OBS-03 / NFRC-C13-2)。
+	bedrockAdapter.SetRetryReporter(order.LogBedrockRetry)
+	deliveryAdapter := delivery.NewMockDeliveryAdapter()
+	fallbackProvider := fallback.NewSimpleFallbackProvider()
+	planBuilder := order.NewBedrockPlanBuilder(bedrockAdapter, fallbackProvider)
+	orderHistoryRepo := orderhistory.NewRepository()
+
+	// Unit B WalletService は本 PR では未配線 (Unit B Code Generation 完了後に
+	// ここで実装を注入する)。本 PR では unconfiguredWalletService をスタブとして
+	// 使い、route 登録の整合だけ確保する。Unit B 実装到達まで POST /api/orders は
+	// 503 SERVICE_UNAVAILABLE を返す (B-C2 修正後、誤 402 を出さないように変更)。
+	walletStub := newUnconfiguredWalletService()
+	orderSvc := order.NewService(orderHistoryRepo, planBuilder, deliveryAdapter, walletStub)
+	orderHandler := handlers.NewOrderHandler(orderSvc)
+
 	// /health は認証不要 (LWA / load balancer 用)
 	r.GET("/health", handlers.Health)
 
@@ -53,7 +84,9 @@ func main() {
 	api := r.Group("/api", auth.AttachUserID())
 	{
 		api.POST("/auth/logout", handlers.Logout)
-		// Unit B/C/D/E が後続 PR で route を追加する
+		api.POST("/orders", orderHandler.PlaceOrder)
+		api.GET("/orders", orderHandler.GetHistory)
+		// Unit B/D/E が後続 PR で route を追加する
 	}
 
 	// LWA は localhost:8080 を期待する

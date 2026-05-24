@@ -3,7 +3,9 @@
 # Build context は apps/api/ 直下を想定 (CodeBuild の buildspec.yml と整合)。
 
 # --- Stage 1: build Go binary ---
-FROM golang:1.22-alpine AS builder
+# Unit C で AWS SDK v2 (bedrockruntime / dynamodb) を導入。SDK 最新版が
+# Go 1.24+ を必須とするため Builder を 1.24 に上げる。
+FROM golang:1.24-alpine AS builder
 WORKDIR /src
 
 # モジュールキャッシュ用に先にコピー
