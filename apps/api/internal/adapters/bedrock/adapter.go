@@ -137,8 +137,10 @@ const (
 	envInferenceProfileID = "BEDROCK_INFERENCE_PROFILE_ID"
 
 	// defaultInferenceProfileID は env 未設定時のデフォルト Inference Profile ID。
-	// ap-northeast-1 含む APAC 推奨 (NFRC-C20 / Q-I10=A)。
-	defaultInferenceProfileID = "apac.anthropic.claude-3-5-haiku-20241022-v1:0"
+	// 旧 apac.anthropic.claude-3-5-haiku は ap-northeast-1 で
+	// list-inference-profiles に出ず実行時 "Cross-region model not found" に
+	// なるため、現行 ACTIVE な JP profile (Haiku 4.5) に統一 (NFRC-C20 / Q-I10=A)。
+	defaultInferenceProfileID = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
 )
 
 // NewClaudeBedrockAdapter は production 用の ClaudeBedrockAdapter を返す。

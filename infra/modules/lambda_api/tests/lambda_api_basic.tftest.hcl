@@ -53,14 +53,24 @@ run "api_lambda_lifecycle_ignores_image_uri" {
   }
 }
 
-run "codebuild_environment_uses_linux_container" {
+run "codebuild_environment_uses_arm_container" {
   command = plan
 
-  # arm64 イメージは buildspec の `docker buildx --platform linux/arm64` で
-  # クロスビルド (curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER 専用)
+  # Lambda が arm64 / Go SDK v2 が大量モジュールを抱えるため、
+  # x86_64 + QEMU クロスビルドだと build に 10 分超かかっていた。
+  # ARM ネイティブ (amazonlinux2-aarch64-standard:3.0) + MEDIUM で
+  # ~50 秒に短縮 (~16x 高速化)。
   assert {
-    condition     = one(aws_codebuild_project.api.environment[*].type) == "LINUX_CONTAINER"
-    error_message = "CodeBuild environment.type must be LINUX_CONTAINER (cross-build arm64 via buildx)"
+    condition     = one(aws_codebuild_project.api.environment[*].type) == "ARM_CONTAINER"
+    error_message = "CodeBuild environment.type must be ARM_CONTAINER (native arm64 build)"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.api.environment[*].image) == "aws/codebuild/amazonlinux2-aarch64-standard:3.0"
+    error_message = "CodeBuild image must be amazonlinux2-aarch64-standard:3.0 (ARM native curated image)"
+  }
+  assert {
+    condition     = one(aws_codebuild_project.api.environment[*].compute_type) == "BUILD_GENERAL1_MEDIUM"
+    error_message = "CodeBuild compute_type must be BUILD_GENERAL1_MEDIUM (go build + docker build に十分なメモリ)"
   }
   assert {
     condition     = one(aws_codebuild_project.api.environment[*].privileged_mode) == true
