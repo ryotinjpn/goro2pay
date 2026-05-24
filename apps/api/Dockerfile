@@ -5,7 +5,10 @@
 # --- Stage 1: build Go binary ---
 # Unit C で AWS SDK v2 (bedrockruntime / dynamodb) を導入。SDK 最新版が
 # Go 1.24+ を必須とするため Builder を 1.24 に上げる。
-FROM golang:1.24-alpine AS builder
+# CodeBuild の未認証 Docker Hub pull が IP 共有でレート制限 (429) に到達しやすい
+# ため、ECR Public の Docker Hub ミラー (公式同期) を経由する。タグは Docker Hub
+# と同じ semver/tag が使える。
+FROM public.ecr.aws/docker/library/golang:1.24-alpine AS builder
 WORKDIR /src
 
 # モジュールキャッシュ用に先にコピー
