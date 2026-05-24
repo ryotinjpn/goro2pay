@@ -45,10 +45,13 @@ ENV PORT=8080
 ENV READINESS_CHECK_PATH=/health
 ENV AWS_LWA_INVOKE_MODE=buffered
 
-# Gin バイナリを Lambda エントリ名 (bootstrap) としてコピー。
-# provided.al2023 では LAMBDA_TASK_ROOT (= /var/task) 配下の bootstrap を実行する。
-# /var/runtime/ は Lambda runtime 内部ディレクトリで、ユーザバイナリは置かない。
+# Gin バイナリは provided.al2023 の lambda-entrypoint.sh が固定で参照する
+# /var/runtime/bootstrap に配置する。LAMBDA_TASK_ROOT (/var/task) に置くと
+# 「No such file or directory: /var/runtime/bootstrap」で起動失敗する。
 # 参考: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html
-COPY --from=builder /out/bootstrap ${LAMBDA_TASK_ROOT}/bootstrap
+COPY --from=builder /out/bootstrap /var/runtime/bootstrap
 
-CMD ["bootstrap"]
+# CMD は handler 名 (custom runtime では未使用) を渡す。
+# lambda-entrypoint.sh が /var/runtime/bootstrap を起動 → LWA extension が
+# /opt/extensions から自動起動する流れを維持する。
+CMD ["app.handler"]
