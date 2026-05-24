@@ -55,12 +55,12 @@ run "policy_resources_limited_to_haiku_arns" {
   }
 
   assert {
-    condition     = anytrue([for r in jsondecode(aws_iam_policy.bedrock_inference.policy).Statement[0].Resource : strcontains(r, "claude-3-5-haiku")])
-    error_message = "Resource ARNs must include claude-3-5-haiku"
+    condition     = anytrue([for r in jsondecode(aws_iam_policy.bedrock_inference.policy).Statement[0].Resource : strcontains(r, "claude-haiku-4-5")])
+    error_message = "Resource ARNs must include claude-haiku-4-5"
   }
 
   assert {
-    condition     = !anytrue([for r in jsondecode(aws_iam_policy.bedrock_inference.policy).Statement[0].Resource : strcontains(r, "claude-3-opus") || strcontains(r, "claude-3-sonnet")])
-    error_message = "Other Claude models must NOT be granted"
+    condition     = !anytrue([for r in jsondecode(aws_iam_policy.bedrock_inference.policy).Statement[0].Resource : strcontains(r, "claude-3-opus") || strcontains(r, "claude-3-sonnet") || strcontains(r, "claude-3-5-haiku")])
+    error_message = "Other Claude models (3.x 系含む) must NOT be granted"
   }
 }

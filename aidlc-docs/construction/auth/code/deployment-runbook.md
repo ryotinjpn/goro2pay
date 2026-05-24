@@ -31,6 +31,31 @@ versioning / encryption / public-access-block 設定済み。
 
 別 env (本番化時の prd 等) を作る場合のみ、`infra/envs/prd/locals.tf` で別値を定義する。
 
+### 2.5. SSM Parameter に Amplify 用 GitHub PAT を投入 (1 度だけ)
+
+Amplify Hosting は `aws_amplify_app` が repository を指定する場合、初回 CreateApp で
+`oauth_token` か `access_token` を必須とする。tf 側に PAT を残さないため、SSM
+SecureString に格納し `data "aws_ssm_parameter"` 経由で注入する。
+
+GitHub で **Personal access token (classic)** を発行 (scopes: `admin:repo_hook` + `repo`):
+
+```bash
+aws ssm put-parameter \
+  --name "/goro2pay/dev/amplify/github_oauth_token" \
+  --type SecureString \
+  --value "<GitHub PAT>" \
+  --region ap-northeast-1 \
+  --profile dev-kyoto-sso-administrator
+```
+
+apply を実行する IAM Principal には `ssm:GetParameter` + `kms:Decrypt`
+(SSM SecureString のデフォルト KMS key 用) が必要。dev では SSO
+Administrator role を使うためデフォルトで両方付与済み。
+
+PAT 漏洩時 / 期限切れ時は `--overwrite` で更新する。`oauth_token` は
+`lifecycle.ignore_changes` で diff されないので、明示反映が必要なら
+`terraform apply -refresh-only` か `terraform apply` を実行する。
+
 ### 3. Terraform apply (1 回目)
 
 ```bash

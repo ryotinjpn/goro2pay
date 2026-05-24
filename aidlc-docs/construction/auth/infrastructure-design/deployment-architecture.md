@@ -56,7 +56,7 @@
    ┌────────────┐      │  │ │ API Gateway HTTP API (gp-dev-api)       │ │          │
    │ ブラウザ    │ ─3──┼──┼►│  Stage: $default                        │ │          │
    │ Bearer<Tok>│      │  │ │  Throttling 100 req/s / Burst 200       │ │          │
-   └────────────┘      │  │ │  JWT Authorizer (Cognito, TTL 60s)      │ │          │
+   └────────────┘      │  │ │  JWT Authorizer (Cognito, TTL 0)        │ │          │
                        │  │ │  Route: POST /api/auth/logout           │ │          │
                        │  │ └────────────┬────────────────────────────┘ │          │
                        │  │              │ AWS_PROXY                     │          │
@@ -225,7 +225,7 @@ BFF パターンの利点:
    ▼
 [API Gateway HTTP API]
    │
-   │ 6. JWT Authorizer 検証 (cache 60s, miss なら Cognito JWKS 検証)
+   │ 6. JWT Authorizer 検証 (HTTP API は cache 非対応のため毎回 Cognito JWKS 検証)
    │    → claims を route 通過時に context へ
    │
    ▼
@@ -294,7 +294,7 @@ BFF パターンの利点:
    │ 4a. npm ci && npm run build (web/)   │ 4b. S3 artifact bucket に source.zip 保存
    │ 5a. Next.js build artifacts を deploy │ 5b. Build Stage: CodeBuild 起動
    │ 6a. 公開 URL 更新                    │     ↓
-   ▼                                       │   ┌─ docker buildx build --platform linux/arm64
+   ▼                                       │   ┌─ docker build (ARM_CONTAINER native, buildx 不要)
 [Amplify default domain で Frontend 公開] │   ├─ ECR login + docker push :sha-XXX, :latest
                                            │   └─ aws lambda update-function-code --image-uri
                                            ▼

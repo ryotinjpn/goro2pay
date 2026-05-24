@@ -795,7 +795,7 @@ API Lambda に注入される環境変数の Unit C 関連（既存に追加）:
 | 環境変数 | 値 | 用途 |
 |---|---|---|
 | `ORDER_HISTORY_TABLE_NAME` | `gp-{env}-order-history` | LC-ORDER-04 OrderHistoryRepository |
-| `BEDRCOK_INFERENCE_PROFILE_ID` | `jp.anthropic.claude-haiku-4-5-20251001-v1:0` | LC-ORDER-05 BedrockAdapter |
+| `BEDROCK_INFERENCE_PROFILE_ID` | `jp.anthropic.claude-haiku-4-5-20251001-v1:0` | LC-ORDER-05 BedrockAdapter |
 | `AWS_REGION` | `ap-northeast-1`（Lambda 標準注入） | P-INIT-01 init() で利用 |
 
 `AWS_REGION` は AWS Lambda が自動注入するため Terraform 側では明示的に設定不要。

@@ -70,7 +70,7 @@
 | `infra/scripts/bootstrap-ecr-initial.sh` | ECR :bootstrap 初回 push |
 | **`infra/modules/codestar_connection/`** (Unit 横串) | CodeStar Connection (CodePipeline / Amplify が共有、Unit=shared)。main.tf / variables.tf / outputs.tf / README.md / tests/codestar_connection_basic.tftest.hcl |
 | **`infra/modules/cognito/`** (Auth Unit 所有) | User Pool + App Client (Token 8h/30d) + Pre Sign-up Lambda (Node.js arm64) + IAM。main.tf / variables.tf / cognito.tf / pre_signup_lambda.tf / iam.tf / outputs.tf / README.md / tests/cognito_basic.tftest.hcl |
-| **`infra/modules/api_gateway/`** (Unit 横串) | HTTP API + JWT Authorizer (TTL 60s) + Stage Throttling + Logout/Health route + 共通 integration。main.tf / variables.tf / api_gateway.tf / routes.tf / outputs.tf / README.md / tests/api_gateway_basic.tftest.hcl |
+| **`infra/modules/api_gateway/`** (Unit 横串) | HTTP API + JWT Authorizer (TTL 0, HTTP API は cache 非対応) + Stage Throttling + Logout/Health route + 共通 integration。main.tf / variables.tf / api_gateway.tf / routes.tf / outputs.tf / README.md / tests/api_gateway_basic.tftest.hcl |
 | **`infra/modules/lambda_api/`** (Unit 横串) | API Lambda (image_uri = :bootstrap, ignore_changes) + ECR + CodePipeline + CodeBuild + S3 artifacts + IAM Role 3 種。main.tf / variables.tf / api_lambda.tf / ecr.tf / codepipeline.tf / iam.tf / outputs.tf / README.md / tests/lambda_api_basic.tftest.hcl |
 | **`infra/modules/amplify/`** (Unit 横串) | Amplify App + Branch (Next.js SSR、env: NEXT_PUBLIC_* + server-only API_ENDPOINT + AMPLIFY_MONOREPO_APP_ROOT=web) + SSR Role。main.tf / variables.tf / amplify.tf / iam.tf / outputs.tf / README.md / tests/amplify_basic.tftest.hcl |
 | `infra/envs/dev/backend.tf` | S3 + use_lockfile |
@@ -120,7 +120,7 @@
 | AMPLIFY_MONOREPO_APP_ROOT=web | `amplify.tf` aws_amplify_branch.environment_variables |
 | Token Validity 8h/30d | `cognito.tf` aws_cognito_user_pool_client |
 | Stage Throttling 100 req/s, Burst 200 | `api_gateway.tf` aws_apigatewayv2_stage |
-| Authorizer TTL 60s | `api_gateway.tf` |
+| Authorizer TTL 0 (HTTP API は cache 非対応) | `api_gateway.tf` |
 | ECR :bootstrap + lifecycle.ignore_changes [image_uri] | `api_lambda.tf` |
 | LWA v1.0.0 GA (公式 README 推奨) | `apps/api/Dockerfile` |
 | Inception §4.1 整合 (apps/api/) | ディレクトリ構造、CodeBuild source path |

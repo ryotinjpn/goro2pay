@@ -7,7 +7,7 @@ unit-of-work.md §4.1 の `infra/modules/amplify/` (PWA 配信、Unit A/B/C/D/E 
 
 - `aws_amplify_app.web` (build_spec = web/amplify.yml、Repository = GitHub)
 - `aws_amplify_branch.develop` (auto_build、env: NEXT_PUBLIC_* + server-only API_ENDPOINT + AMPLIFY_MONOREPO_APP_ROOT=web)
-- `aws_iam_role.amplify_ssr` + AWSAmplifyServerSideRendering managed policy attachment
+- `aws_iam_role.amplify_ssr` + inline policy (CloudWatch Logs `/aws/amplify/*` 最小権限。旧 AWSAmplifyServerSideRendering managed policy は AWS から削除済)
 
 CodeStar Connection は本 module 内では作成せず、envs/ 側で作成して URL 経由で repository を指定する (Amplify は GitHub App / OAuth Token なしの直接 URL でも動作)。
 

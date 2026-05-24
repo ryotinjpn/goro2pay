@@ -9,7 +9,7 @@ Auth Unit 範囲では Logout / Health の route と integration もここに含
 
 - `aws_apigatewayv2_api.main` — HTTP API
   - cors_configuration 未設定 (BFF パターン)
-- `aws_apigatewayv2_authorizer.cognito` — JWT Authorizer (TTL 60s)
+- `aws_apigatewayv2_authorizer.cognito` — JWT Authorizer (TTL 0, HTTP API は cache 非対応)
 - `aws_apigatewayv2_stage.default` — `$default` (Throttling 100/200)
 - `aws_apigatewayv2_integration.api_lambda` — 共通 integration
 - `aws_apigatewayv2_route.logout` — POST /api/auth/logout (JWT)

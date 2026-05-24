@@ -54,11 +54,13 @@ run "throttling_matches_a_nfr_sec_04" {
   }
 }
 
-run "authorizer_ttl_matches_q_i8" {
+run "authorizer_ttl_is_zero" {
   command = plan
 
+  # HTTP API (v2) JWT Authorizer は cache 非対応で TTL=0 固定。
+  # Q-I8=C (60秒) は HTTP API 仕様適用不可と実装時に判明。
   assert {
-    condition     = aws_apigatewayv2_authorizer.cognito.authorizer_result_ttl_in_seconds == 60
-    error_message = "authorizer_result_ttl_in_seconds must be 60 (Q-I8=C)"
+    condition     = aws_apigatewayv2_authorizer.cognito.authorizer_result_ttl_in_seconds == 0
+    error_message = "authorizer_result_ttl_in_seconds must be 0 (HTTP API JWT Authorizer は cache 非対応)"
   }
 }

@@ -1,11 +1,13 @@
 # Amplify Hosting (Q-I14=A) — CodeStar Connection は envs 側で別途作成
 #
 # GitHub 接続について:
-# 本 module は oauth_token / access_token を terraform 側で管理しない。
-# 初回 apply 後、AWS Console で手動再接続 (Reconnect repository → GitHub App
-# インストール) することで repo 紐付け + webhook 設定を確立する。
-# CodeStar Connection の Console 承認 (deployment-runbook.md §4) と同じ
-# 「初回 1 度だけの手動操作」として運用する。
+# `aws_amplify_app` は repository を指定すると CreateApp 時に oauth_token /
+# access_token のいずれかを必須とするため、token 無しで apply すると
+# "You should at least provide one valid token" で失敗する。
+# 本 module は GitHub PAT (classic, scopes: admin:repo_hook + repo) を
+# var.github_oauth_token で受け取り、envs 側で SSM SecureString
+# `/goro2pay/${env}/amplify/github_oauth_token` から data source 経由で
+# 注入する。AWS 側でハッシュ化保管後は ignore_changes で diff を抑える。
 
 resource "aws_amplify_app" "web" {
   name                 = "${local.prefix}-web"
