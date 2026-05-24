@@ -23,9 +23,11 @@ phases:
   build:
     commands:
       # echo の引数に () を含めると dash がサブシェル開始と誤認するためクォート必須。
-      - echo "Building Docker image (linux/arm64)..."
-      - docker buildx create --use
-      - docker buildx build --platform linux/arm64 --load
+      - echo "Building Docker image (linux/arm64, native)..."
+      # CodeBuild が ARM_CONTAINER (aws/codebuild/amazonlinux2-aarch64-standard)
+      # でネイティブ実行されるため buildx + QEMU エミュレーションは不要。
+      # docker build で直接 arm64 イメージが作られる。
+      - docker build
         -t $ECR_REPOSITORY_URI:$IMAGE_TAG
         -t $ECR_REPOSITORY_URI:latest
         -f apps/api/Dockerfile apps/api/
