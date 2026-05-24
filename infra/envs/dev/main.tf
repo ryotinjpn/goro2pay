@@ -26,7 +26,22 @@ module "api_gateway" {
   api_lambda_invoke_arn       = module.lambda_api.api_lambda_invoke_arn
 }
 
+# Unit C: OrderHistory DynamoDB + IAM Policy (Unit C 専用)
+module "order_history" {
+  source = "../../modules/order_history"
+  env    = local.env
+}
+
+# Unit C / D 共有: Bedrock IAM Policy
+module "bedrock" {
+  source = "../../modules/bedrock"
+  env    = local.env
+  region = local.region
+}
+
 # Lambda API (Unit 横串、API Lambda + ECR + CodePipeline + CodeBuild)
+# Unit C 追加: additional_policy_arns で order_history + bedrock の Policy を attach。
+# order_history_table_name で API Lambda 環境変数を注入。
 module "lambda_api" {
   source                      = "../../modules/lambda_api"
   env                         = local.env
@@ -37,6 +52,20 @@ module "lambda_api" {
   github_owner                = local.github_owner
   github_repo_name            = local.github_repo
   github_branch               = local.github_branch
+  additional_policy_arns = [
+    module.order_history.dynamodb_policy_arn,
+    module.bedrock.bedrock_policy_arn,
+  ]
+  order_history_table_name = module.order_history.dynamodb_table_name
+}
+
+# 横串 Observability: CloudWatch Alarms / SNS Topic / Budgets (NFRC-C13 / NFRC-C20)
+# しきい値はデフォルトを採用、必要時 tfvars で上書き可能 (Q-I4 = C)。
+module "observability" {
+  source             = "../../modules/observability"
+  env                = local.env
+  alarm_email        = local.alarm_email
+  api_log_group_name = module.lambda_api.api_log_group_name
 }
 
 # API Gateway → API Lambda invoke 許可

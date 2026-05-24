@@ -39,3 +39,18 @@ variable "github_branch" {
   type        = string
   description = "API Lambda CD のソースブランチ"
 }
+
+# Unit C で追加: 後続 Unit が IAM policy ARN を attach するための受け口。
+# Q-I12 改定版: Policy 定義は責務元 module、attach は本 module で for_each。
+variable "additional_policy_arns" {
+  type        = list(string)
+  description = "API Lambda Role に追加 attach する IAM Policy ARN のリスト (Unit C/D/E が利用)"
+  default     = []
+}
+
+# Unit C で追加: API Lambda の environment に注入する OrderHistory テーブル名。
+variable "order_history_table_name" {
+  type        = string
+  description = "OrderHistory DynamoDB テーブル名 (空文字なら env 注入をスキップ)"
+  default     = ""
+}

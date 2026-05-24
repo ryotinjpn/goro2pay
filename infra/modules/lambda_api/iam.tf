@@ -38,6 +38,15 @@ resource "aws_iam_role_policy" "api_lambda_logs" {
   })
 }
 
+# Unit C / D / E が必要に応じて IAM Policy ARN を渡す (Q-I12 改定版)。
+# Policy リソース定義は呼出元 module (modules/order_history, modules/bedrock 等) に
+# 置き、本 module は attach のみを担う。for_each で渡された ARN 全てを attach。
+resource "aws_iam_role_policy_attachment" "additional" {
+  for_each   = toset(var.additional_policy_arns)
+  role       = aws_iam_role.api_lambda.name
+  policy_arn = each.value
+}
+
 # --- CodePipeline Role ---
 
 resource "aws_iam_role" "codepipeline_api" {

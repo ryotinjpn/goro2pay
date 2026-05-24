@@ -26,3 +26,24 @@ resource "aws_apigatewayv2_route" "health" {
   target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
   authorization_type = "NONE"
 }
+
+# ----------------------------------------------------------------------------
+# Unit C: POST /api/orders / GET /api/orders (NFRC-C01 / 凍結契約 §4.1)
+# integration は既存 api_lambda を再利用 (single Lambda、route 切替で済むため)。
+# ----------------------------------------------------------------------------
+
+resource "aws_apigatewayv2_route" "place_order" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /api/orders"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "get_order_history" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/orders"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}

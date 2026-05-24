@@ -32,3 +32,9 @@ output "codepipeline_name" {
   description = "CodePipeline 名 (デプロイ状態確認用)"
   value       = aws_codepipeline.api.name
 }
+
+# Unit C 追加: 横串 observability module の metric filter source として参照させる。
+output "api_log_group_name" {
+  description = "API Lambda CloudWatch Log Group 名 (modules/observability の metric filter source)"
+  value       = aws_cloudwatch_log_group.api.name
+}
