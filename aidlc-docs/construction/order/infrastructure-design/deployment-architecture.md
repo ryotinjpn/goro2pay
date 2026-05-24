@@ -57,7 +57,7 @@
         │
         ├─→ [PlanBuilder (LC-08)] ─── [BedrockAdapter (LC-05)] ─── Amazon Bedrock
         │       │                                                  └ Inference Profile
-        │       │                                                    apac.anthropic.claude-3-5-haiku-*
+        │       │                                                    apac.anthropic.claude-haiku-4-5-*
         │       │
         │       └─→ [FallbackSuggestProvider (LC-09)]
         │
@@ -396,7 +396,7 @@ Handler 実行
 | 3 | `terraform plan` で変更内容確認（既存リソース変更なし、3 module 新規 + 既存 2 module 拡張） | ローカル |
 | 4 | `terraform apply` 実行 | ローカル |
 | 5 | SNS 購読確認メール（5 分以内）の `Confirm subscription` リンクをクリック | メール |
-| 6 | AWS Console → Bedrock → Model access で `Anthropic Claude 3.5 Haiku` を有効化（未承認なら申請） | AWS Console |
+| 6 | AWS Console → Bedrock → Model access で `Anthropic Claude Haiku 4.5` を有効化（未承認なら申請） | AWS Console |
 | 7 | `terraform output order_history_table_name` で `gp-dev-order-history` を確認 | ローカル |
 | 8 | Code Generation 完了後、git push → CodePipeline 起動で API Lambda の最新 image をデプロイ | GitHub |
 | 9 | Frontend は Amplify Hosting で自動デプロイ（develop ブランチ push） | GitHub |
@@ -463,7 +463,7 @@ Code Generation ステージで実装すべき項目（NFR Design 由来）:
 
 **環境変数注入**:
 - `ORDER_HISTORY_TABLE_NAME` → `gp-dev-order-history` （Terraform output 経由）
-- `BEDROCK_INFERENCE_PROFILE_ID` → `apac.anthropic.claude-3-5-haiku-20241022-v1:0`（Terraform 直書き）
+- `BEDROCK_INFERENCE_PROFILE_ID` → `jp.anthropic.claude-haiku-4-5-20251001-v1:0`（Terraform 直書き）
 
 **Test 戦略**:
 - local / CI: mock 必須（NFRC-C16）

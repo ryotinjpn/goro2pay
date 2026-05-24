@@ -244,7 +244,7 @@ unit-of-work.md §3.3 では「Amazon Bedrock: Claude 系モデル」と概要�
 参考価格（ap-northeast-1, 2026-05 時点想定、概算）:
 - Claude 3 Haiku: 入力 $0.25/Mtok, 出力 $1.25/Mtok（**最廉価**）
 - Claude 3.5 Sonnet v2: 入力 $3.00/Mtok, 出力 $15.00/Mtok
-- Claude 3.5 Haiku: 入力 $0.80/Mtok, 出力 $4.00/Mtok（中間）
+- Claude Haiku 4.5: 入力 $0.80/Mtok, 出力 $4.00/Mtok（中間）
 - Claude Opus 4.7: 入力 $15.00/Mtok, 出力 $75.00/Mtok（**高品質・高コスト**）
 
 1 リクエストあたりトークン想定: 入力 500tok（履歴 + プロンプト）、出力 200tok（Plan JSON）
@@ -252,14 +252,14 @@ unit-of-work.md §3.3 では「Amazon Bedrock: Claude 系モデル」と概要�
 | 案 | モデル | 1 リクエストコスト概算 | 月次予算（10 ユーザ × 3 注文/日 × 30 日 = 900 req/月） |
 |---|---|---|---|
 | A | Claude 3 Haiku | $0.000375 | **$0.34/月** |
-| B | Claude 3.5 Haiku | $0.0012 | **$1.08/月** |
+| B | Claude Haiku 4.5 | $0.0012 | **$1.08/月** |
 | C | Claude 3.5 Sonnet v2 | $0.0045 | **$4.05/月** |
 | D | Claude Opus 4.7 | $0.0225 | **$20.25/月**（無料枠超過注意） |
 
-[Answer]: **B（Claude 3.5 Haiku）**
+[Answer]: **B（Claude Haiku 4.5）**
 
 追記事項:
-- **モデル ID**: `apac.anthropic.claude-3-5-haiku-20241022-v1:0`（ap-northeast-1 inference profile）または `anthropic.claude-3-5-haiku-20241022-v1:0` 直接呼出
+- **モデル ID**: `jp.anthropic.claude-haiku-4-5-20251001-v1:0`（ap-northeast-1 inference profile）または `anthropic.claude-haiku-4-5-20251001-v1:0` 直接呼出
 - **API**: Converse API（FD で確定済み）
 - **想定トークン**: 入力 500tok / 出力 200tok / リクエスト
 - **月次予算上限**: $10/月（負荷 10 倍 = 9,000 req/月想定）、超過時はモデル変更検討

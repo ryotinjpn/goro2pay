@@ -108,7 +108,7 @@ NFRC-C16 4 シナリオ (成功 / Throttle / Timeout / 永続エラー) を clos
 | NFRC-C07 (タイムアウト 1.5s) | adapter.go の `bedrockTimeoutPerCall = 1500 * time.Millisecond` |
 | NFRC-C08 (フォールバック閾値 5 件) | plan_builder.go の `fallbackThreshold = 5` |
 | NFRC-C16 (mock 必須) | MockBedrockAdapter / FakeDeliveryAdapter / FakeFallbackProvider |
-| NFRC-C20 (Bedrock 3.5 Haiku Inference Profile) | adapter.go の `defaultInferenceProfileID` + `BEDROCK_INFERENCE_PROFILE_ID` 環境変数 |
+| NFRC-C20 (Bedrock Haiku 4.5 Inference Profile) | adapter.go の `defaultInferenceProfileID` + `BEDROCK_INFERENCE_PROFILE_ID` 環境変数 |
 | NFRC-C24 (Bedrock 本文ログ非記録) | prompt.go の HistoryItem に PII フィールドなし、 ParsePlanResponse のログ出力なし |
 
 ## 後続ステージへの引き継ぎ

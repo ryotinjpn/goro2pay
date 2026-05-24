@@ -15,13 +15,19 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
-      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      # CodeBuild standard:7.0 は /bin/sh (dash) でコマンドを実行するため、
+      # bash 拡張の ${VAR:0:7} (部分文字列) は "Bad substitution" になる。
+      # POSIX 互換の cut で先頭 7 文字を取得する。
+      - IMAGE_TAG=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7)
       - echo "Image tag is $IMAGE_TAG"
   build:
     commands:
-      - echo Building Docker image (linux/arm64)...
-      - docker buildx create --use
-      - docker buildx build --platform linux/arm64 --load
+      # echo の引数に () を含めると dash がサブシェル開始と誤認するためクォート必須。
+      - echo "Building Docker image (linux/arm64, native)..."
+      # CodeBuild が ARM_CONTAINER (aws/codebuild/amazonlinux2-aarch64-standard)
+      # でネイティブ実行されるため buildx + QEMU エミュレーションは不要。
+      # docker build で直接 arm64 イメージが作られる。
+      - docker build
         -t $ECR_REPOSITORY_URI:$IMAGE_TAG
         -t $ECR_REPOSITORY_URI:latest
         -f apps/api/Dockerfile apps/api/

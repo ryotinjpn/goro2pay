@@ -5,7 +5,10 @@
 # --- Stage 1: build Go binary ---
 # Unit C で AWS SDK v2 (bedrockruntime / dynamodb) を導入。SDK 最新版が
 # Go 1.24+ を必須とするため Builder を 1.24 に上げる。
-FROM golang:1.24-alpine AS builder
+# CodeBuild の未認証 Docker Hub pull が IP 共有でレート制限 (429) に到達しやすい
+# ため、ECR Public の Docker Hub ミラー (公式同期) を経由する。タグは Docker Hub
+# と同じ semver/tag が使える。
+FROM public.ecr.aws/docker/library/golang:1.24-alpine AS builder
 WORKDIR /src
 
 # モジュールキャッシュ用に先にコピー
@@ -42,10 +45,13 @@ ENV PORT=8080
 ENV READINESS_CHECK_PATH=/health
 ENV AWS_LWA_INVOKE_MODE=buffered
 
-# Gin バイナリを Lambda エントリ名 (bootstrap) としてコピー。
-# provided.al2023 では LAMBDA_TASK_ROOT (= /var/task) 配下の bootstrap を実行する。
-# /var/runtime/ は Lambda runtime 内部ディレクトリで、ユーザバイナリは置かない。
+# Gin バイナリは provided.al2023 の lambda-entrypoint.sh が固定で参照する
+# /var/runtime/bootstrap に配置する。LAMBDA_TASK_ROOT (/var/task) に置くと
+# 「No such file or directory: /var/runtime/bootstrap」で起動失敗する。
 # 参考: https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html
-COPY --from=builder /out/bootstrap ${LAMBDA_TASK_ROOT}/bootstrap
+COPY --from=builder /out/bootstrap /var/runtime/bootstrap
 
-CMD ["bootstrap"]
+# CMD は handler 名 (custom runtime では未使用) を渡す。
+# lambda-entrypoint.sh が /var/runtime/bootstrap を起動 → LWA extension が
+# /opt/extensions から自動起動する流れを維持する。
+CMD ["app.handler"]

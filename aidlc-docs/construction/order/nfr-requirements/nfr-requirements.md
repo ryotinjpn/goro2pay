@@ -267,7 +267,7 @@
 ### NFRC-C20: Bedrock モデル選定
 - **由来**: Plan Q-N8 = B
 - **要件**:
-  - **モデル ID**: `apac.anthropic.claude-3-5-haiku-20241022-v1:0`（ap-northeast-1 inference profile）または `anthropic.claude-3-5-haiku-20241022-v1:0` 直接呼出
+  - **モデル ID**: `jp.anthropic.claude-haiku-4-5-20251001-v1:0`（ap-northeast-1 inference profile）または `anthropic.claude-haiku-4-5-20251001-v1:0` 直接呼出
   - **API**: Converse API（FD で確定済み）
   - **想定トークン**: 入力 500tok / 出力 200tok / リクエスト
   - **月次予算上限**: $10/月（負荷 10 倍 = 9,000 req/月想定）、超過時はモデル変更検討

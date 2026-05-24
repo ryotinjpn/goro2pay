@@ -37,7 +37,7 @@
 
 | 項目 | 決定 | 由来 |
 |---|---|---|
-| モデル ID | **`apac.anthropic.claude-3-5-haiku-20241022-v1:0`**（ap-northeast-1 inference profile） | NFRC-C20、Plan Q-N8=B |
+| モデル ID | **`jp.anthropic.claude-haiku-4-5-20251001-v1:0`**（ap-northeast-1 inference profile） | NFRC-C20、Plan Q-N8=B |
 | API | **Converse API**（`Converse` メソッド） | FD 確定済み、NFRC-C20 |
 | 想定トークン | 入力 500tok / 出力 200tok / リクエスト | NFRC-C20 |
 | タイムアウト | **1.5 秒/呼出**、リトライ最大 1 回 | NFRC-C06 / NFRC-C07 |
@@ -129,7 +129,7 @@
 | Lambda 関数 | `POST /api/orders` / `GET /api/orders` を 1 関数で処理（Go ビルド分割不要） | Infrastructure Design |
 | API Gateway | REST API、Cognito Authorizer 経由（Unit A 横串） | Infrastructure Design |
 | DynamoDB `GoroPay_OrderHistory` | TTL 90 日、PK=userID、SK=orderedAt-orderID | Infrastructure Design |
-| Amazon Bedrock | Claude 3.5 Haiku 呼出、IAM Role 設定 | Infrastructure Design |
+| Amazon Bedrock | Claude Haiku 4.5 呼出、IAM Role 設定 | Infrastructure Design |
 | CloudWatch Logs | Lambda ログ、構造化 JSON | Infrastructure Design |
 | CloudWatch Alarms | NFRC-C13 の 3 アラーム | Infrastructure Design |
 | SNS Topic | アラーム通知（メール） | Infrastructure Design |
@@ -139,7 +139,7 @@
 
 | 権限 | 範囲 |
 |---|---|
-| `bedrock:InvokeModel` / `bedrock:Converse` | `apac.anthropic.claude-3-5-haiku-*` モデル ARN に限定 |
+| `bedrock:InvokeModel` / `bedrock:Converse` | `apac.anthropic.claude-haiku-4-5-*` モデル ARN に限定 |
 | `dynamodb:Query` / `dynamodb:PutItem` / `dynamodb:UpdateItem` | `GoroPay_OrderHistory` テーブルのみ |
 | `dynamodb:GetItem` / `dynamodb:UpdateItem` | Unit B 所有: `GoroPay_Wallet` / `GoroPay_IdempotencyRecord` 経由（Unit B `WalletService.Deduct` を呼ぶため Unit C 自体は直接アクセスしない） |
 | `logs:CreateLogStream` / `logs:PutLogEvents` | Lambda 実行ロール標準 |
@@ -175,7 +175,7 @@
 
 | Adapter | 配置 | 用途 |
 |---|---|---|
-| `BedrockAdapter` | `internal/adapters/bedrock/`（Unit C / D 共有） | Claude 3.5 Haiku 呼出 |
+| `BedrockAdapter` | `internal/adapters/bedrock/`（Unit C / D 共有） | Claude Haiku 4.5 呼出 |
 | `DeliveryAdapter` | `internal/adapters/delivery/`（`MockDeliveryAdapter` 実装） | モック手配 |
 | `FallbackSuggestProvider` | `internal/adapters/fallback/`（Unit C / D 共有） | フォールバック Plan 生成 |
 
@@ -186,7 +186,7 @@
 | 決定 | 関連 NFR | 整合性 |
 |---|---|---|
 | Lambda 256MB / arm64 | NFRC-C04（コールドスタート 600ms 以内） | ✅ |
-| Bedrock 3.5 Haiku ap-northeast-1 | NFRC-C01（通常パス p95 2.5s）/ NFRC-C20 | ✅ |
+| Bedrock Haiku 4.5 ap-northeast-1 | NFRC-C01（通常パス p95 2.5s）/ NFRC-C20 | ✅ |
 | `gopter` PBT (P-1/P-3) | NFRC-C15 / NFRC-C16 | ✅ |
 | TanStack Query v5 (60s + invalidate) | NFRC-C19 | ✅ |
 | `log/slog` + 19 項目 | NFRC-C12 | ✅ |

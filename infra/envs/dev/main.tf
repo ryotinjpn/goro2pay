@@ -87,6 +87,23 @@ resource "aws_lambda_permission" "apigw_invoke_api" {
 }
 
 # Amplify Hosting (Unit 横串、Frontend 配信)
+#
+# GitHub 接続には PAT (classic, admin:repo_hook + repo) が必要だが、リポジトリに
+# 残さないため SSM Parameter Store (SecureString) に事前格納し、Terraform は
+# data source 経由で取得する。
+#
+# 事前作業 (1 度だけ):
+#   aws ssm put-parameter \
+#     --name "/goro2pay/dev/amplify/github_oauth_token" \
+#     --type SecureString \
+#     --value "<GitHub PAT>" \
+#     --region ap-northeast-1 \
+#     --profile dev-kyoto-sso-administrator
+data "aws_ssm_parameter" "amplify_github_token" {
+  name            = "/goro2pay/${local.env}/amplify/github_oauth_token"
+  with_decryption = true
+}
+
 module "amplify" {
   source                      = "../../modules/amplify"
   env                         = local.env
@@ -99,6 +116,5 @@ module "amplify" {
   api_endpoint                = module.api_gateway.api_endpoint
   amplify_yml_path            = "${path.root}/../../../web/amplify.yml"
   codestar_connection_arn     = module.codestar_connection.connection_arn
-  # 現状 Amplify 側では Console 手動接続運用のため connection_arn 自体は
-  # tf resource では使わず、変数受け口だけ揃える (将来 Console 操作レス化時用)。
+  github_oauth_token          = data.aws_ssm_parameter.amplify_github_token.value
 }

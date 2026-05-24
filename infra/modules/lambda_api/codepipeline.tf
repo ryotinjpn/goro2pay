@@ -32,13 +32,14 @@ resource "aws_codebuild_project" "api" {
     type = "CODEPIPELINE"
   }
 
-  # CodeBuild curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER (x86_64) 専用。
-  # buildspec.yml 側で `docker buildx build --platform linux/arm64` により
-  # arm64 イメージをクロスビルドする (Lambda 側の architectures = ["arm64"] と整合)。
+  # ARM ネイティブビルダ。Lambda が arm64 / Go SDK v2 が大量モジュールを抱える
+  # ため、x86_64 + QEMU クロスビルドだと build に 10 分超かかっていた。
+  # ARM ネイティブにすると buildx --platform エミュレーションが不要となり
+  # ~5x 高速化。compute_type も MEDIUM (7 GB / 4 vCPU) に底上げする。
   environment {
-    compute_type    = "BUILD_GENERAL1_SMALL"
-    image           = "aws/codebuild/standard:7.0"
-    type            = "LINUX_CONTAINER"
+    compute_type    = "BUILD_GENERAL1_MEDIUM"
+    image           = "aws/codebuild/amazonlinux2-aarch64-standard:3.0"
+    type            = "ARM_CONTAINER"
     privileged_mode = true
 
     environment_variable {

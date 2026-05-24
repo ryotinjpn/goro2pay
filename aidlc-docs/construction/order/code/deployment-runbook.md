@@ -16,7 +16,7 @@
 | Region | `ap-northeast-1` |
 | Terraform Backend | S3 (`gp-tfstate-dev`) + native lock (`use_lockfile = true`) |
 | AWS Account | (Unit A デプロイ時に bootstrap 済み) |
-| Bedrock Model Access | Claude 3.5 Haiku が ap-northeast-1 で承認済み (要事前申請) |
+| Bedrock Model Access | Claude Haiku 4.5 が ap-northeast-1 で承認済み (要事前申請) |
 | Unit A | デプロイ済み (PR #69-#73 マージ後の develop 環境) |
 
 ---
@@ -25,8 +25,8 @@
 
 ### 2.1 Bedrock モデルアクセス申請 (初回のみ)
 
-AWS Console → Bedrock → Model access → "Anthropic Claude 3.5 Haiku" を有効化。
-APAC Inference Profile (`apac.anthropic.claude-3-5-haiku-20241022-v1:0`) を使うため、
+AWS Console → Bedrock → Model access → "Anthropic Claude Haiku 4.5" を有効化。
+APAC Inference Profile (`jp.anthropic.claude-haiku-4-5-20251001-v1:0`) を使うため、
 ap-northeast-1 に加えて他の APAC リージョンの承認も必要な場合あり。
 
 ### 2.2 alarm_email の設定

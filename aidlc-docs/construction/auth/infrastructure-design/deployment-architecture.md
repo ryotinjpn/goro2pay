@@ -369,7 +369,7 @@ infra/envs/dev/
    │   ├─ module "amplify"
    │   │     ├─ aws_amplify_app.web (lifecycle.ignore_changes=[oauth_token, access_token])
    │   │     ├─ aws_amplify_branch.develop
-   │   │     └─ aws_iam_role.amplify_ssr (managed policy AWSAmplifyServerSideRendering attach)
+   │   │     └─ aws_iam_role.amplify_ssr (inline policy: CloudWatch Logs 最小権限)
    │   └─ aws_lambda_permission.apigw_invoke_api
    │         (両 module の output を必要とするため envs 側で組立、
    │          循環依存を避ける)

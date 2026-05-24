@@ -17,15 +17,21 @@ resource "aws_amplify_app" "web" {
 
   build_spec = file(var.amplify_yml_path)
 
+  # GitHub Personal Access Token (classic, admin:repo_hook + repo)。
+  # CreateApp 時に Amplify が GitHub Webhook を登録するため初回 apply で必要。
+  # AWS 側で受け取った後はマスクされ、後続の更新では使われないため、
+  # tf 側 (tfvars / TF_VAR_) からも消す運用にしている。
+  oauth_token = var.github_oauth_token
+
   # NOTE: SPA 用の custom_rule (`/<*>` → `/index.html` 404-200) は WEB_COMPUTE
   # (Next.js SSR) では設定しない。Next.js Server がリクエストを受けて自前で
   # ルーティングするため、Amplify 側で 404 を /index.html に書き換えると
   # Server 経路と干渉して二重処理 / 想定外 fallback の原因になる。
 
-  # oauth_token / access_token は Console での手動接続後に AWS 側で保持される。
-  # terraform 側で空文字を渡すと一部 provider バージョンで ValidationException に
-  # なるため、属性自体を省略する。一度接続したあとは drift 扱いされない。
   lifecycle {
+    # oauth_token は AWS 側でハッシュ化保管されるため、tf state とは差分が
+    # 出続ける。再 apply の度に oauth_token が更新されないよう ignore する。
+    # access_token も将来的な切り替え用に残す。
     ignore_changes = [oauth_token, access_token]
   }
 }

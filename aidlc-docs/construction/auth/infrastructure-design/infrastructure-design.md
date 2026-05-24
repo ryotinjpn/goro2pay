@@ -318,7 +318,7 @@ API Lambda の Docker image を保存。
 | `identity_sources` | `["$request.header.Authorization"]` | 標準 |
 | `jwt_configuration.audience` | `[aws_cognito_user_pool_client.web.id]` | LC-17 |
 | `jwt_configuration.issuer` | `https://cognito-idp.${var.region}.amazonaws.com/${aws_cognito_user_pool.main.id}` | 同上 |
-| `authorizer_result_ttl_in_seconds` | 60 | Q-I8 |
+| `authorizer_result_ttl_in_seconds` | 0 | HTTP API (v2) JWT Authorizer は cache 非対応、TTL は 0 固定 (Q-I8 当初の 60 は HTTP API 仕様で適用不可と実装時に判明) |
 
 #### 3.4.3 `aws_apigatewayv2_stage.default`
 
@@ -461,18 +461,15 @@ Amplify Hosting (WEB_COMPUTE) の SSR Compute role。
 |---|---|
 | `name` | `gp-${var.env}-amplify-ssr-role` |
 | `assume_role_policy` | `amplify.amazonaws.com` service principal |
-| 権限 | AWS managed policy `AWSAmplifyServerSideRendering` を attach |
+| 権限 | inline policy (CloudWatch Logs 最小権限) を attach |
 
-`AWSAmplifyServerSideRendering` は Amplify Hosting WEB_COMPUTE で SSR Lambda が
-deployment artifact (S3) 取得・SSM Parameter Store / Secrets Manager 参照・
-CloudWatch Logs 出力等を行うために必要な公式 managed policy。
-本 MVP では Amplify SSR が他 AWS サービスを直接呼ぶ業務ロジックは無いが
-(Cognito 呼出は Frontend ブラウザ側、API は API Gateway 経由)、Amplify Hosting
-の内部動作 (deployment / runtime) が同 policy を必須とするため attach する。
-
-NOTE: 設計の初稿では「インラインポリシーで CloudWatch Logs 書込のみ」としていたが、
-それでは Amplify Hosting WEB_COMPUTE の SSR が起動できないことが実装時に判明したため、
-公式要件に揃える形で managed policy 採用に変更した。
+旧 AWS managed policy `AWSAmplifyServerSideRendering` を attach する設計だったが、
+当該 managed policy は AWS 側で削除されており attach 時に
+`NoSuchEntity: Policy ... does not exist or is not attachable` で apply が
+失敗する。インラインポリシーで CloudWatch Logs `/aws/amplify/*` への
+書込のみ許可する最小権限構成に切替えた (Amplify Hosting WEB_COMPUTE の
+deployment / runtime そのものは AWS 側のサービスロールで賄われるため
+追加権限は不要)。
 
 #### 3.8.5 buildSpec（YAML 文字列を Terraform 内で）
 
@@ -511,9 +508,9 @@ API Lambda の CD パイプライン。
 | `name` | `gp-${var.env}-api-build` | Q-I4 |
 | `service_role` | `aws_iam_role.codebuild_api.arn` | — |
 | `artifacts.type` | `CODEPIPELINE` | Pipeline 内で実行 |
-| `environment.compute_type` | `BUILD_GENERAL1_SMALL` | 最小コスト |
-| `environment.image` | `aws/codebuild/standard:7.0` | Docker / Go ビルド可能 |
-| `environment.type` | `LINUX_CONTAINER` | — |
+| `environment.compute_type` | `BUILD_GENERAL1_MEDIUM` | go build + docker build に十分なメモリ。最終的に build 時間 ~50 秒 |
+| `environment.image` | `aws/codebuild/amazonlinux2-aarch64-standard:3.0` | ARM ネイティブビルダ (Lambda が arm64) |
+| `environment.type` | `ARM_CONTAINER` | QEMU 不要のネイティブ build。LINUX + buildx クロスビルドだと ~13 分かかった |
 | `environment.privileged_mode` | true | Docker build に必要 |
 | `environment.environment_variable.AWS_DEFAULT_REGION` | `ap-northeast-1` | — |
 | `environment.environment_variable.ECR_REPOSITORY_URI` | `aws_ecr_repository.api.repository_url` | — |
@@ -729,7 +726,7 @@ A-NFR-MAINT-01 / terraform-test プラグイン規約に従い、各機能別 mo
 |---|---|---|
 | `modules/cognito/tests/` | `cognito_basic.tftest.hcl` | plan 成立 / resource non-computed 属性確認 / password_policy が A-NFR-SEC-02 と一致 / token_validity が A-NFR-SEC-03 と一致 |
 | `modules/api_gateway/tests/` | `api_gateway_basic.tftest.hcl` | plan 成立 / resource 名 / Authorizer JWT type / access_log_settings 有効 / throttling A-NFR-SEC-04 / Authorizer TTL Q-I8 |
-| `modules/lambda_api/tests/` | `lambda_api_basic.tftest.hcl` | plan 成立 / Lambda function_name / package_type Image / architectures arm64 / CodeBuild type LINUX_CONTAINER + privileged_mode (Q-I15) |
+| `modules/lambda_api/tests/` | `lambda_api_basic.tftest.hcl` | plan 成立 / Lambda function_name / package_type Image / architectures arm64 / CodeBuild type ARM_CONTAINER + privileged_mode (Q-I15) |
 | `modules/amplify/tests/` | `amplify_basic.tftest.hcl` (+ `fixtures/amplify.yml`) | plan 成立 / app name / platform WEB_COMPUTE / branch env vars (NEXT_PUBLIC_*) (Q-I14) |
 | `modules/codestar_connection/tests/` | `codestar_connection_basic.tftest.hcl` | plan 成立 / 名前 / provider_type GitHub / Unit=shared タグ |
 
@@ -798,8 +795,8 @@ Access Analyzer 等の静的解析で補う方針 (envs/prd/README.md の produc
     - `infra/modules/amplify/`: Amplify App + Branch + SSR Role (Unit 横串)
     - `envs/dev/main.tf` で 5 module を組み合わせて呼出、`aws_lambda_permission.apigw_invoke_api` のみ envs 側で組立 (両 module の output を必要とするため、循環依存を避ける)
     - 他 Unit (B/C/D/E) は `module.lambda_api.api_lambda_role_name` に権限 attach、`module.api_gateway.api_id` / `cognito_authorizer_id` を参照して route 追加 する形で機能を拡張
-- **CodeBuild compute type**: 設計初稿想定の `ARM_CONTAINER` を **`LINUX_CONTAINER`** に修正。curated image `aws/codebuild/standard:7.0` は LINUX_CONTAINER 専用のため、arm64 イメージは `docker buildx build --platform linux/arm64` のクロスビルドで生成する
-- **Amplify SSR Role**: §3.8.4 を参照。AWS managed policy `AWSAmplifyServerSideRendering` を採用 (Amplify Hosting WEB_COMPUTE 公式要件)
+- **CodeBuild compute type**: 設計初稿の `ARM_CONTAINER` 採用に回帰。一度 `LINUX_CONTAINER` + `docker buildx --platform linux/arm64` のクロスビルドにしたが、QEMU エミュレーションで go build に ~13 分かかったため、ARM ネイティブビルダ (`aws/codebuild/amazonlinux2-aarch64-standard:3.0`) + `BUILD_GENERAL1_MEDIUM` に変更。`docker build` のみで arm64 イメージを生成し build 時間 ~50 秒
+- **Amplify SSR Role**: §3.8.4 を参照。AWS managed policy `AWSAmplifyServerSideRendering` は AWS から削除済のため inline policy (CloudWatch Logs 最小権限) に切替
 - **Amplify SPA fallback**: WEB_COMPUTE では `custom_rule "/<*>" → /index.html` を **設定しない** (Next.js Server がルーティングするため SSR と干渉する)
 
 ### 10.2 整合修正メモ
