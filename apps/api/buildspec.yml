@@ -1,7 +1,9 @@
 # CodeBuild buildspec for API Lambda CD (Q-I15=D)
 #
-# 動作: GitHub develop branch push → CodePipeline Source → CodeBuild
-#       → docker buildx build (linux/arm64) → ECR push → lambda update-function-code
+# 動作: GitHub develop branch push → CodePipeline Source → CodeBuild (ARM_CONTAINER,
+#       amazonlinux2-aarch64-standard:3.0, MEDIUM) → docker build (native arm64)
+#       → ECR push → aws lambda update-function-code。LINUX + buildx クロスビルド
+#       (~13 分) から ARM ネイティブ build (~50 秒) に変更済 (~16x 高速化)。
 #
 # 期待される env vars (CodeBuild project で設定済み):
 #   AWS_DEFAULT_REGION:   ap-northeast-1

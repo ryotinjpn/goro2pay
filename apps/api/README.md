@@ -20,8 +20,14 @@ GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o dist/bootstrap .
 ## Docker build
 
 ```bash
+# Apple Silicon など arm64 ホストではネイティブで build できる:
+docker build --platform linux/arm64 -t gp-dev-api-image:local -f Dockerfile .
+
+# x86_64 ホスト (Intel Mac / GitHub Actions x86 runner) でクロスビルドする場合は buildx:
 docker buildx build --platform linux/arm64 -t gp-dev-api-image:local -f Dockerfile .
 ```
+
+> CI (CodeBuild) は ARM_CONTAINER (`amazonlinux2-aarch64-standard:3.0`) でネイティブビルドのため `docker build` のみ。
 
 ## ディレクトリ
 

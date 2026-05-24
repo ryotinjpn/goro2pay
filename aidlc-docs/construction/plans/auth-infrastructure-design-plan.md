@@ -163,7 +163,9 @@ Cognito Authorizer の `authorizer_result_ttl_in_seconds` 設定。
 
 A-NFR-SEC-03 で Token Validity 8h なので、キャッシュ TTL は短い方がセキュア。Logout の即時反映が UX 的にも望ましい。
 
-[Answer]: **C**（60 秒）。`authorizer_result_ttl_in_seconds = 60`。Cognito 呼出を中庸に抑えつつ、Logout (GlobalSignOut) の反映遅延を最大 1 分以内に。Q-I2=B の HTTP API でも JWT Authorizer に同等の TTL 設定が可能。
+[Answer]: **C**（60 秒、当初）。`authorizer_result_ttl_in_seconds = 60` を Cognito 呼出を中庸に抑えつつ Logout (GlobalSignOut) の反映遅延を最大 1 分以内にする目的で採用していた。
+
+> **【実装時の修正 (2026-05-24)】** HTTP API (v2) の JWT Authorizer は cache 非対応で、TTL に 0 以外を渡すと CreateAuthorizer 時に `Cache is not available for JWT authorizer. TTL must be set to 0 to disable cache.` で apply が失敗する。Q-I2 = B (HTTP API) の前提と矛盾するため、最終的に **A (`authorizer_result_ttl_in_seconds = 0`)** を採用。Logout 反映は元から即時となるため UX 的にもより望ましい結果に着地した。
 
 ### Q-I9: Pre Sign-up Lambda の IAM Role 権限範囲
 

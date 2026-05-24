@@ -1,6 +1,6 @@
 # `modules/bedrock`
 
-Unit C / D 共有: Bedrock Claude 3.5 Haiku 呼出用 IAM Policy。
+Unit C / D 共有: Bedrock Claude Haiku 4.5 呼出用 IAM Policy。
 
 ## リソース
 
@@ -14,11 +14,11 @@ Unit C / D 共有: Bedrock Claude 3.5 Haiku 呼出用 IAM Policy。
 
 ## 仕様根拠
 
-- NFRC-C20 / Q-N8 = B (Claude 3.5 Haiku)
+- NFRC-C20 / Q-N8 = B (Claude Haiku 4.5)
 - Q-I3 = A (最小権限、`bedrock:*` ではなく特定モデルに限定)
-- Q-I10 = A (APAC Inference Profile 経由)
+- Q-I10 = A (Inference Profile 経由、JP リージョン採用でデータ越境を防止)
 
 ## モデル ID
 
-- Foundation: `anthropic.claude-3-5-haiku-20241022-v1:0`
-- Inference Profile (APAC): `apac.anthropic.claude-3-5-haiku-20241022-v1:0`
+- Foundation: `anthropic.claude-haiku-4-5-20251001-v1:0`
+- Inference Profile (JP): `jp.anthropic.claude-haiku-4-5-20251001-v1:0`
