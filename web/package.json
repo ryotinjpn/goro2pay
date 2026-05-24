@@ -19,7 +19,8 @@
     "jotai": "^2.10.3",
     "next": "15.0.3",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
