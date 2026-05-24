@@ -1,7 +1,10 @@
 locals {
-  # NFRC-C20 / Q-N8 = B / Q-I10 = A: Claude 3.5 Haiku, APAC Inference Profile
-  model_id             = "anthropic.claude-3-5-haiku-20241022-v1:0"
-  inference_profile_id = "apac.anthropic.claude-3-5-haiku-20241022-v1:0"
+  # NFRC-C20 / Q-N8 = B / Q-I10 = A: Claude Haiku 4.5, JP Inference Profile
+  # 旧 (Claude 3.5 Haiku / apac.) は ap-northeast-1 で list-inference-profiles
+  # に表示されず、Lambda 実行時に "Cross-region model not found" になるため、
+  # 現行 ACTIVE な Haiku 4.5 + JP profile に更新する (data 越境を防ぐ目的でも JP)。
+  model_id             = "anthropic.claude-haiku-4-5-20251001-v1:0"
+  inference_profile_id = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
 
   policy_name = "gp-${var.env}-bedrock-inference-policy"
   account_id  = data.aws_caller_identity.current.account_id

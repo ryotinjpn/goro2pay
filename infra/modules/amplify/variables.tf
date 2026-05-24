@@ -53,3 +53,10 @@ variable "codestar_connection_arn" {
   # 完全に terraform 側に取り込む場合は、aws_amplify_app.web に
   # `connection_arn = var.codestar_connection_arn` を設定して default を外す。
 }
+
+variable "github_oauth_token" {
+  type        = string
+  description = "GitHub Personal Access Token (classic, scopes: admin:repo_hook + repo)。CreateApp 時に Amplify が webhook 登録するため必要。"
+  sensitive   = true
+  default     = ""
+}

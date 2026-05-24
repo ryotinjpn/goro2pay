@@ -19,7 +19,7 @@ resource "aws_lambda_function" "api" {
         COGNITO_APP_CLIENT_ID        = var.cognito_user_pool_client_id
         AWS_LWA_READINESS_CHECK_PATH = "/health"
         # Unit C: Bedrock Inference Profile (NFRC-C20 / Q-I10 = A)
-        BEDROCK_INFERENCE_PROFILE_ID = "apac.anthropic.claude-3-5-haiku-20241022-v1:0"
+        BEDROCK_INFERENCE_PROFILE_ID = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
       },
       # Unit C: OrderHistory テーブル名は env 経由で注入。空文字なら省略
       # (lambda 側の os.Getenv が "" を返すと repo 層が err を出すため、

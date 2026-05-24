@@ -17,7 +17,10 @@ resource "aws_apigatewayv2_authorizer" "cognito" {
     issuer   = "https://cognito-idp.${var.region}.amazonaws.com/${var.cognito_user_pool_id}"
   }
 
-  authorizer_result_ttl_in_seconds = 60 # Q-I8=C
+  # HTTP API (v2) の JWT Authorizer はキャッシュ非対応 (= TTL は 0 固定)。
+  # 0 以外を指定すると CreateAuthorizer が "Cache is not available for JWT
+  # authorizer. TTL must be set to 0 to disable cache." で失敗する。
+  authorizer_result_ttl_in_seconds = 0
 }
 
 resource "aws_cloudwatch_log_group" "apigw_access" {
