@@ -1000,6 +1000,41 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## Functional Design (Unit E) — セッション開始 & Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T00:00:00Z
+**User Input**: "unitEの担当になりました。unitDと並列作業になってしまいますが、時間がないのでコンストラクションを進めたいです"
+**AI Response**: Unit E `metrics` (Standard 深度) の Construction を Unit D と並列で開始。前段成果物を読み込み Functional Design Plan を作成。Q-F1〜Q-F8 を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-F1: A — DamageCount = 当月 JST カレンダーベース（OrderHistory.CreatedAt >= 月初）
+- Q-F2: B — monthlyBudget=0 → ErrNoBudgetSet を返す（remainingBalance<0 クランプは Unit B 不変条件で不要）
+- Q-F3: C — Backend が SummaryText を生成しつつ数値フィールドも並列で返す
+- Q-F4: A — useMetrics の remainingBalance===0 で MainScreen から router.push('/budget-empty')
+- Q-F5: A — BudgetEmptyScreen マウント時に RaiseModal を自動表示
+- Q-F6: A — Backend が JST で翌月 1 日 00:00 を計算して AppliedFrom に設定
+- Q-F7: B — マウント時取得 + useOrder mutation 成功時に invalidateQueries(['metrics'])
+- Q-F8: A — HTTP 400 + ERR_NO_BUDGET_SET、useMetrics の isError で /budget へリダイレクト
+
+矛盾チェック: 6 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/functional-design/):
+- business-logic-model.md: GetMetrics / ComputeRecommendedBudget / Accept の 3 フロー詳細
+- business-rules.md: BR-M01〜BR-M05 / BR-R01〜BR-R04 / BR-FE01〜BR-FE03 の 12 ルール
+- domain-entities.md: Metrics / BudgetRaiseResult DTO + 読取参照エンティティ + OrderHistoryReader.CountSince 追加要件
+- frontend-components.md: useMetrics / useBudgetRaise / MetricsPanel / BudgetEmptyScreen / RaiseModal
+
+**Context**: Functional Design 完了承認。NFR Requirements へ進行。
+
+---
+
+## Functional Design (Unit E) — 承認
+**Timestamp**: 2026-05-25T00:30:00Z
+**User Input**: "sammaryTextはバックエンド側でテキストで持ってるんだっけ？" → "このままで"
+**AI Response**: Q-F3=C（Backend が SummaryText 文字列 + 数値フィールドを並列返却）の設計を確認。変更なしで承認受領。NFR Requirements ステージへ進行。
+**Context**: Unit E Functional Design 承認完了
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"

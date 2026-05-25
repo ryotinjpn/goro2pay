@@ -57,12 +57,19 @@
 - [x] Infrastructure Design (Unit C, 2026-05-24, PR #80 マージ済み) — infrastructure-design.md / deployment-architecture.md 生成済み、Q-I1〜Q-I13 全 13 問推奨案で確定（ユーザ要請の一括回答 + Q-I1/Q-I11/Q-I12 を terraform-module-design 準拠に見直し）。新規 module 3 種（order_history / bedrock / observability）+ 既存 2 module（api_gateway / lambda_api）への追記
 - [x] Code Generation (Unit C, 2026-05-24) — 約 101 ファイル生成 (Backend 41 + Frontend 24 + Infra 28 + Docs 8)、Step 1〜19 全完了。Backend Go テスト全パス、Frontend Vitest 44 全パス、Terraform tftest 12 全パス。ユーザ承認待ち
 
-**他 Unit (worktree 別、Unit D/E)**
-- [ ] Functional Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] NFR Requirements (per-unit, Unit D/E) - **EXECUTE**
-- [ ] NFR Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] Code Generation (per-unit, Unit D/E) - **EXECUTE**
+**Unit D `suggest` 進捗** (worktree: future-unit-d)
+- [ ] Functional Design (Unit D) - **EXECUTE**
+- [ ] NFR Requirements (Unit D) - **EXECUTE**
+- [ ] NFR Design (Unit D) - **EXECUTE**
+- [ ] Infrastructure Design (Unit D) - **EXECUTE**
+- [ ] Code Generation (Unit D) - **EXECUTE**
+
+**Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
+- [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認待ち
+- [ ] NFR Requirements (Unit E) - **EXECUTE**
+- [ ] NFR Design (Unit E) - **EXECUTE**
+- [ ] Infrastructure Design (Unit E) - **EXECUTE**
+- [ ] Code Generation (Unit E) - **EXECUTE**
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
