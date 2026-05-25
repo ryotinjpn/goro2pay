@@ -1175,3 +1175,11 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: NFR Requirements 完了承認（2-option: Request Changes / Continue to NFR Design）を待機中。
 
 ---
+
+## Construction (Unit D) — NFR Requirements 完了承認 / push + PR
+**Timestamp**: 2026-05-25T03:40:00Z
+**User Input**: "それでおk"（2-option ゲートで Continue to Next Stage を承認 + NFR-R ブランチの push + PR 作成に同意）
+**AI Response**: Unit D NFR Requirements を承認として受領。aidlc-state.md の Unit D NFR Requirements を [x] 完了に更新。`docs/construction-suggest-nfr-requirements` を push し develop 向け PR を作成（per-stage PR パターン、PR マージ後に NFR Design へ）。
+**Context**: NFR Requirements 完了。PR レビュー・マージ後に ③ NFR Design (Unit D) へ進行。
+
+---
