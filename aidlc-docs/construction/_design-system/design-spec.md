@@ -44,7 +44,7 @@
 
 **デザインの応答**:
 - ボタン副コピー `— 押せ。考えるな。` で**思考停止を即座に正当化**
-- 残高数字を Cormorant Garamond Italic という**気品のあるセリフ書体**で見せ、「**安全な決済**」感を演出 (高級ホテルやバーの請求書を想起させる)
+- 残高数字を Cormorant Garamond Italic という**気品のあるセリフ書体**で見せ、「**運命の数字**」としての重みを演出 (スロット筐体の配当表示・金融口座の最終残高を想起させる)
 - 金色グラデーションのボタンは「報酬感」を誘発する。赤ではなく金にしたのは、ペルソナ独白「**1,200円でこれが買えるなら、安いでしょ**」の "お得感" を表現するため。赤=警告だと「**買うべきではない**」と読まれてしまう
 
 #### フェーズ2: ボタンすら不要 (依存の深化)
@@ -293,8 +293,8 @@ dead ──[増額決定 & 月初]──→ idle
 
 - 認証: `useAuth()` (既存) — そのまま流用
 - 注文: `useOrder()` (既存 react-query mutation) — `onMutate` で `screenState = 'slot'`、`onSuccess` で `idle` 復帰、`onError` の残高不足エラーで `dead` 遷移
-- 残高: 新規 `useBalance()` hook (react-query で `GET /balance` を取得し、注文 mutation の `onSuccess` で invalidate)
-- サジェスト: 新規 `useSuggest()` hook (メイン画面マウント時に `GET /suggest` を 1 回叩く)
+- 残高: 新規 `useBalance()` hook (react-query で `GET /api/wallet` を取得し、注文 mutation の `onSuccess` で invalidate)
+- サジェスト: 新規 `useSuggest()` hook (メイン画面マウント時に `GET /api/suggest` を 1 回叩く)
 
 ### 2.5 階層図
 
@@ -419,7 +419,7 @@ dead ──[増額決定 & 月初]──→ idle
 
 **IncreaseBudgetButton ラベル**: `¥{推奨額}。来月もこの調子だ。`
 - 例: `¥50,000。来月もこの調子だ。`
-- 増額値の算出: フロント側の表示として、まず固定で「現在予算 × 5/3 (端数を 10,000 円単位に丸め)」を初期実装とする。例: 30,000 → 50,000 / 50,000 → 80,000 / 80,000 → 130,000。AI による精緻な推奨は将来検討 (§9)。requirements.md `FR-METRICS-04` 準拠
+- 増額値の算出: `GET /api/budget/raise/recommendation` を叩いて取得する (Unit E で実装済み)。API 応答の推奨額をボタンラベルに表示する。requirements.md `FR-METRICS-04` 準拠
 
 **モーション**:
 
@@ -817,7 +817,7 @@ dead ──[増額決定 & 月初]──→ idle
 ## 8. 既存 spec / ドキュメントとの関係
 
 - 本 spec は `aidlc-docs/inception/application-design/` の `components.md`, `services.md` の延長線上にあり、フロントエンド全画面の **見た目とマイクロインタラクション** を補完するもの。
-- バックエンド API 仕様 (`/order`, `/balance`, `/suggest`) は既存 `aidlc-docs/construction/order/` 配下と整合させる。本 spec ではフロント側の利用方法のみ規定する。
+- バックエンド API 仕様 (`POST /api/orders`, `GET /api/orders`, `GET /api/wallet`, `POST /api/wallet/budget`, `GET /api/suggest`, `GET /api/metrics`, `GET /api/budget/raise/recommendation`, `POST /api/budget/raise`) は各 Unit の Construction 成果物と整合させる。本 spec ではフロント側の利用方法のみ規定する。
 - AI-DLC ワークフロー上は Construction フェーズの追加成果物として扱える (Functional Design 補完 / NFR Design 補完)。
 - v1.0 (`2026-05-24-main-screen-design.md`) は本ファイルにリネームされ、内容は本 spec の §1–§4 として保持されている。
 
@@ -825,7 +825,7 @@ dead ──[増額決定 & 月初]──→ idle
 
 ## 9. オープン項目 (将来検討)
 
-- **AI 推奨の増額値の決定ロジック**: 現状は「現在予算 × 5/3」固定。Bedrock 側の推論ロジックは別途設計。
+- **AI 推奨の増額値の決定ロジック**: Unit E で `GET /api/budget/raise/recommendation` として実装済み。フロントはこの API 応答をそのまま表示する。
 - **サジェストの timing 学習**: 現 spec は「マウント時に 1 回叩く」で固定。フェーズ 2 を深掘りするなら定期的なサジェスト再評価 (notification API なしでの) を将来検討。
 - **サジェスト吹き出しの文言バリエーション**: 現 spec は固定文 `そろそろだろ。`。Bedrock 側で時刻・履歴に応じた文言切替を実装するなら別途プロンプト設計が必要。
 - **多カテゴリ対応**: 本 spec は「ご飯」カテゴリのみ。requirements.md `FR-ORDER-09` の SHOULD 要件である清掃・役所手続き等は、ボタンを縦に並べる or サジェストカードで掘り下げる将来案あり。
