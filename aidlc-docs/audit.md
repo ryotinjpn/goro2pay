@@ -1042,12 +1042,19 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は 5 PR への分割コミット作業。
 
 ---
-
 ## 横串デザインシステム — brainstorming + spec v1.0
 **Timestamp**: 2026-05-24T10:00:00Z
 **User Input**: "aidlc-docsにドキュメントがあるので、そのコンセプトに沿ってuiuxを検討して一番最適を考えて"
 **AI Response**: superpowers:brainstorming + frontend-design を併用して UI/UX 検討開始。Visual Companion (ローカル HTTP サーバ) でモック比較を提示しつつ 1 問ずつ対話ヒアリング。トーン候補 4 種 (refined dark luxury / soft warm playful / retro neon / brutalist minimal) → ユーザ選好で C×A ハイブリッド (レトロ自販機ネオン × 金融的品格) → 「赤がきつい」修正で WARM (金主役+赤は警告差し色) に確定。コンセプト名は当初「Forbidden Vending」→「Pocket Casino」→ コンプラ配慮で最終「Slot Machine」。メイン画面 1 枚に集中する方針で v1.0 spec `docs/superpowers/specs/2026-05-24-main-screen-design.md` を作成、PR #94 として提出。
 **Context**: ハッカソン審査軸「創造性とテーマ適合性」最大化のための追加スコープ。v1.0 はメイン画面のみ。
+
+---
+
+## Bugfix — Cognito Auth Flow ミスマッチ (USER_PASSWORD_AUTH → USER_SRP_AUTH)
+**Timestamp**: 2026-05-25T00:00:00Z
+**User Input**: "https://develop.d1m43i53iuty35.amplifyapp.com/このurlからユーザー登録したんだけど、dev-kyoto-sso-administrator cognioには登録されているが、フロントでエラーになってる" → 画面エラー文言「メールアドレスの形式が正しくないようです」 → DevTools Network: cognito-idp.ap-northeast-1.amazonaws.com への POST が 400 Bad Request、Request Body は AuthFlow="USER_SRP_AUTH" の InitiateAuth → "そのあたりaidlc-docsに定義してなかったの？" → "どれがセキュアなの？" → "yes" (design doc + infra を SRP に揃える方針承認) → "全体的に直して別のブランチで"
+**AI Response**: 根本原因: フロント `web/hooks/useAuth.ts` の `amplifySignIn({ username, password })` は authFlowType 未指定 (Amplify Auth v6 default = USER_SRP_AUTH)。一方 `infra/modules/cognito/cognito.tf` の `explicit_auth_flows` は `["ALLOW_USER_PASSWORD_AUTH","ALLOW_REFRESH_TOKEN_AUTH"]` のみ → Cognito が InvalidParameterException (Auth flow not enabled for this client) を 400 で返却。`useAuth.ts:53` の `case "InvalidParameterException": return "INVALID_EMAIL_FORMAT"` という雑なマッピングが拾い、画面に「メアド形式エラー」と的外れ表示。aidlc-docs 側を grep した結果、設計書とインフラは USER_PASSWORD_AUTH で整合していたが Amplify v6 実装と齟齬。セキュリティ比較 (SRP は平文パスワードを Cognito に送らない / TLS 誤設定時の被害幅小 / Amplify v6 default / AWS 推奨) を踏まえ、design doc とインフラを SRP に揃える方針で承認取得。`doc/cognito_auth_flow_srp` ブランチで以下を実施。変更: (1) `infra/modules/cognito/cognito.tf` を SRP+REFRESH のみに、`infra/modules/cognito/tests/cognito_basic.tftest.hcl` に `explicit_auth_flows_srp_only` run 追加 (USER_PASSWORD_AUTH 不在も assert)、`infra/modules/cognito/README.md` の auth flows 表記更新。(2) `aidlc-docs/construction/auth/nfr-requirements/tech-stack-decisions.md` §3 / `nfr-design/logical-components.md` LC-AUTH-16 / `infrastructure-design/infrastructure-design.md` §3.1.2 / `functional-design/business-logic-model.md` (Sign-up / Login の InitiateAuth 2 箇所) を SRP 表記に更新。(3) `web/hooks/useAuth.ts` の `mapAmplifyErrorToCode` を改修: `InvalidParameterException` は message に "email" を含む時のみ INVALID_EMAIL_FORMAT、それ以外は UNKNOWN にフォールバック。同関数を export 化し、`web/tests/mapAmplifyErrorToCode.test.ts` を新規追加 (auth flow 不許可ケースが UNKNOWN になることを assert / 同種の誤誘導再発防止)。フロント `amplifySignIn` 自体は authFlowType 未指定 = SRP がそのまま走るため呼び出しコードは修正不要。Terraform apply はユーザ実行待ち。
+**Context**: design doc の auth flow 選定理由が記録されていなかったため、今回 SRP 採用の根拠 (defense in depth / Amplify v6 default) を doc 内に併記。`useAuth.ts` の雑マッピングも合わせて改修して同じブランチ (doc/cognito_auth_flow_srp) で出す。Unit B Code Generation の作業中差分は別ブランチ案件のため、本ブランチには含めない (audit.md の Q-N8 Haiku 表記変更等の混入差分も除外)。
 
 ---
 
@@ -1064,3 +1071,5 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **User Input**: "実装プランなんだけどaidlcの現状の状態に対してplan組まなくても大丈夫？"
 **AI Response**: 指摘を受け、現状 AI-DLC のフェーズ別ドキュメント (`aidlc-docs/construction/{auth,budget,order}/...`) と私の作った `docs/superpowers/...` が**整合していない**ことを認識。`aidlc-docs/construction/_design-system/` を新設し、git mv で spec/plan を移動 (`design-spec.md` / `implementation-plan.md`)。`README.md` を新規追加して AI-DLC 上の位置づけと各 Unit との関係を明記。spec の §0.5 に「デザイン哲学 (idea.md / personas.md との対応)」を追加し、なぜこのコンセプトとコピーが太郎ペルソナのフェーズ 1→2→3 に効くかを 5 サブ章で文書化。aidlc-state.md の CONSTRUCTION PHASE に「横串デザインシステム」を追記。PR #94 はクローズせず、本リファクタを追加 commit として上に積む方針を選択。
 **Context**: AI-DLC ワークフローからの逸脱を是正。実装担当者 (別ブランチ・別人) は `_design-system/README.md` から読み始めれば、spec → plan → 各 Unit 成果物 の順で context を組み立てられる。
+
+---

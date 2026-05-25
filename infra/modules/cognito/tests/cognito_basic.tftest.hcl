@@ -48,6 +48,25 @@ run "password_policy_matches_a_nfr_sec_02" {
   }
 }
 
+run "explicit_auth_flows_srp_only" {
+  command = plan
+
+  # SRP のみ許可。USER_PASSWORD_AUTH は平文パスワードが Cognito に届くため
+  # 許可しない (defense in depth)。
+  assert {
+    condition     = contains(aws_cognito_user_pool_client.web.explicit_auth_flows, "ALLOW_USER_SRP_AUTH")
+    error_message = "explicit_auth_flows must include ALLOW_USER_SRP_AUTH"
+  }
+  assert {
+    condition     = contains(aws_cognito_user_pool_client.web.explicit_auth_flows, "ALLOW_REFRESH_TOKEN_AUTH")
+    error_message = "explicit_auth_flows must include ALLOW_REFRESH_TOKEN_AUTH"
+  }
+  assert {
+    condition     = !contains(aws_cognito_user_pool_client.web.explicit_auth_flows, "ALLOW_USER_PASSWORD_AUTH")
+    error_message = "explicit_auth_flows must NOT include ALLOW_USER_PASSWORD_AUTH (SRP-only policy)"
+  }
+}
+
 run "token_validity_matches_a_nfr_sec_03" {
   command = plan
 

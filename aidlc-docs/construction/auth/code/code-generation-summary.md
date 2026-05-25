@@ -72,7 +72,7 @@
 | **`infra/modules/cognito/`** (Auth Unit 所有) | User Pool + App Client (Token 8h/30d) + Pre Sign-up Lambda (Node.js arm64) + IAM。main.tf / variables.tf / cognito.tf / pre_signup_lambda.tf / iam.tf / outputs.tf / README.md / tests/cognito_basic.tftest.hcl |
 | **`infra/modules/api_gateway/`** (Unit 横串) | HTTP API + JWT Authorizer (TTL 0, HTTP API は cache 非対応) + Stage Throttling + Logout/Health route + 共通 integration。main.tf / variables.tf / api_gateway.tf / routes.tf / outputs.tf / README.md / tests/api_gateway_basic.tftest.hcl |
 | **`infra/modules/lambda_api/`** (Unit 横串) | API Lambda (image_uri = :bootstrap, ignore_changes) + ECR + CodePipeline + CodeBuild + S3 artifacts + IAM Role 3 種。main.tf / variables.tf / api_lambda.tf / ecr.tf / codepipeline.tf / iam.tf / outputs.tf / README.md / tests/lambda_api_basic.tftest.hcl |
-| **`infra/modules/amplify/`** (Unit 横串) | Amplify App + Branch (Next.js SSR、env: NEXT_PUBLIC_* + server-only API_ENDPOINT + AMPLIFY_MONOREPO_APP_ROOT=web) + SSR Role。main.tf / variables.tf / amplify.tf / iam.tf / outputs.tf / README.md / tests/amplify_basic.tftest.hcl |
+| **`infra/modules/amplify/`** (Unit 横串) | Amplify App + Branch (Next.js SSR、App-level env: AMPLIFY_MONOREPO_APP_ROOT=web、Branch-level env: NEXT_PUBLIC_* + server-only API_ENDPOINT) + SSR Role。main.tf / variables.tf / amplify.tf / iam.tf / outputs.tf / README.md / tests/amplify_basic.tftest.hcl |
 | `infra/envs/dev/backend.tf` | S3 + use_lockfile |
 | `infra/envs/dev/providers.tf` | default_tags |
 | `infra/envs/dev/main.tf` | 5 module 呼出 (codestar_connection / cognito / api_gateway / lambda_api / amplify) + `aws_lambda_permission.apigw_invoke_api` (両 module の output を必要とするため envs 側で組立) |
@@ -117,7 +117,7 @@
 | Cognito auto-confirm | `infra/lambdas/pre-signup/index.js` 5 行 |
 | Authorizer JWT (Cognito 連携) | `api_gateway.tf` aws_apigatewayv2_authorizer |
 | CodePipeline + CodeBuild | `codepipeline.tf` + `apps/api/buildspec.yml` |
-| AMPLIFY_MONOREPO_APP_ROOT=web | `amplify.tf` aws_amplify_branch.environment_variables |
+| AMPLIFY_MONOREPO_APP_ROOT=web | `amplify.tf` aws_amplify_app.web.environment_variables (App-level、framework auto-detection 用) |
 | Token Validity 8h/30d | `cognito.tf` aws_cognito_user_pool_client |
 | Stage Throttling 100 req/s, Burst 200 | `api_gateway.tf` aws_apigatewayv2_stage |
 | Authorizer TTL 0 (HTTP API は cache 非対応) | `api_gateway.tf` |
