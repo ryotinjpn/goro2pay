@@ -41,7 +41,7 @@
 - [x] NFR Requirements (Unit B, 2026-05-22) — nfr-requirements.md / tech-stack-decisions.md 生成済み、ユーザ承認待ち
 - [x] NFR Design (Unit B, 2026-05-22) — nfr-design-patterns.md / logical-components.md 生成済み、unit-interfaces.md 更新済み
 - [x] Infrastructure Design (Unit B, 2026-05-22) — infrastructure-design.md / deployment-architecture.md 生成済み
-- [ ] Code Generation (Unit B) - **EXECUTE**
+- [x] Code Generation (Unit B, 2026-05-25) — Backend (apps/api/internal/wallet/ + 4 Repo + cmd/scheduler) + Frontend (hooks 2 + components 3 + state 1 + page + tests) + Infrastructure (modules/budget/ 全 8 + tests 4) + Docs (5 サマリ)。約 50 ファイル生成。検証: Backend Go test 17 packages PASS / Frontend Vitest 75 PASS / TypeScript PASS / Terraform validate + tftest 11 + 既存 9 PASS / bootstrap 14MB build PASS。worktree feat/unit-b-code-generation。ユーザ承認待ち
 
 **Unit A `auth` 進捗** (worktree: future-unit-a)
 - [x] Functional Design (Unit A, 2026-05-21, PR #61, #66) — Cognito + Pre Sign-up + JWT 検証戦略確定
