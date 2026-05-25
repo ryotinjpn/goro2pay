@@ -39,9 +39,20 @@ module "bedrock" {
   region = local.region
 }
 
+# Unit B: Wallet/BudgetSettings/Idempotency/BudgetResetLog DynamoDB +
+# Scheduler Lambda + EventBridge Scheduler + IAM (最小権限)。
+# 前提: terraform apply 前に `make -C apps/api/cmd/scheduler build` で
+# bootstrap バイナリを生成しておくこと。
+module "budget" {
+  source = "../../modules/budget"
+  env    = local.env
+  region = local.region
+}
+
 # Lambda API (Unit 横串、API Lambda + ECR + CodePipeline + CodeBuild)
 # Unit C 追加: additional_policy_arns で order_history + bedrock の Policy を attach。
 # order_history_table_name で API Lambda 環境変数を注入。
+# Unit B 追加: budget DynamoDB Policy を attach + 4 テーブル名を env 注入。
 module "lambda_api" {
   source                      = "../../modules/lambda_api"
   env                         = local.env
@@ -55,8 +66,13 @@ module "lambda_api" {
   additional_policy_arns = [
     module.order_history.dynamodb_policy_arn,
     module.bedrock.bedrock_policy_arn,
+    module.budget.dynamodb_policy_arn,
   ]
-  order_history_table_name = module.order_history.dynamodb_table_name
+  order_history_table_name    = module.order_history.dynamodb_table_name
+  wallet_table_name           = module.budget.wallet_table_name
+  budget_settings_table_name  = module.budget.budget_settings_table_name
+  idempotency_keys_table_name = module.budget.idempotency_keys_table_name
+  budget_reset_log_table_name = module.budget.budget_reset_log_table_name
 }
 
 # 横串 Observability: CloudWatch Alarms / SNS Topic / Budgets (NFRC-C13 / NFRC-C20)
