@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { fetchMetrics, type MetricsResponse } from "@/lib/api/metrics";
+import { ApiError } from "@/lib/api/orders";
 
 export function useMetrics() {
   const router = useRouter();
@@ -17,11 +18,8 @@ export function useMetrics() {
 
   // BR-FE01: ERR_NO_BUDGET_SET → /budget へリダイレクト (Q-F8=A)
   useEffect(() => {
-    if (query.isError) {
-      const msg = query.error?.message ?? "";
-      if (msg.includes("ERR_NO_BUDGET_SET")) {
-        router.push("/budget");
-      }
+    if (query.isError && query.error instanceof ApiError && query.error.code === "ERR_NO_BUDGET_SET") {
+      router.push("/budget");
     }
   }, [query.isError, query.error, router]);
 
