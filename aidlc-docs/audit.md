@@ -1216,3 +1216,11 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: Infrastructure Design 完了承認（2-option: Request Changes / Continue to Code Generation）を待機中。
 
 ---
+
+## Construction (Unit D) — Infrastructure Design 完了承認 / push + PR
+**Timestamp**: 2026-05-25T04:50:00Z
+**User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
+**AI Response**: Unit D Infrastructure Design を承認として受領。aidlc-state.md の Unit D Infrastructure Design を [x] 完了に更新。`docs/construction-suggest-infrastructure-design` を push し develop 向け PR を作成（per-stage PR、マージ後に最終 Code Generation へ）。
+**Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
+
+---
