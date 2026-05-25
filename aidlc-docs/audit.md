@@ -1161,3 +1161,25 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: Functional Design 完了。次ステージ NFR Requirements (Unit D) へ進行。
 
 ---
+
+## Construction (Unit D) — NFR Requirements（Plan + 全 8 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T03:30:00Z
+**User Inputs**:
+- "マージした"（PR #100 マージ完了の通知）→ 私が #100 マージ・develop 反映を確認し、最新 develop から `docs/construction-suggest-nfr-requirements` を作成
+- NFR-R 進め方: AskUserQuestion で「#100 マージ後に develop から（推奨）」を選択（per-stage PR）
+- Q-ND1〜Q-ND8: いずれも "a" / "ok"（全問 A 採用、`interview-style-one-question-at-a-time` で 1 問ずつ）
+- Plan 承認 + Artifacts 生成承認: "ok"
+**AI Response**: 先行する Unit C NFR Requirements（NFRC-Cxx）を読了し Bedrock 横串の決定を継承。`suggest-nfr-requirements-plan.md` を作成（Q-ND1〜Q-ND8、Bedrock/Lambda/観測性は Unit C 継承確認、固有論点に集中）。全問 A 採用、矛盾チェック（Unit C 継承整合）OK。`suggest/nfr-requirements/` に成果物 2 種を生成:
+- **nfr-requirements.md**: NFRD-D01〜D20（GetSuggestion p95≤2.5s / Bedrock 1.5s×1 継承 / Suggestion 1RCU1WCU / カスタムメトリクス不実装継承 / 共有 Lambda 256MB継承 / useSuggestion マウント1回 / PBT 軽量 / Bedrock モデル・コスト・PII 継承 / 認証 Unit A 委譲）、Unit C 継承マップ + トレーサビリティ
+- **tech-stack-decisions.md**: Unit A/B/C スタック全面継承（Go/Gin/slog/gopter + bedrockruntime Converse + Next/TanStack/fast-check）、新規技術なし、suggestion module のみ新規
+**Context**: ⛔ GATE: NFR Requirements 完了承認（2-option: Request Changes / Continue to NFR Design）を待機中。
+
+---
+
+## Construction (Unit D) — NFR Requirements 完了承認 / push + PR
+**Timestamp**: 2026-05-25T03:40:00Z
+**User Input**: "それでおk"（2-option ゲートで Continue to Next Stage を承認 + NFR-R ブランチの push + PR 作成に同意）
+**AI Response**: Unit D NFR Requirements を承認として受領。aidlc-state.md の Unit D NFR Requirements を [x] 完了に更新。`docs/construction-suggest-nfr-requirements` を push し develop 向け PR を作成（per-stage PR パターン、PR マージ後に NFR Design へ）。
+**Context**: NFR Requirements 完了。PR レビュー・マージ後に ③ NFR Design (Unit D) へ進行。
+
+---

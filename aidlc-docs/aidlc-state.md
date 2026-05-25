@@ -59,7 +59,7 @@
 
 **Unit D `suggest` 進捗** (branch: docs/construction-suggest-functional-design)
 - [x] Functional Design (Unit D, 2026-05-25) — business-logic-model / business-rules (BR-D01〜D20) / domain-entities / frontend-components 生成済み。Q-DF1〜Q-DF10 全 10 問対話ヒアリング完了（全 A）。design-spec §3.3（PR #94）/ 凍結契約 §5 整合、契約⇄spec 命名対応表を明記。ユーザ承認済み（2026-05-25）
-- [ ] NFR Requirements (Unit D) - **EXECUTE**
+- [x] NFR Requirements (Unit D, 2026-05-25) — nfr-requirements.md (NFRD-D01〜D20) / tech-stack-decisions.md 生成済み。Q-ND1〜Q-ND8 全 8 問対話ヒアリング完了（全 A）。Bedrock 横串は Unit C NFRC-Cxx を継承、新規技術なし。ユーザ承認済み
 - [ ] NFR Design (Unit D) - **EXECUTE**
 - [ ] Infrastructure Design (Unit D) - **EXECUTE**
 - [ ] Code Generation (Unit D) - **EXECUTE**
