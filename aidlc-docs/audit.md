@@ -1118,3 +1118,11 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: Functional Design 完了承認（2-option: Request Changes / Continue to NFR Requirements）を待機中。
 
 ---
+
+## Construction (Unit D) — Functional Design 完了承認
+**Timestamp**: 2026-05-25T02:40:00Z
+**User Input**: "ok"（2-option 完了ゲートで Continue to Next Stage を選択）
+**AI Response**: Unit D Functional Design を承認として受領。aidlc-state.md に「Unit D `suggest` 進捗」セクションを新設し Functional Design を [x] 完了に更新。FD 成果物 4 種（business-logic-model / business-rules BR-D01〜D20 / domain-entities / frontend-components）確定。次は ② NFR Requirements (Standard) へ。
+**Context**: Functional Design 完了。次ステージ NFR Requirements (Unit D) へ進行。
+
+---
