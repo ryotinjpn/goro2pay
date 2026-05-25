@@ -1035,6 +1035,28 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## NFR Requirements (Unit E) — Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "unitEの続きをお願いします"
+**AI Response**: NFR Requirements ステージ開始。Q-N1〜Q-N5 の 5 問を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-N1: C — BudgetSettings + Wallet を errgroup で並列取得 → NotFound 確認後に CountThisMonth 直列呼び出し
+- Q-N2: A — いずれかの DynamoDB 読み取り失敗で HTTP 500（部分返却なし）
+- Q-N3: A — ConsumptionRate と ComputeRecommendedBudget の 2 関数に gopter で PBT 適用
+- Q-N4: B — 赤色 (text-red-500 / bg-red-500) + animate-pulse で不安の演出を最大化
+- Q-N5: A — BudgetEmptyScreen マウントのたびに RaiseModal を再表示（逃げられない退化ループ）
+
+矛盾チェック: 4 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/nfr-requirements/):
+- nfr-requirements.md: NFRE-E01〜E10 の 10 NFR（Performance / Reliability / Maintainability / Usability / Security）
+- tech-stack-decisions.md: 新規テックスタックなし、Unit A/B/C/D 継承のみ
+
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
@@ -1222,6 +1244,30 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
 **AI Response**: Unit D Infrastructure Design を承認として受領。aidlc-state.md の Unit D Infrastructure Design を [x] 完了に更新。`docs/construction-suggest-infrastructure-design` を push し develop 向け PR を作成（per-stage PR、マージ後に最終 Code Generation へ）。
 **Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
+
+---
+
+## Construction (Unit E) — NFR Requirements PR 作成
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "ブランチ切ってprつくって"（前セッション末尾の継続）
+**AI Response**: `docs/construction-metrics-nfr-requirements` ブランチを push し PR #104 を作成。NFR 要件 E01〜E10 / tech-stack-decisions.md を含む。
+**Context**: Unit E NFR Requirements ステージ完了。
+
+---
+
+## Construction (Unit E) — NFR Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:10:00Z
+**User Input**: "次お願いします"
+**AI Response**: Q-DD1〜Q-DD5 を全推奨選択肢で確定。nfr-design-patterns.md（P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種）/ logical-components.md（LC-ME-01〜11）を生成。aidlc-state.md の Unit E NFR Design を [x] に更新。
+**Context**: Unit E NFR Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:20:00Z
+**User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic tf テストファイル（4 assert 追記）のみ。
+**Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
 
 ---
 
