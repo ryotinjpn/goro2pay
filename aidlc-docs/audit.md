@@ -1266,7 +1266,7 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 ## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
 **Timestamp**: 2026-05-25T05:20:00Z
 **User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
-**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic tf テストファイル（4 assert 追記）のみ。
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic テストファイル（4 assert 追記）のみ。
 **Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
 
 ---
@@ -1293,5 +1293,13 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 - **Docs**: suggest/code/ にサマリ 6 種。
 aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ全 5 ステージ完了**。Q-DG2=B により 1 PR で push 予定。
 **Context**: ⛔ GATE: Code Generation 完了承認（2-option）+ PR 作成。Unit D 全ステージ完了。
+
+---
+
+## Construction (Unit E) — Code Generation 全 26 Step 完了
+**Timestamp**: 2026-05-25T07:45:00Z
+**User Input**: "開始"（前セッション継続）
+**AI Response**: 26 Step 全完了。Backend: metrics/types.go + compute.go + service.go (goroutine group P-ME-PARALLEL-01) + service_test.go (PBT P-E-PBT-01); budget_raise/types.go + compute.go + service.go + service_test.go (PBT P-E-PBT-02); handlers/metrics_handler.go + budget_raise_handler.go + テスト 2 ファイル; main.go DI 配線。Frontend: lib/api/metrics.ts + hooks/useMetrics.ts + hooks/useBudgetRaise.ts + hooks/useOrder.ts (invalidateQueries 追加) + components/metrics/MetricsPanel.tsx (DEG UX) + components/metrics/RaiseModal.tsx (ダメコピー) + app/budget-empty/page.tsx + app/page.tsx 修正 + テスト 4 ファイル。Infrastructure: routes.tf 3 route 追記 + テストファイル 4 assert 追記。Docs: code-summary.md。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。
+**Context**: Unit E Code Generation ステージ完了。ユーザ承認待ち。
 
 ---
