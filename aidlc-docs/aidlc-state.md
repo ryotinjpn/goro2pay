@@ -62,7 +62,7 @@
 - [x] NFR Requirements (Unit D, 2026-05-25) — nfr-requirements.md (NFRD-D01〜D20) / tech-stack-decisions.md 生成済み。Q-ND1〜Q-ND8 全 8 問対話ヒアリング完了（全 A）。Bedrock 横串は Unit C NFRC-Cxx を継承、新規技術なし。ユーザ承認済み
 - [x] NFR Design (Unit D, 2026-05-25) — nfr-design-patterns.md (P-SG-BUILD-01 / P-SG-OBS-01 / P-SG-PBT-01 / P-SG-FE-01 + Unit C パターン再利用) / logical-components.md (LC-SUGGEST-01〜11 + 共有 LC-ORDER-* 参照) 生成済み。Q-DD1〜Q-DD6 全 A。ユーザ承認済み
 - [x] Infrastructure Design (Unit D, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 modules/suggestion/（GoroPay_Suggestion 1RCU1WCU/TTL30分）+ GET /api/suggest ルート + lambda_api policy/env 追記。bedrock/observability は Unit C module 再利用。Q-DI1〜Q-DI6 全 A。ユーザ承認済み
-- [ ] Code Generation (Unit D) - **EXECUTE**
+- [x] Code Generation (Unit D, 2026-05-25) — Plan(Q-DG1〜4) + 実装。Backend (suggest pkg 5 + repo + handler + bedrock InferSuggestion + order SuggestResolver 注入〔Q-DG1=B〕+ main.go) / Frontend (lib/api/suggest + useSuggestion + SuggestBubble + GoroButton) / Infra (modules/suggestion + routes + lambda_api + envs) / Docs (code サマリ 6)。検証: Go test 16pkg PASS / Vitest 92 PASS / tsc PASS / terraform test 4 PASS + validate Success。1 PR(Q-DG2=B)。**Unit D per-unit ループ全 5 ステージ完了**
 
 **Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
 - [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認済み

@@ -1236,3 +1236,16 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ Code Generation Part 2（Backend → Frontend → Infra → サマリ）実行中。
 
 ---
+
+## Construction (Unit D) — Code Generation Part 2 完了（実コード生成 + 検証）
+**Timestamp**: 2026-05-25T06:30:00Z
+**User Input**: 各層ごとに「ok」（"各層が終わったら一旦俺に報告して、承認してから次の層へ" の方針で Backend / Frontend / Infra / Docs を順次承認）
+**AI Response**: Q-DG4=A のレイヤ順で生成・各層検証・承認ゲートを実施:
+- **Backend**: suggest pkg (types/service/builder/logsummary/order_adapter + tests + PBT) / repo/suggestion / handlers/suggest_handler / bedrock に InferSuggestion 追加 (inferWithPrompt 共通化) / order に SuggestResolver 注入 (Q-DG1=B、service.go・NewService・main.go) / main.go DI+route。検証 `go test ./...` 16pkg PASS（Unit C リグレッションなし）。
+- **Frontend**: lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 改修 + tests。`npm ci` 632pkg → vitest 92 PASS / tsc PASS。※途中 exact 固定を試みたが React 19 peer 解決が重く caret に戻した（package.json 復元）。
+- **Infra**: modules/suggestion (DynamoDB + IAM + tftest) / api_gateway routes / lambda_api / envs/dev。terraform v1.15.4 を公式 zip 導入（brew は CLT 古さで失敗）し suggestion `terraform test` 4 PASS / envs/dev `validate` Success。
+- **Docs**: suggest/code/ にサマリ 6 種。
+aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ全 5 ステージ完了**。Q-DG2=B により 1 PR で push 予定。
+**Context**: ⛔ GATE: Code Generation 完了承認（2-option）+ PR 作成。Unit D 全ステージ完了。
+
+---
