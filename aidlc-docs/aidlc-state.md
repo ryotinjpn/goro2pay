@@ -61,7 +61,7 @@
 - [x] Functional Design (Unit D, 2026-05-25) — business-logic-model / business-rules (BR-D01〜D20) / domain-entities / frontend-components 生成済み。Q-DF1〜Q-DF10 全 10 問対話ヒアリング完了（全 A）。design-spec §3.3（PR #94）/ 凍結契約 §5 整合、契約⇄spec 命名対応表を明記。ユーザ承認済み（2026-05-25）
 - [x] NFR Requirements (Unit D, 2026-05-25) — nfr-requirements.md (NFRD-D01〜D20) / tech-stack-decisions.md 生成済み。Q-ND1〜Q-ND8 全 8 問対話ヒアリング完了（全 A）。Bedrock 横串は Unit C NFRC-Cxx を継承、新規技術なし。ユーザ承認済み
 - [x] NFR Design (Unit D, 2026-05-25) — nfr-design-patterns.md (P-SG-BUILD-01 / P-SG-OBS-01 / P-SG-PBT-01 / P-SG-FE-01 + Unit C パターン再利用) / logical-components.md (LC-SUGGEST-01〜11 + 共有 LC-ORDER-* 参照) 生成済み。Q-DD1〜Q-DD6 全 A。ユーザ承認済み
-- [ ] Infrastructure Design (Unit D) - **EXECUTE**
+- [x] Infrastructure Design (Unit D, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 modules/suggestion/（GoroPay_Suggestion 1RCU1WCU/TTL30分）+ GET /api/suggest ルート + lambda_api policy/env 追記。bedrock/observability は Unit C module 再利用。Q-DI1〜Q-DI6 全 A。ユーザ承認済み
 - [ ] Code Generation (Unit D) - **EXECUTE**
 
 **Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
