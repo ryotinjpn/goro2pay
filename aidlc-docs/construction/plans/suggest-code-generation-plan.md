@@ -126,8 +126,8 @@ Part 2（実コード生成）は大規模。どう進めるか。
 - [x] Step 5: Backend 検証（`go build` PASS / `go test ./...` 16 pkg PASS / `go vet` PASS / `gofmt` 適用）
 - [x] Step 6: Frontend（lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 連携 + tests 2）
 - [x] Step 7: Frontend 検証（`npm ci` 632pkg / `vitest` 92 tests PASS / `tsc --noEmit` PASS）
-- [ ] Step 8: Infra（modules/suggestion + routes/envs 追記 + tftest）
-- [ ] Step 9: Infra 検証（`terraform validate` / `fmt` / `test`）
+- [x] Step 8: Infra（modules/suggestion 一式 + api_gateway/routes.tf + lambda_api/variables.tf・api_lambda.tf + envs/dev/main.tf + tftest）
+- [x] Step 9: Infra 検証（terraform v1.15.4 を公式 zip 導入。`fmt -recursive` 整形済 / suggestion `terraform test` 4 PASS / envs/dev `validate` Success）
 - [ ] Step 10: code サマリ生成（aidlc-docs/construction/suggest/code/）
 - [ ] Step 11: aidlc-state.md / audit.md 更新、ブランチ分割 push + PR
 
