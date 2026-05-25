@@ -1203,3 +1203,16 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: NFR Design 完了。PR マージ後に ④ Infrastructure Design (Unit D) へ進行。
 
 ---
+
+## Construction (Unit D) — Infrastructure Design（Plan + 全 6 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T04:40:00Z
+**User Inputs**:
+- "次に進んで、１つずつ確認して"（#102 マージ済みを確認、最新 develop から `docs/construction-suggest-infrastructure-design` 作成）
+- Q-DI1〜Q-DI6: いずれも "a" / "ok"（全 A、`interview-style` で 1 問ずつ）
+- Plan 承認 + 生成承認: "ok"
+**AI Response**: 先行 Unit C Infrastructure Design（modules 構成: order_history / bedrock〔C/D 共有〕/ observability〔横串〕）を把握し再利用。`suggest-infrastructure-design-plan.md` 作成（Q-DI1〜Q-DI6）。全 A 採用、矛盾なし。`suggest/infrastructure-design/` に成果物 2 種を生成:
+- **infrastructure-design.md**: LC-SUGGEST→AWS マッピング、新規 `modules/suggestion/`（GoroPay_Suggestion: PK suggestionId / TTL expiresAt 30分 / PROVISIONED 1RCU1WCU / GSI なし / SSE）、`GET /api/suggest` ルート追記、lambda_api への suggestion policy + DDB_TABLE_SUGGESTION env 追記、bedrock/observability 再利用（新規 IAM・アラームなし）、tftest
+- **deployment-architecture.md**: 共有パイプライン/共有 API Lambda/Amplify 相乗り、新規は GoroPay_Suggestion テーブルのみ、デプロイ順序（テーブル/env → コード）、可用性独立（suggest 停止でも注文に影響なし）
+**Context**: ⛔ GATE: Infrastructure Design 完了承認（2-option: Request Changes / Continue to Code Generation）を待機中。
+
+---
