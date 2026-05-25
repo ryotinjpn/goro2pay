@@ -54,3 +54,29 @@ variable "order_history_table_name" {
   description = "OrderHistory DynamoDB テーブル名 (空文字なら env 注入をスキップ)"
   default     = ""
 }
+
+# Unit B で追加: API Lambda の environment に注入する Budget Unit テーブル名。
+# 凍結 IF (unit-interfaces.md §10) の DDB_TABLE_* 命名規則に従う。
+variable "wallet_table_name" {
+  type        = string
+  description = "Wallet DynamoDB テーブル名 (環境変数 DDB_TABLE_WALLET、空文字なら env 注入をスキップ)"
+  default     = ""
+}
+
+variable "budget_settings_table_name" {
+  type        = string
+  description = "BudgetSettings DynamoDB テーブル名 (環境変数 DDB_TABLE_BUDGET_SETTINGS、空文字なら env 注入をスキップ)"
+  default     = ""
+}
+
+variable "idempotency_keys_table_name" {
+  type        = string
+  description = "IdempotencyKeys DynamoDB テーブル名 (環境変数 DDB_TABLE_IDEMPOTENCY、空文字なら env 注入をスキップ)"
+  default     = ""
+}
+
+variable "budget_reset_log_table_name" {
+  type        = string
+  description = "BudgetResetLog DynamoDB テーブル名 (環境変数 DDB_TABLE_BUDGET_RESET_LOG、空文字なら env 注入をスキップ)"
+  default     = ""
+}

@@ -40,8 +40,10 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function mapAmplifyErrorToCode(err: unknown): AuthErrorCode {
-  const name = (err as { name?: string })?.name ?? "";
+export function mapAmplifyErrorToCode(err: unknown): AuthErrorCode {
+  const e = err as { name?: string; message?: string } | null;
+  const name = e?.name ?? "";
+  const message = e?.message ?? "";
   switch (name) {
     case "NotAuthorizedException":
     case "UserNotFoundException":
@@ -51,7 +53,12 @@ function mapAmplifyErrorToCode(err: unknown): AuthErrorCode {
     case "InvalidPasswordException":
       return "WEAK_PASSWORD";
     case "InvalidParameterException":
-      return "INVALID_EMAIL_FORMAT";
+      // Cognito は様々な理由で InvalidParameterException を投げる
+      // (App Client の auth flow 未許可、属性検証エラー、etc)。
+      // クライアント側で R-Email-1 の事前検証を通過した状態で
+      // ここに到達するのは設定不整合の蓋然性が高いため UNKNOWN に倒す。
+      // 「email」を含むメッセージの時のみメール形式エラーに割り当てる。
+      return /email/i.test(message) ? "INVALID_EMAIL_FORMAT" : "UNKNOWN";
     case "TooManyRequestsException":
       return "RATE_LIMIT_EXCEEDED";
     case "NetworkError":

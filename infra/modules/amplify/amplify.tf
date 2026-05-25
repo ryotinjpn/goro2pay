@@ -19,6 +19,16 @@ resource "aws_amplify_app" "web" {
 
   build_spec = file(var.amplify_yml_path)
 
+  # AMPLIFY_MONOREPO_APP_ROOT は App-level に置く必要がある。
+  # Amplify の framework auto-detection は clone 直後 (build phase より前) に
+  # 動き、この段階では App-level の env var しか参照されない。Branch-level に
+  # 置くと "Cannot read 'next' version in package.json" でジョブが失敗する
+  # (リポジトリルートに package.json が無いため)。
+  # AWS 公式: monorepo-configuration.html の Branch=All branches の記述に対応。
+  environment_variables = {
+    AMPLIFY_MONOREPO_APP_ROOT = "web"
+  }
+
   # GitHub Personal Access Token (classic, admin:repo_hook + repo)。
   # CreateApp 時に Amplify が GitHub Webhook を登録するため初回 apply で必要。
   # AWS 側で受け取った後はマスクされ、後続の更新では使われないため、
@@ -46,9 +56,10 @@ resource "aws_amplify_branch" "develop" {
 
   enable_auto_build = true
 
+  # AMPLIFY_MONOREPO_APP_ROOT は App-level (aws_amplify_app.web) に置くため、
+  # ここでは設定しない。Branch-level に置くと framework auto-detection 段階で
+  # 読まれず、モノレポ build が起動しない。
   environment_variables = {
-    AMPLIFY_MONOREPO_APP_ROOT = "web"
-
     # Browser に露出する公開 env (NEXT_PUBLIC_*)
     NEXT_PUBLIC_USER_POOL_ID        = var.cognito_user_pool_id
     NEXT_PUBLIC_USER_POOL_CLIENT_ID = var.cognito_user_pool_client_id

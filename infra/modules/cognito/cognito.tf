@@ -51,8 +51,11 @@ resource "aws_cognito_user_pool_client" "web" {
 
   generate_secret = false # PWA Public Client
 
+  # SRP は平文パスワードを Cognito へ送らないため、TLS 誤設定時の被害幅が
+  # USER_PASSWORD_AUTH より小さい (defense in depth)。Amplify Auth v6 の
+  # signIn default も SRP。USER_PASSWORD_AUTH は許可しない。
   explicit_auth_flows = [
-    "ALLOW_USER_PASSWORD_AUTH",
+    "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
 

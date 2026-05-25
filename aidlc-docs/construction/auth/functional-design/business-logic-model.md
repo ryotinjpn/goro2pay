@@ -88,7 +88,7 @@ sequenceDiagram
     Note over UI,Cog: そのまま自動ログインへ
 
     UI->>Auth: signIn({ username, password })
-    Auth->>Cog: InitiateAuth (USER_PASSWORD_AUTH)
+    Auth->>Cog: InitiateAuth (USER_SRP_AUTH)
     Cog-->>Auth: {idToken, accessToken, refreshToken}
     Auth-->>UI: AuthSession 確立
     UI->>UI: router.push("/")
@@ -161,7 +161,7 @@ sequenceDiagram
     UI->>UI: クライアント側検証
     User->>UI: 「ログイン」ボタン押下
     UI->>Auth: signIn({ username, password })
-    Auth->>Cog: InitiateAuth (USER_PASSWORD_AUTH)
+    Auth->>Cog: InitiateAuth (USER_SRP_AUTH)
 
     alt 認証成功
         Cog-->>Auth: {idToken, accessToken, refreshToken}

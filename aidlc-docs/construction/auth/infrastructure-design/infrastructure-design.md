@@ -212,7 +212,7 @@ apps/
 | `name` | `gp-${var.env}-appclient-web` | Q-I4 |
 | `user_pool_id` | `aws_cognito_user_pool.main.id` | — |
 | `generate_secret` | false | LC-16 (PWA Public Client) |
-| `explicit_auth_flows` | `["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]` | LC-16 |
+| `explicit_auth_flows` | `["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]` | LC-16（SRP-only。defense in depth / Amplify v6 default） |
 | `id_token_validity` | 8 | A-NFR-SEC-03 |
 | `access_token_validity` | 8 | 同上 |
 | `refresh_token_validity` | 30 | 同上 |
