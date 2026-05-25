@@ -55,7 +55,11 @@ export function mapOrderError(err: unknown): OrderErrorAction {
   if (err instanceof ApiError) {
     switch (err.status) {
       case 402:
-        return { type: "navigate", path: "/budget-empty", transitionMs: 0 };
+        // Unit B 修正 (P-DEG-02): InsufficientBalanceModal を atom 経由で表示する
+        // 設計に統一。`/budget-empty` ルートは web/app 配下に存在しないため
+        // navigate すると 404 になっていた。useOrder.ts が err.status === 402 で
+        // insufficientBalanceAtom.set(true) を呼ぶので、ここでは silent で済む。
+        return { type: "silent" };
       case 409:
         // F-I4 修正: 冪等性衝突 (BR-C39) は実質成功扱い。完了画面に行きたいが
         // orderId が body に含まれないため、履歴 invalidate + 自虐風トーストで代替。
