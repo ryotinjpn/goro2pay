@@ -39,6 +39,12 @@ module "bedrock" {
   region = local.region
 }
 
+# Unit D: Suggestion DynamoDB + IAM Policy (Unit D 専用、GoroPay_Suggestion)
+module "suggestion" {
+  source = "../../modules/suggestion"
+  env    = local.env
+}
+
 # Unit B: Wallet/BudgetSettings/Idempotency/BudgetResetLog DynamoDB +
 # Scheduler Lambda + EventBridge Scheduler + IAM (最小権限)。
 # 前提: terraform apply 前に `make -C apps/api/cmd/scheduler build` で
@@ -67,8 +73,10 @@ module "lambda_api" {
     module.order_history.dynamodb_policy_arn,
     module.bedrock.bedrock_policy_arn,
     module.budget.dynamodb_policy_arn,
+    module.suggestion.dynamodb_policy_arn,
   ]
   order_history_table_name    = module.order_history.dynamodb_table_name
+  suggestion_table_name       = module.suggestion.dynamodb_table_name
   wallet_table_name           = module.budget.wallet_table_name
   budget_settings_table_name  = module.budget.budget_settings_table_name
   idempotency_keys_table_name = module.budget.idempotency_keys_table_name

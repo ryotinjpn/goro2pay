@@ -1,6 +1,6 @@
 module github.com/ryotinjpn/goro2pay/apps/api
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/aws/aws-lambda-go v1.54.0
@@ -55,6 +55,7 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect

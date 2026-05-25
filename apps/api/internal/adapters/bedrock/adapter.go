@@ -18,13 +18,13 @@ import (
 //
 // Source は計画の出処を識別する: "bedrock" | "fallback_history" | "fallback_default"
 type Plan struct {
-	StoreName        string
-	MenuName         string
-	Amount           int
-	Category         string
-	Source           string
-	BedrockLatencyMs int64
-	BedrockAttempt  int
+	StoreName         string
+	MenuName          string
+	Amount            int
+	Category          string
+	Source            string
+	BedrockLatencyMs  int64
+	BedrockAttempt    int
 	FallbackTriggered bool
 }
 
@@ -34,6 +34,9 @@ type Plan struct {
 // MockBedrockAdapter (P-MOCK-01) を注入する。
 type BedrockAdapter interface {
 	InferOrderPlan(ctx context.Context, history []HistoryItem, dayOfWeek string, category string) (*Plan, error)
+	// InferSuggestion は起動時の先回りサジェストを生成する (Unit D)。
+	// InferOrderPlan と同じリトライ・タイムアウト方針 (NFRC-C06/C07 = NFRD-D03)。
+	InferSuggestion(ctx context.Context, history []HistoryItem, dayOfWeek string) (*Plan, error)
 }
 
 // BedrockRuntimeAPI は ClaudeBedrockAdapter が依存する Bedrock SDK の最小 interface。
@@ -120,10 +123,10 @@ func init() {
 // に委譲する (NFRC-C06、P-RETRY-01)。retryReporter はリトライ発動時に呼ばれ、
 // NFRC-C13-2 の WARN ログ出力 (P-OBS-03) に bridge される。
 type ClaudeBedrockAdapter struct {
-	client         BedrockRuntimeAPI
-	classifier     RetryClassifier
-	modelID        string
-	retryReporter  RetryReporter
+	client        BedrockRuntimeAPI
+	classifier    RetryClassifier
+	modelID       string
+	retryReporter RetryReporter
 }
 
 const (
@@ -189,7 +192,25 @@ func (a *ClaudeBedrockAdapter) InferOrderPlan(parentCtx context.Context, history
 	if err != nil {
 		return nil, fmt.Errorf("build prompt: %w", err)
 	}
+	return a.inferWithPrompt(parentCtx, prompt)
+}
 
+// InferSuggestion は起動時の先回りサジェストを生成する (Unit D)。
+//
+// BuildSuggestPrompt でプロンプトのみ差し替え、リトライ・タイムアウト・パースは
+// InferOrderPlan と共通の inferWithPrompt を使う (NFRD-D03 = NFRC-C06/C07)。
+func (a *ClaudeBedrockAdapter) InferSuggestion(parentCtx context.Context, history []HistoryItem, dayOfWeek string) (*Plan, error) {
+	prompt, err := BuildSuggestPrompt(history, dayOfWeek)
+	if err != nil {
+		return nil, fmt.Errorf("build suggest prompt: %w", err)
+	}
+	return a.inferWithPrompt(parentCtx, prompt)
+}
+
+// inferWithPrompt は Bedrock Converse 呼出 + リトライ判定 + レスポンスパースの
+// 共通ループ。InferOrderPlan / InferSuggestion はプロンプトのみ差し替えて共有する
+// (挙動は従来の InferOrderPlan と同一)。
+func (a *ClaudeBedrockAdapter) inferWithPrompt(parentCtx context.Context, prompt string) (*Plan, error) {
 	overall := time.Now()
 	var lastErr error
 	for attempt := 1; attempt <= maxAttempts; attempt++ {

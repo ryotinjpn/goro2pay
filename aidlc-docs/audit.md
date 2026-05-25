@@ -1035,6 +1035,28 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## NFR Requirements (Unit E) — Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "unitEの続きをお願いします"
+**AI Response**: NFR Requirements ステージ開始。Q-N1〜Q-N5 の 5 問を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-N1: C — BudgetSettings + Wallet を errgroup で並列取得 → NotFound 確認後に CountThisMonth 直列呼び出し
+- Q-N2: A — いずれかの DynamoDB 読み取り失敗で HTTP 500（部分返却なし）
+- Q-N3: A — ConsumptionRate と ComputeRecommendedBudget の 2 関数に gopter で PBT 適用
+- Q-N4: B — 赤色 (text-red-500 / bg-red-500) + animate-pulse で不安の演出を最大化
+- Q-N5: A — BudgetEmptyScreen マウントのたびに RaiseModal を再表示（逃げられない退化ループ）
+
+矛盾チェック: 4 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/nfr-requirements/):
+- nfr-requirements.md: NFRE-E01〜E10 の 10 NFR（Performance / Reliability / Maintainability / Usability / Security）
+- tech-stack-decisions.md: 新規テックスタックなし、Unit A/B/C/D 継承のみ
+
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
@@ -1238,6 +1260,63 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
 **AI Response**: Unit D Infrastructure Design を承認として受領。aidlc-state.md の Unit D Infrastructure Design を [x] 完了に更新。`docs/construction-suggest-infrastructure-design` を push し develop 向け PR を作成（per-stage PR、マージ後に最終 Code Generation へ）。
 **Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
+
+---
+
+## Construction (Unit E) — NFR Requirements PR 作成
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "ブランチ切ってprつくって"（前セッション末尾の継続）
+**AI Response**: `docs/construction-metrics-nfr-requirements` ブランチを push し PR #104 を作成。NFR 要件 E01〜E10 / tech-stack-decisions.md を含む。
+**Context**: Unit E NFR Requirements ステージ完了。
+
+---
+
+## Construction (Unit E) — NFR Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:10:00Z
+**User Input**: "次お願いします"
+**AI Response**: Q-DD1〜Q-DD5 を全推奨選択肢で確定。nfr-design-patterns.md（P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種）/ logical-components.md（LC-ME-01〜11）を生成。aidlc-state.md の Unit E NFR Design を [x] に更新。
+**Context**: Unit E NFR Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:20:00Z
+**User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic テストファイル（4 assert 追記）のみ。
+**Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit D) — Code Generation Part 1（Plan + 全 4 問回答）
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Inputs**:
+- "マージした"（#103）→ 最新 develop から `docs/construction-suggest-code-generation` 作成。既存コード構造調査で BedrockAdapter に InferSuggestion 未実装・FallbackProvider.BuildFromHistory 既存・OrderService が SuggestResolver 未配線（ギャップ）を確認
+- Q-DG1: "コード見せて" → handler/service 実コード提示後 "bで"（B: OrderService に SuggestResolver 注入）
+- Q-DG2: "小さいって大体どれくらい" → 約 38 ファイル見積提示後 "b"（1 PR にまとめる）
+- Q-DG3: "a"（InferOrderPlan プロンプト様式踏襲）/ Q-DG4: "a"（レイヤ順生成+検証）
+**AI Response**: `suggest-code-generation-plan.md` 作成（ファイル manifest 約 38 + Q-DG1〜Q-DG4 + Part 2 手順 Step 1〜11）。Q-DG1=B により Unit C の order/service.go・NewService・main.go に SuggestResolver 注入の変更が入ることを明記。Part 1 完了、Part 2（実コード生成）へ移行。
+**Context**: ⛔ Code Generation Part 2（Backend → Frontend → Infra → サマリ）実行中。
+
+---
+
+## Construction (Unit D) — Code Generation Part 2 完了（実コード生成 + 検証）
+**Timestamp**: 2026-05-25T06:30:00Z
+**User Input**: 各層ごとに「ok」（"各層が終わったら一旦俺に報告して、承認してから次の層へ" の方針で Backend / Frontend / Infra / Docs を順次承認）
+**AI Response**: Q-DG4=A のレイヤ順で生成・各層検証・承認ゲートを実施:
+- **Backend**: suggest pkg (types/service/builder/logsummary/order_adapter + tests + PBT) / repo/suggestion / handlers/suggest_handler / bedrock に InferSuggestion 追加 (inferWithPrompt 共通化) / order に SuggestResolver 注入 (Q-DG1=B、service.go・NewService・main.go) / main.go DI+route。検証 `go test ./...` 16pkg PASS（Unit C リグレッションなし）。
+- **Frontend**: lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 改修 + tests。`npm ci` 632pkg → vitest 92 PASS / tsc PASS。※途中 exact 固定を試みたが React 19 peer 解決が重く caret に戻した（package.json 復元）。
+- **Infra**: modules/suggestion (DynamoDB + IAM + tftest) / api_gateway routes / lambda_api / envs/dev。terraform v1.15.4 を公式 zip 導入（brew は CLT 古さで失敗）し suggestion `terraform test` 4 PASS / envs/dev `validate` Success。
+- **Docs**: suggest/code/ にサマリ 6 種。
+aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ全 5 ステージ完了**。Q-DG2=B により 1 PR で push 予定。
+**Context**: ⛔ GATE: Code Generation 完了承認（2-option）+ PR 作成。Unit D 全ステージ完了。
+
+---
+
+## Construction (Unit E) — Code Generation 全 26 Step 完了
+**Timestamp**: 2026-05-25T07:45:00Z
+**User Input**: "開始"（前セッション継続）
+**AI Response**: 26 Step 全完了。Backend: metrics/types.go + compute.go + service.go (goroutine group P-ME-PARALLEL-01) + service_test.go (PBT P-E-PBT-01); budget_raise/types.go + compute.go + service.go + service_test.go (PBT P-E-PBT-02); handlers/metrics_handler.go + budget_raise_handler.go + テスト 2 ファイル; main.go DI 配線。Frontend: lib/api/metrics.ts + hooks/useMetrics.ts + hooks/useBudgetRaise.ts + hooks/useOrder.ts (invalidateQueries 追加) + components/metrics/MetricsPanel.tsx (DEG UX) + components/metrics/RaiseModal.tsx (ダメコピー) + app/budget-empty/page.tsx + app/page.tsx 修正 + テスト 4 ファイル。Infrastructure: routes.tf 3 route 追記 + テストファイル 4 assert 追記。Docs: code-summary.md。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。
+**Context**: Unit E Code Generation ステージ完了。ユーザ承認待ち。
 
 ---
 
