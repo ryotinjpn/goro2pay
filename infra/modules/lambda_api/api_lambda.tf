@@ -27,6 +27,19 @@ resource "aws_lambda_function" "api" {
       var.order_history_table_name != "" ? {
         ORDER_HISTORY_TABLE_NAME = var.order_history_table_name
       } : {},
+      # Unit B: 4 テーブル名を env 経由で注入 (凍結 IF §10 の DDB_TABLE_* 命名)
+      var.wallet_table_name != "" ? {
+        DDB_TABLE_WALLET = var.wallet_table_name
+      } : {},
+      var.budget_settings_table_name != "" ? {
+        DDB_TABLE_BUDGET_SETTINGS = var.budget_settings_table_name
+      } : {},
+      var.idempotency_keys_table_name != "" ? {
+        DDB_TABLE_IDEMPOTENCY = var.idempotency_keys_table_name
+      } : {},
+      var.budget_reset_log_table_name != "" ? {
+        DDB_TABLE_BUDGET_RESET_LOG = var.budget_reset_log_table_name
+      } : {},
     )
   }
 

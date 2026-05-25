@@ -47,3 +47,26 @@ resource "aws_apigatewayv2_route" "get_order_history" {
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
+
+# ----------------------------------------------------------------------------
+# Unit B: GET /api/wallet / POST /api/wallet/budget (凍結契約 §3.3)
+# 既存 api_lambda integration を再利用 (single Lambda、route 切替で済む)。
+# 全 Unit (A/B/C/D/E) の route が同一 `aws_apigatewayv2_integration.api_lambda`
+# を経由して同じ API Lambda function に転送される構造 (Code Review Minor 10)。
+# ----------------------------------------------------------------------------
+
+resource "aws_apigatewayv2_route" "get_wallet" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/wallet"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "post_wallet_budget" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /api/wallet/budget"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
