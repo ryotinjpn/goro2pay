@@ -1000,6 +1000,41 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## Functional Design (Unit E) — セッション開始 & Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T00:00:00Z
+**User Input**: "unitEの担当になりました。unitDと並列作業になってしまいますが、時間がないのでコンストラクションを進めたいです"
+**AI Response**: Unit E `metrics` (Standard 深度) の Construction を Unit D と並列で開始。前段成果物を読み込み Functional Design Plan を作成。Q-F1〜Q-F8 を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-F1: A — DamageCount = 当月 JST カレンダーベース（OrderHistory.CreatedAt >= 月初）
+- Q-F2: B — monthlyBudget=0 → ErrNoBudgetSet を返す（remainingBalance<0 クランプは Unit B 不変条件で不要）
+- Q-F3: C — Backend が SummaryText を生成しつつ数値フィールドも並列で返す
+- Q-F4: A — useMetrics の remainingBalance===0 で MainScreen から router.push('/budget-empty')
+- Q-F5: A — BudgetEmptyScreen マウント時に RaiseModal を自動表示
+- Q-F6: A — Backend が JST で翌月 1 日 00:00 を計算して AppliedFrom に設定
+- Q-F7: B — マウント時取得 + useOrder mutation 成功時に invalidateQueries(['metrics'])
+- Q-F8: A — HTTP 400 + ERR_NO_BUDGET_SET、useMetrics の isError で /budget へリダイレクト
+
+矛盾チェック: 6 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/functional-design/):
+- business-logic-model.md: GetMetrics / ComputeRecommendedBudget / Accept の 3 フロー詳細
+- business-rules.md: BR-M01〜BR-M05 / BR-R01〜BR-R04 / BR-FE01〜BR-FE03 の 12 ルール
+- domain-entities.md: Metrics / BudgetRaiseResult DTO + 読取参照エンティティ + OrderHistoryReader.CountSince 追加要件
+- frontend-components.md: useMetrics / useBudgetRaise / MetricsPanel / BudgetEmptyScreen / RaiseModal
+
+**Context**: Functional Design 完了承認。NFR Requirements へ進行。
+
+---
+
+## Functional Design (Unit E) — 承認
+**Timestamp**: 2026-05-25T00:30:00Z
+**User Input**: "sammaryTextはバックエンド側でテキストで持ってるんだっけ？" → "このままで"
+**AI Response**: Q-F3=C（Backend が SummaryText 文字列 + 数値フィールドを並列返却）の設計を確認。変更なしで承認受領。NFR Requirements ステージへ進行。
+**Context**: Unit E Functional Design 承認完了
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
@@ -1057,12 +1092,152 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **Context**: design doc の auth flow 選定理由が記録されていなかったため、今回 SRP 採用の根拠 (defense in depth / Amplify v6 default) を doc 内に併記。`useAuth.ts` の雑マッピングも合わせて改修して同じブランチ (doc/cognito_auth_flow_srp) で出す。Unit B Code Generation の作業中差分は別ブランチ案件のため、本ブランチには含めない (audit.md の Q-N8 Haiku 表記変更等の混入差分も除外)。
 
 ---
+## Code Generation (Unit B) — Part 2 Generation 完了
+**Timestamp**: 2026-05-25T00:30:00Z
+**User Input**: "yes" (Plan 承認) → 途中サブエージェント並列起動 (Write 権限拒否で 5 件全失敗) → 主スレッドで逐次実装 → "develop取り込んで" → "デプロイ完了した" → 別ブランチ doc/cognito_auth_flow_srp 検出 → "work spaceに移動したら？" → worktree future-unit-b 作成・移行 → "a" 承認継続 → 全 Step 22-23 完了
+**AI Response**: Unit B Code Generation Step 1〜23 全完了。worktree feat/unit-b-code-generation で約 50 ファイル生成:
+
+成果物:
+- **Backend (apps/api/, 約 22 ファイル)**:
+  - `internal/wallet/` (doc/errors/types/validation + service + service_test 17 シナリオ + service_pbt_test gopter 3 props + handler + handler_test + order_adapter + order_adapter_test)
+  - `internal/repo/` 配下 4 種 (wallet_repo / budget_settings / idempotency / budget_reset_log)、各 types/repo + 必要なら test
+  - `cmd/scheduler/` (main + main_test + Makefile + README) — `apps/scheduler/` ではなく `apps/api/cmd/` 配下、Go の internal package 制約のため
+  - `main.go` への DI 配線追加 + `wallet_stub.go` 削除
+- **Frontend (web/, 約 11 ファイル)**:
+  - `lib/api/wallet.ts`, `hooks/useWallet.ts`, `hooks/useSetBudget.ts`, `state/budget.ts`
+  - `components/budget/{BalanceDisplay,BudgetForm,InsufficientBalanceModal}.tsx`
+  - `app/(authenticated)/budget/page.tsx` (BudgetSetupScreen)
+  - `app/page.tsx` への BalanceDisplay + InsufficientBalanceModal 埋込最小追記
+  - `hooks/useOrder.ts` への 402 → setInsufficientBalance(true) 最小追記
+  - `tests/` 5 ファイル (budget-state / wallet-api / BalanceDisplay / BudgetForm / InsufficientBalanceModal)
+- **Infrastructure (infra/, 約 14 ファイル)**:
+  - 新規 `modules/budget/` (versions/variables/locals/dynamodb/iam/log_groups/scheduler_lambda/outputs/README + tests 4)
+  - 既存 `modules/api_gateway/routes.tf` に Unit B ルート 2 本追記
+  - 既存 `modules/lambda_api/{variables,api_lambda}.tf` に 4 変数 + 4 env 注入追記
+  - 既存 `envs/dev/main.tf` に `module "budget"` 追加 + `module.lambda_api` への 4 注入
+- **Documentation (aidlc-docs/, 5 ファイル)**: code/{README,backend-summary,frontend-summary,infrastructure-summary,deployment-runbook}.md
+
+主要な実装上の決定:
+- `apps/scheduler/` は internal package 制約で動かないため `apps/api/cmd/scheduler/` に配置
+- `wallet_repo` ↔ `wallet` の循環 import 回避のため `wallet_repo.ErrInsufficientBalance` を repo 側 sentinel として定義し Service 層で `wallet.ErrInsufficientBalance` に変換
+- `useWallet` は凍結 IF §9 の 4 フィールドのみ公開、`BalanceDisplay` は内部で `useQuery({queryKey:['balance']})` を直接 subscribe (FD §3.1 注通り)
+- `useOrder.ts` への 402 受信時の atom セットは最小追記、既存の `mapOrderError` 経由 `/budget-empty` ナビゲートは保持
+- terraform tftest IAM Policy 検証は naming のみに簡略化 (jsonencode 結果は plan 時 unknown のため)
+- API Lambda env: Unit C `ORDER_HISTORY_TABLE_NAME` と Unit B `DDB_TABLE_*` を併存 (Unit C 既存維持 + Unit B は凍結 IF §10 採用)
+
+検証結果 (全 PASS):
+- Backend: `go build ./...` PASS / `go test ./...` 17 packages PASS / `go vet` PASS
+- Scheduler: `make build` で bootstrap 14MB Linux arm64 バイナリ生成 PASS
+- Frontend: `npx vitest run` 75 tests PASS (新規 21 + 既存 54) / `npx tsc --noEmit` PASS
+- Infrastructure: `terraform validate` PASS / `terraform fmt -recursive` 適用済 / `terraform test` budget 11 PASS + lambda_api 4 PASS + api_gateway 5 PASS (regression なし)
+- envs/dev: `terraform init -backend=false && terraform validate` PASS
+
+ブランチ移行: 途中で別ブランチ `doc/cognito_auth_flow_srp` (別作業 Cognito SRP) に切替えられていたため、`feat/unit-b-code-generation` worktree を develop ベースで新規作成し、Unit B 専用 untracked ファイルを移行 + 既存ファイル編集 (main.go DI / routes.tf / lambda_api / envs/dev / useOrder.ts / page.tsx) を再実行。元ブランチ `doc/cognito_auth_flow_srp` の Cognito SRP 関連変更は完全保持 (auth/amplify/cognito 関連 modified 14 + untracked 4)。
+
+aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit ループ全 5 ステージ完了。
+**Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は PR 分割コミット作業 (Unit C と同様、Backend / Frontend / Infrastructure / Docs の 4 PR 想定)。
+
+---
 
 ## 横串デザインシステム — spec v2.0 + コピー全画面確定
 **Timestamp**: 2026-05-25T01:00:00Z
 **User Input**: "他の画面のuiuxはどうする？" → 「他画面も同じ Slot Machine コンセプトに揃える (推奨)」を選択。続けて全画面のコピーを 1 問ずつヒアリング。「YES」→「押す。」、サジェスト吹き出しを「そろそろだろ。」、完了画面中央を「いい判断だ。」、DEAD 中央を「今月は、終わりだ。」、増額ボタンを「¥50,000。来月もこの調子だ。」、ログアウト見出しを「やめるのか？」、セッション切れ見出しを「離れすぎたな。」など、リヴァイ調 (進撃の巨人のリヴァイの口調をパロディ参照点とした、短文体言止め・終止形限定・上から目線) で全画面統一。「お前」「兵団用語 (任務 / 撤退 / 持ち場)」「金で消す」など強すぎる語彙はコンプラ配慮で除外。
 **AI Response**: spec を全画面分に拡張し、§1.6「コピーシステム」§5「他画面の詳細仕様」§6「共通アクセシビリティ」§9「オープン項目」を追加。ファイル名を `2026-05-25-app-design.md` にリネームしながら commit。続けて 22 タスクの implementation plan を作成し、PR #94 に積んだ。
 **Context**: spec v2.0 と implementation plan の 2 ファイルを `docs/superpowers/` 配下に置いて push 済み。
+
+---
+
+## Construction (Unit D) — Functional Design ステージ開始 / Plan 作成
+**Timestamp**: 2026-05-25T02:00:00Z
+**User Input**: "worktree-add-desingをみて、unitDのfunctional designを進めてほしい。"
+**AI Response**: 着手前に現状確認（git fetch）。Unit D (`suggest`) は develop に成果物なし・関連 PR なしで未着手であることを確認。横串デザインシステム（PR #94 `worktree-add-desing`、develop 未マージ）の `_design-system/{README,design-spec}.md` を読了し Unit D 関連を把握（SUGGESTED 状態 §3.3 = Unit D フロント表出 / `SuggestBubble`「そろそろだろ。」/ useSuggest マウント時 1 回 / 履歴十分判定はバックエンド / README §3 矛盾時デザイン spec 優先）。作業ブランチ起点を AskUserQuestion で確認 → 「develop から新ブランチ（推奨）」を選択。`docs/construction-suggest-functional-design` を develop（最新）から作成。`aidlc-docs/construction/plans/suggest-functional-design-plan.md` を作成し、Standard 深度の確認質問 Q-DF1〜Q-DF10 を [Answer] タグ付きで埋め込み（Q-DF1 履歴十分閾値 / Q-DF2 履歴不足時挙動 / Q-DF3 サジェスト抑制条件 / Q-DF4 InferSuggestion タイムアウト・リトライ / Q-DF5 Bedrock 失敗フォールバック / Q-DF6 Suggestion TTL・保存内容 / Q-DF7 ResolveSuggestion 挙動 / Q-DF8 hook/component 命名突合 / Q-DF9 Title 文言突合 / Q-DF10 取得タイミング）。凍結契約（IF 正）とデザイン spec（視覚正）の突合方針を明記。
+**Context**: ⛔ GATE: Functional Design Plan の Q-DF1〜Q-DF10 回答 + Plan 承認を待機中。
+
+---
+
+## Construction (Unit D) — FD Plan 全 10 問回答完了 / Artifacts 4 ファイル生成
+**Timestamp**: 2026-05-25T02:30:00Z
+**User Inputs**（対話ヒアリング、`interview-style-one-question-at-a-time` に従い 1 問ずつ提示）:
+- Q-DF1〜Q-DF10: いずれも "a" / "ok"（全問 A=推奨を採用）
+- 途中 "サジェストって何" → 機能説明（先回り提案・具体例）で回答後に Q-DF1 を A 確定
+- Plan 承認: "ok"
+**AI Response**: 全問 A 採用。矛盾チェック（10観点）実施、矛盾なし（Q-DF1 5件 ↔ Q-DF5 最頻フォールバックが噛合い、Q-DF8/9 は「契約=IF / spec=視覚」で一貫、Unit C BR-C06/C09/C10 と整合）。Plan 承認後、`aidlc-docs/construction/suggest/functional-design/` に FD 成果物 4 ファイルを生成:
+- **business-logic-model.md**: UC-D-01 GetSuggestion / UC-D-02 ResolveSuggestion 擬似コード、5 シーケンス図（起動成功 / 履歴不足非表示 / Bedrock 失敗フォールバック / 1タップ注文 Resolve / 失効透過FB）、状態モデル、横串・Unit C 相互作用
+- **business-rules.md**: BR-D01〜BR-D20（履歴判定 / Bedrock リトライ・フォールバック / 保存・復元 / フロント・コピー / カテゴリ・セキュリティ・ログ）
+- **domain-entities.md**: Suggestion / SuggestionPlan / SuggestionRecord(GoroPay_Suggestion) / InferSuggestion DTO / OrderHistoryBrief、キー設計、INV-D-1〜5
+- **frontend-components.md**: useSuggestion hook（マウント時1回）/ SuggestBubble（design spec §3.3）、契約⇄design spec 命名対応表、操作フロー、テスト戦略
+**Context**: ⛔ GATE: Functional Design 完了承認（2-option: Request Changes / Continue to NFR Requirements）を待機中。
+
+---
+
+## Construction (Unit D) — Functional Design 完了承認
+**Timestamp**: 2026-05-25T02:40:00Z
+**User Input**: "ok"（2-option 完了ゲートで Continue to Next Stage を選択）
+**AI Response**: Unit D Functional Design を承認として受領。aidlc-state.md に「Unit D `suggest` 進捗」セクションを新設し Functional Design を [x] 完了に更新。FD 成果物 4 種（business-logic-model / business-rules BR-D01〜D20 / domain-entities / frontend-components）確定。次は ② NFR Requirements (Standard) へ。
+**Context**: Functional Design 完了。次ステージ NFR Requirements (Unit D) へ進行。
+
+---
+
+## Construction (Unit D) — NFR Requirements（Plan + 全 8 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T03:30:00Z
+**User Inputs**:
+- "マージした"（PR #100 マージ完了の通知）→ 私が #100 マージ・develop 反映を確認し、最新 develop から `docs/construction-suggest-nfr-requirements` を作成
+- NFR-R 進め方: AskUserQuestion で「#100 マージ後に develop から（推奨）」を選択（per-stage PR）
+- Q-ND1〜Q-ND8: いずれも "a" / "ok"（全問 A 採用、`interview-style-one-question-at-a-time` で 1 問ずつ）
+- Plan 承認 + Artifacts 生成承認: "ok"
+**AI Response**: 先行する Unit C NFR Requirements（NFRC-Cxx）を読了し Bedrock 横串の決定を継承。`suggest-nfr-requirements-plan.md` を作成（Q-ND1〜Q-ND8、Bedrock/Lambda/観測性は Unit C 継承確認、固有論点に集中）。全問 A 採用、矛盾チェック（Unit C 継承整合）OK。`suggest/nfr-requirements/` に成果物 2 種を生成:
+- **nfr-requirements.md**: NFRD-D01〜D20（GetSuggestion p95≤2.5s / Bedrock 1.5s×1 継承 / Suggestion 1RCU1WCU / カスタムメトリクス不実装継承 / 共有 Lambda 256MB継承 / useSuggestion マウント1回 / PBT 軽量 / Bedrock モデル・コスト・PII 継承 / 認証 Unit A 委譲）、Unit C 継承マップ + トレーサビリティ
+- **tech-stack-decisions.md**: Unit A/B/C スタック全面継承（Go/Gin/slog/gopter + bedrockruntime Converse + Next/TanStack/fast-check）、新規技術なし、suggestion module のみ新規
+**Context**: ⛔ GATE: NFR Requirements 完了承認（2-option: Request Changes / Continue to NFR Design）を待機中。
+
+---
+
+## Construction (Unit D) — NFR Requirements 完了承認 / push + PR
+**Timestamp**: 2026-05-25T03:40:00Z
+**User Input**: "それでおk"（2-option ゲートで Continue to Next Stage を承認 + NFR-R ブランチの push + PR 作成に同意）
+**AI Response**: Unit D NFR Requirements を承認として受領。aidlc-state.md の Unit D NFR Requirements を [x] 完了に更新。`docs/construction-suggest-nfr-requirements` を push し develop 向け PR を作成（per-stage PR パターン、PR マージ後に NFR Design へ）。
+**Context**: NFR Requirements 完了。PR レビュー・マージ後に ③ NFR Design (Unit D) へ進行。
+
+---
+
+## Construction (Unit D) — NFR Design（Plan + 全 6 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T04:10:00Z
+**User Inputs**:
+- "マージした"（PR #101 マージ通知）→ #101 マージ・develop 反映を確認、最新 develop から `docs/construction-suggest-nfr-design` 作成
+- Q-DD1: "a" / Q-DD2 以降: "すべてAでいいよ。推奨で"（Q-DD1〜Q-DD6 全 A 採用、`interview-style` で開始し途中から一括）
+**AI Response**: 先行 Unit C NFR Design（P-* 14 パターン / LC-ORDER-* 34 コンポーネント）のカタログを把握し再利用。`suggest-nfr-design-plan.md` 作成（Q-DD1〜Q-DD6）。全 A 採用、矛盾なし。`suggest/nfr-design/` に成果物 2 種を生成:
+- **nfr-design-patterns.md**: Unit C パターン再利用マップ（P-RETRY-01/P-OBS-01〜03/P-INIT-01/P-DI-01/P-MOCK-01/P-FE-LOAD-01 再利用）+ 新規 P-SG-BUILD-01（SuggestionBuilder orchestration）/ P-SG-OBS-01（SuggestLogSummary）/ P-SG-PBT-01（軽量PBT）/ P-SG-FE-01（useSuggestion+SuggestBubble）。P-FE-ERR/TOAST/LOCK は不採用（表示のみ）
+- **logical-components.md**: LC-SUGGEST-01〜11（SuggestService/Handler/DTO/SuggestionStore/SuggestionBuilder/SuggestLogSummary/mock/useSuggestion/SuggestBubble）+ 共有 LC-ORDER-05/07/09/14/15 参照、依存図、NFR トレーサビリティ
+**Context**: ⛔ GATE: NFR Design 完了承認（2-option: Request Changes / Continue to Infrastructure Design）を待機中。
+
+---
+
+## Construction (Unit D) — NFR Design 完了承認 / push + PR
+**Timestamp**: 2026-05-25T04:20:00Z
+**User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
+**AI Response**: Unit D NFR Design を承認として受領。aidlc-state.md の Unit D NFR Design を [x] 完了に更新。`docs/construction-suggest-nfr-design` を push し develop 向け PR を作成（per-stage PR、マージ後に Infrastructure Design へ）。
+**Context**: NFR Design 完了。PR マージ後に ④ Infrastructure Design (Unit D) へ進行。
+
+---
+
+## Construction (Unit D) — Infrastructure Design（Plan + 全 6 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T04:40:00Z
+**User Inputs**:
+- "次に進んで、１つずつ確認して"（#102 マージ済みを確認、最新 develop から `docs/construction-suggest-infrastructure-design` 作成）
+- Q-DI1〜Q-DI6: いずれも "a" / "ok"（全 A、`interview-style` で 1 問ずつ）
+- Plan 承認 + 生成承認: "ok"
+**AI Response**: 先行 Unit C Infrastructure Design（modules 構成: order_history / bedrock〔C/D 共有〕/ observability〔横串〕）を把握し再利用。`suggest-infrastructure-design-plan.md` 作成（Q-DI1〜Q-DI6）。全 A 採用、矛盾なし。`suggest/infrastructure-design/` に成果物 2 種を生成:
+- **infrastructure-design.md**: LC-SUGGEST→AWS マッピング、新規 `modules/suggestion/`（GoroPay_Suggestion: PK suggestionId / TTL expiresAt 30分 / PROVISIONED 1RCU1WCU / GSI なし / SSE）、`GET /api/suggest` ルート追記、lambda_api への suggestion policy + DDB_TABLE_SUGGESTION env 追記、bedrock/observability 再利用（新規 IAM・アラームなし）、tftest
+- **deployment-architecture.md**: 共有パイプライン/共有 API Lambda/Amplify 相乗り、新規は GoroPay_Suggestion テーブルのみ、デプロイ順序（テーブル/env → コード）、可用性独立（suggest 停止でも注文に影響なし）
+**Context**: ⛔ GATE: Infrastructure Design 完了承認（2-option: Request Changes / Continue to Code Generation）を待機中。
+
+---
+
+## Construction (Unit D) — Infrastructure Design 完了承認 / push + PR
+**Timestamp**: 2026-05-25T04:50:00Z
+**User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
+**AI Response**: Unit D Infrastructure Design を承認として受領。aidlc-state.md の Unit D Infrastructure Design を [x] 完了に更新。`docs/construction-suggest-infrastructure-design` を push し develop 向け PR を作成（per-stage PR、マージ後に最終 Code Generation へ）。
+**Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
 
 ---
 

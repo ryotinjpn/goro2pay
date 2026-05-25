@@ -41,7 +41,7 @@
 - [x] NFR Requirements (Unit B, 2026-05-22) — nfr-requirements.md / tech-stack-decisions.md 生成済み、ユーザ承認待ち
 - [x] NFR Design (Unit B, 2026-05-22) — nfr-design-patterns.md / logical-components.md 生成済み、unit-interfaces.md 更新済み
 - [x] Infrastructure Design (Unit B, 2026-05-22) — infrastructure-design.md / deployment-architecture.md 生成済み
-- [ ] Code Generation (Unit B) - **EXECUTE**
+- [x] Code Generation (Unit B, 2026-05-25) — Backend (apps/api/internal/wallet/ + 4 Repo + cmd/scheduler) + Frontend (hooks 2 + components 3 + state 1 + page + tests) + Infrastructure (modules/budget/ 全 8 + tests 4) + Docs (5 サマリ)。約 50 ファイル生成。検証: Backend Go test 17 packages PASS / Frontend Vitest 75 PASS / TypeScript PASS / Terraform validate + tftest 11 + 既存 9 PASS / bootstrap 14MB build PASS。worktree feat/unit-b-code-generation。ユーザ承認待ち
 
 **Unit A `auth` 進捗** (worktree: future-unit-a)
 - [x] Functional Design (Unit A, 2026-05-21, PR #61, #66) — Cognito + Pre Sign-up + JWT 検証戦略確定
@@ -57,12 +57,19 @@
 - [x] Infrastructure Design (Unit C, 2026-05-24, PR #80 マージ済み) — infrastructure-design.md / deployment-architecture.md 生成済み、Q-I1〜Q-I13 全 13 問推奨案で確定（ユーザ要請の一括回答 + Q-I1/Q-I11/Q-I12 を terraform-module-design 準拠に見直し）。新規 module 3 種（order_history / bedrock / observability）+ 既存 2 module（api_gateway / lambda_api）への追記
 - [x] Code Generation (Unit C, 2026-05-24) — 約 101 ファイル生成 (Backend 41 + Frontend 24 + Infra 28 + Docs 8)、Step 1〜19 全完了。Backend Go テスト全パス、Frontend Vitest 44 全パス、Terraform tftest 12 全パス。ユーザ承認待ち
 
-**他 Unit (worktree 別、Unit D/E)**
-- [ ] Functional Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] NFR Requirements (per-unit, Unit D/E) - **EXECUTE**
-- [ ] NFR Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit, Unit D/E) - **EXECUTE**
-- [ ] Code Generation (per-unit, Unit D/E) - **EXECUTE**
+**Unit D `suggest` 進捗** (branch: docs/construction-suggest-functional-design)
+- [x] Functional Design (Unit D, 2026-05-25) — business-logic-model / business-rules (BR-D01〜D20) / domain-entities / frontend-components 生成済み。Q-DF1〜Q-DF10 全 10 問対話ヒアリング完了（全 A）。design-spec §3.3（PR #94）/ 凍結契約 §5 整合、契約⇄spec 命名対応表を明記。ユーザ承認済み（2026-05-25）
+- [x] NFR Requirements (Unit D, 2026-05-25) — nfr-requirements.md (NFRD-D01〜D20) / tech-stack-decisions.md 生成済み。Q-ND1〜Q-ND8 全 8 問対話ヒアリング完了（全 A）。Bedrock 横串は Unit C NFRC-Cxx を継承、新規技術なし。ユーザ承認済み
+- [x] NFR Design (Unit D, 2026-05-25) — nfr-design-patterns.md (P-SG-BUILD-01 / P-SG-OBS-01 / P-SG-PBT-01 / P-SG-FE-01 + Unit C パターン再利用) / logical-components.md (LC-SUGGEST-01〜11 + 共有 LC-ORDER-* 参照) 生成済み。Q-DD1〜Q-DD6 全 A。ユーザ承認済み
+- [x] Infrastructure Design (Unit D, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 modules/suggestion/（GoroPay_Suggestion 1RCU1WCU/TTL30分）+ GET /api/suggest ルート + lambda_api policy/env 追記。bedrock/observability は Unit C module 再利用。Q-DI1〜Q-DI6 全 A。ユーザ承認済み
+- [ ] Code Generation (Unit D) - **EXECUTE**
+
+**Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
+- [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認済み
+- [ ] NFR Requirements (Unit E) - **EXECUTE**
+- [ ] NFR Design (Unit E) - **EXECUTE**
+- [ ] Infrastructure Design (Unit E) - **EXECUTE**
+- [ ] Code Generation (Unit E) - **EXECUTE**
 
 **横串デザインシステム** (worktree: add-desing)
 - [x] Design Spec v1.0 (2026-05-24) — メイン画面のみの design-spec
