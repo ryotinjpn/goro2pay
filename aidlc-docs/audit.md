@@ -1224,3 +1224,15 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
 
 ---
+
+## Construction (Unit D) — Code Generation Part 1（Plan + 全 4 問回答）
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Inputs**:
+- "マージした"（#103）→ 最新 develop から `docs/construction-suggest-code-generation` 作成。既存コード構造調査で BedrockAdapter に InferSuggestion 未実装・FallbackProvider.BuildFromHistory 既存・OrderService が SuggestResolver 未配線（ギャップ）を確認
+- Q-DG1: "コード見せて" → handler/service 実コード提示後 "bで"（B: OrderService に SuggestResolver 注入）
+- Q-DG2: "小さいって大体どれくらい" → 約 38 ファイル見積提示後 "b"（1 PR にまとめる）
+- Q-DG3: "a"（InferOrderPlan プロンプト様式踏襲）/ Q-DG4: "a"（レイヤ順生成+検証）
+**AI Response**: `suggest-code-generation-plan.md` 作成（ファイル manifest 約 38 + Q-DG1〜Q-DG4 + Part 2 手順 Step 1〜11）。Q-DG1=B により Unit C の order/service.go・NewService・main.go に SuggestResolver 注入の変更が入ることを明記。Part 1 完了、Part 2（実コード生成）へ移行。
+**Context**: ⛔ Code Generation Part 2（Backend → Frontend → Infra → サマリ）実行中。
+
+---
