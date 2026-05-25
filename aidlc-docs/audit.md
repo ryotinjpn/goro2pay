@@ -1246,3 +1246,27 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: Infrastructure Design 完了。PR マージ後に ⑤ Code Generation (Unit D) へ進行。
 
 ---
+
+## Construction (Unit E) — NFR Requirements PR 作成
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "ブランチ切ってprつくって"（前セッション末尾の継続）
+**AI Response**: `docs/construction-metrics-nfr-requirements` ブランチを push し PR #104 を作成。NFR 要件 E01〜E10 / tech-stack-decisions.md を含む。
+**Context**: Unit E NFR Requirements ステージ完了。
+
+---
+
+## Construction (Unit E) — NFR Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:10:00Z
+**User Input**: "次お願いします"
+**AI Response**: Q-DD1〜Q-DD5 を全推奨選択肢で確定。nfr-design-patterns.md（P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種）/ logical-components.md（LC-ME-01〜11）を生成。aidlc-state.md の Unit E NFR Design を [x] に更新。
+**Context**: Unit E NFR Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:20:00Z
+**User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic tf テストファイル（4 assert 追記）のみ。
+**Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
+
+---
