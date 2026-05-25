@@ -1095,3 +1095,34 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は PR 分割コミット作業 (Unit C と同様、Backend / Frontend / Infrastructure / Docs の 4 PR 想定)。
 
 ---
+
+## Construction (Unit D) — Functional Design ステージ開始 / Plan 作成
+**Timestamp**: 2026-05-25T02:00:00Z
+**User Input**: "worktree-add-desingをみて、unitDのfunctional designを進めてほしい。"
+**AI Response**: 着手前に現状確認（git fetch）。Unit D (`suggest`) は develop に成果物なし・関連 PR なしで未着手であることを確認。横串デザインシステム（PR #94 `worktree-add-desing`、develop 未マージ）の `_design-system/{README,design-spec}.md` を読了し Unit D 関連を把握（SUGGESTED 状態 §3.3 = Unit D フロント表出 / `SuggestBubble`「そろそろだろ。」/ useSuggest マウント時 1 回 / 履歴十分判定はバックエンド / README §3 矛盾時デザイン spec 優先）。作業ブランチ起点を AskUserQuestion で確認 → 「develop から新ブランチ（推奨）」を選択。`docs/construction-suggest-functional-design` を develop（最新）から作成。`aidlc-docs/construction/plans/suggest-functional-design-plan.md` を作成し、Standard 深度の確認質問 Q-DF1〜Q-DF10 を [Answer] タグ付きで埋め込み（Q-DF1 履歴十分閾値 / Q-DF2 履歴不足時挙動 / Q-DF3 サジェスト抑制条件 / Q-DF4 InferSuggestion タイムアウト・リトライ / Q-DF5 Bedrock 失敗フォールバック / Q-DF6 Suggestion TTL・保存内容 / Q-DF7 ResolveSuggestion 挙動 / Q-DF8 hook/component 命名突合 / Q-DF9 Title 文言突合 / Q-DF10 取得タイミング）。凍結契約（IF 正）とデザイン spec（視覚正）の突合方針を明記。
+**Context**: ⛔ GATE: Functional Design Plan の Q-DF1〜Q-DF10 回答 + Plan 承認を待機中。
+
+---
+
+## Construction (Unit D) — FD Plan 全 10 問回答完了 / Artifacts 4 ファイル生成
+**Timestamp**: 2026-05-25T02:30:00Z
+**User Inputs**（対話ヒアリング、`interview-style-one-question-at-a-time` に従い 1 問ずつ提示）:
+- Q-DF1〜Q-DF10: いずれも "a" / "ok"（全問 A=推奨を採用）
+- 途中 "サジェストって何" → 機能説明（先回り提案・具体例）で回答後に Q-DF1 を A 確定
+- Plan 承認: "ok"
+**AI Response**: 全問 A 採用。矛盾チェック（10観点）実施、矛盾なし（Q-DF1 5件 ↔ Q-DF5 最頻フォールバックが噛合い、Q-DF8/9 は「契約=IF / spec=視覚」で一貫、Unit C BR-C06/C09/C10 と整合）。Plan 承認後、`aidlc-docs/construction/suggest/functional-design/` に FD 成果物 4 ファイルを生成:
+- **business-logic-model.md**: UC-D-01 GetSuggestion / UC-D-02 ResolveSuggestion 擬似コード、5 シーケンス図（起動成功 / 履歴不足非表示 / Bedrock 失敗フォールバック / 1タップ注文 Resolve / 失効透過FB）、状態モデル、横串・Unit C 相互作用
+- **business-rules.md**: BR-D01〜BR-D20（履歴判定 / Bedrock リトライ・フォールバック / 保存・復元 / フロント・コピー / カテゴリ・セキュリティ・ログ）
+- **domain-entities.md**: Suggestion / SuggestionPlan / SuggestionRecord(GoroPay_Suggestion) / InferSuggestion DTO / OrderHistoryBrief、キー設計、INV-D-1〜5
+- **frontend-components.md**: useSuggestion hook（マウント時1回）/ SuggestBubble（design spec §3.3）、契約⇄design spec 命名対応表、操作フロー、テスト戦略
+**Context**: ⛔ GATE: Functional Design 完了承認（2-option: Request Changes / Continue to NFR Requirements）を待機中。
+
+---
+
+## Construction (Unit D) — Functional Design 完了承認
+**Timestamp**: 2026-05-25T02:40:00Z
+**User Input**: "ok"（2-option 完了ゲートで Continue to Next Stage を選択）
+**AI Response**: Unit D Functional Design を承認として受領。aidlc-state.md に「Unit D `suggest` 進捗」セクションを新設し Functional Design を [x] 完了に更新。FD 成果物 4 種（business-logic-model / business-rules BR-D01〜D20 / domain-entities / frontend-components）確定。次は ② NFR Requirements (Standard) へ。
+**Context**: Functional Design 完了。次ステージ NFR Requirements (Unit D) へ進行。
+
+---
