@@ -54,13 +54,13 @@ Unit D `suggest`（学習・先回り）の **業務ロジック設計**（技�
 
 ユーザ承認後、以下の順で実施する。
 
-- [ ] §3 の確認質問（Q-DF1〜Q-DF10）にユーザが回答
-- [ ] 回答の曖昧さ・矛盾を点検（特に契約 ⇄ デザイン spec の突合）、必要なら追加質問
-- [ ] ユーザによる Plan 承認（Part 1 完了）
-- [ ] `aidlc-docs/construction/suggest/functional-design/business-logic-model.md` 生成
-- [ ] `aidlc-docs/construction/suggest/functional-design/business-rules.md` 生成
-- [ ] `aidlc-docs/construction/suggest/functional-design/domain-entities.md` 生成
-- [ ] `aidlc-docs/construction/suggest/functional-design/frontend-components.md` 生成
+- [x] §3 の確認質問（Q-DF1〜Q-DF10）にユーザが回答（全問 A）
+- [x] 回答の曖昧さ・矛盾を点検（特に契約 ⇄ デザイン spec の突合）、必要なら追加質問（矛盾なし）
+- [x] ユーザによる Plan 承認（Part 1 完了、2026-05-25「ok」）
+- [x] `aidlc-docs/construction/suggest/functional-design/business-logic-model.md` 生成
+- [x] `aidlc-docs/construction/suggest/functional-design/business-rules.md` 生成
+- [x] `aidlc-docs/construction/suggest/functional-design/domain-entities.md` 生成
+- [x] `aidlc-docs/construction/suggest/functional-design/frontend-components.md` 生成
 - [ ] Functional Design 完了メッセージ提示（2-option ゲート）
 - [ ] aidlc-state.md / audit.md 更新、#65 とは別の本ブランチ（develop 起点）へコミット
 
@@ -80,7 +80,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - C) 件数ではなく「直近 N 日に注文あり」で判定
 - D) Other
 
-[Answer]:
+[Answer]: **A**（直近 30 日で 5 件以上ならサジェスト生成、未満は出さない。Unit C BR-C06 と統一）
 
 #### Q-DF2 — 履歴不足時（閾値未満）の挙動
 履歴が閾値未満のとき。Unit C の注文フローは `Default()`（架空 5 店舗）にフォールバックするが、サジェストは US-2-02 で「出さない」が要件。
@@ -89,7 +89,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - B) `Default()` で適当なサジェストを出す（order と同じ挙動）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（履歴不足時は `hasSuggestion=false` を返す。`Default()` フォールバックは使わない。US-2-02 準拠）
 
 #### Q-DF3 — サジェスト抑制条件（直近注文済み）
 デザイン spec §3.2 は「直近 3 時間以内に同カテゴリ注文済みならサジェスト無効（IDLE 表示）」とする。これを Unit D バックエンドで判定するか。
@@ -99,7 +99,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - C) フロント側で抑制（バックエンドは常に返す）
 - D) Other（時間窓を変える等）
 
-[Answer]:
+[Answer]: **A**（バックエンドで「直近 3 時間以内に同カテゴリ注文あり」なら `hasSuggestion=false`。design spec §3.2 準拠、時間窓 3h）
 
 ### —— 連携 / Bedrock ——
 
@@ -111,7 +111,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - C) NFR Requirements で数値確定（FD では「リトライあり/フォールバックあり」の方針のみ）
 - D) Other
 
-[Answer]:
+[Answer]: **A**（order と同じ 1.5s/回・1 リトライ。共有 BedrockAdapter ポリシーの一貫性。NFR Requirements で SLI 数値を追認）
 
 #### Q-DF5 — Bedrock 失敗時のフォールバック
 `InferSuggestion` がリトライ後も失敗したとき。
@@ -120,7 +120,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - B) 即 `hasSuggestion=false`（フォールバックせず、サジェストを諦める）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（`FallbackSuggestProvider.BuildFromHistory` で最頻パターンを生成。不可なら `hasSuggestion=false`。`FallbackUsed=true` は内部ログのみ、API 応答には出さず透過）
 
 ### —— ドメインモデル / 保存 ——
 
@@ -131,7 +131,7 @@ GetSuggestion が「履歴十分でサジェストを出す」と判定する閾
 - B) TTL を変更（[Answer] に値・根拠）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（`suggestionId`=ULID、TTL 30 分、payload=`{userId, plan{storeName,menuName,amount,category}, createdAt}`。凍結契約 §5.3 準拠）
 
 #### Q-DF7 — `ResolveSuggestion` の挙動（Unit C が呼ぶ）
 Unit C `OrderService` が 1 タップ注文時に `ResolveSuggestion(suggestionID)` を呼ぶ。Unit C 側は BR-C09（保存値そのまま使用）/ BR-C10（失効時は透過的に Bedrock フローへ）。
@@ -139,7 +139,7 @@ Unit C `OrderService` が 1 タップ注文時に `ResolveSuggestion(suggestionI
 - A) **`suggestionId` で `GoroPay_Suggestion` を Get → あれば `SuggestionPlan` 返却 / TTL 失効・不在なら `nil` 返却（Unit C が透過フォールバック）。Bedrock 再検証なし（Unit C BR-C09 と整合）** **(推奨)**
 - B) Other
 
-[Answer]:
+[Answer]: **A**（`suggestionId` で Get → 有効なら `SuggestionPlan` 返却 / 失効・不在なら `nil`（Unit C が透過フォールバック）。Bedrock 再検証なし。Unit C BR-C09/BR-C10 と整合）
 
 ### —— フロントエンド ——
 
@@ -150,7 +150,7 @@ Unit C `OrderService` が 1 タップ注文時に `ResolveSuggestion(suggestionI
 - B) デザイン spec 側の命名（useSuggest）に寄せる（契約更新が必要）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（IF=凍結契約 `useSuggestion`/`GET /api/suggest`、視覚=design spec `SuggestBubble`。frontend-components.md に対応表を明記）
 
 #### Q-DF9 — `Suggestion.Title` フィールドの扱い（契約 ⇄ デザイン spec の文言差）
 契約 §5.1 例は `Title: "そろそろご飯めんどくさいですよね？"`、デザイン spec §3.3 吹き出しは固定 `そろそろだろ。`（README §3: 矛盾時デザイン spec 優先）。
@@ -159,7 +159,7 @@ Unit C `OrderService` が 1 タップ注文時に `ResolveSuggestion(suggestionI
 - B) API の `Title` をそのまま表示（design spec の吹き出しを動的化）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（API は `Title` を返すが、フロント表示は固定「そろそろだろ。」を優先。`Title` は将来の文言バリエーション用に契約維持。design system 優先原則）
 
 #### Q-DF10 — サジェスト取得タイミング
 デザイン spec §2.4「マウント時に 1 回 `GET /api/suggest`」。spec §9 で定期再評価は将来検討。
@@ -168,7 +168,7 @@ Unit C `OrderService` が 1 タップ注文時に `ResolveSuggestion(suggestionI
 - B) 定期再評価あり（[Answer] に間隔）
 - C) Other
 
-[Answer]:
+[Answer]: **A**（メイン画面マウント時に 1 回だけ `GET /api/suggest`、再評価・ポーリングなし。`useSuggestion` は staleTime を長めに設定。spec §2.4 準拠）
 
 ---
 

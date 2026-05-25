@@ -1103,3 +1103,18 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: Functional Design Plan の Q-DF1〜Q-DF10 回答 + Plan 承認を待機中。
 
 ---
+
+## Construction (Unit D) — FD Plan 全 10 問回答完了 / Artifacts 4 ファイル生成
+**Timestamp**: 2026-05-25T02:30:00Z
+**User Inputs**（対話ヒアリング、`interview-style-one-question-at-a-time` に従い 1 問ずつ提示）:
+- Q-DF1〜Q-DF10: いずれも "a" / "ok"（全問 A=推奨を採用）
+- 途中 "サジェストって何" → 機能説明（先回り提案・具体例）で回答後に Q-DF1 を A 確定
+- Plan 承認: "ok"
+**AI Response**: 全問 A 採用。矛盾チェック（10観点）実施、矛盾なし（Q-DF1 5件 ↔ Q-DF5 最頻フォールバックが噛合い、Q-DF8/9 は「契約=IF / spec=視覚」で一貫、Unit C BR-C06/C09/C10 と整合）。Plan 承認後、`aidlc-docs/construction/suggest/functional-design/` に FD 成果物 4 ファイルを生成:
+- **business-logic-model.md**: UC-D-01 GetSuggestion / UC-D-02 ResolveSuggestion 擬似コード、5 シーケンス図（起動成功 / 履歴不足非表示 / Bedrock 失敗フォールバック / 1タップ注文 Resolve / 失効透過FB）、状態モデル、横串・Unit C 相互作用
+- **business-rules.md**: BR-D01〜BR-D20（履歴判定 / Bedrock リトライ・フォールバック / 保存・復元 / フロント・コピー / カテゴリ・セキュリティ・ログ）
+- **domain-entities.md**: Suggestion / SuggestionPlan / SuggestionRecord(GoroPay_Suggestion) / InferSuggestion DTO / OrderHistoryBrief、キー設計、INV-D-1〜5
+- **frontend-components.md**: useSuggestion hook（マウント時1回）/ SuggestBubble（design spec §3.3）、契約⇄design spec 命名対応表、操作フロー、テスト戦略
+**Context**: ⛔ GATE: Functional Design 完了承認（2-option: Request Changes / Continue to NFR Requirements）を待機中。
+
+---
