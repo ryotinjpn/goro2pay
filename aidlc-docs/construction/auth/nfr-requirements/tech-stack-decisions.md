@@ -92,7 +92,7 @@
 | サービス | 用途 | 主要設定（Infrastructure Design で詳細確定） |
 |---|---|---|
 | **Amazon Cognito User Pool** | 認証主体 | Sign-in attribute = email, MFA OFF, password policy = A-NFR-SEC-02 準拠, Token Validity = A-NFR-SEC-03 準拠, Pre Sign-up Lambda Trigger = auto-confirm |
-| **Amazon Cognito App Client** | Frontend 認証クライアント | Auth Flow = USER_PASSWORD_AUTH, Refresh Token 30 日 |
+| **Amazon Cognito App Client** | Frontend 認証クライアント | Auth Flow = USER_SRP_AUTH（平文パスワードを送らない / Amplify v6 default）, Refresh Token 30 日 |
 | **AWS Lambda** | Pre Sign-up Trigger（auto-confirm） | Go ランタイム or Node.js ランタイム、5 行程度のシンプル実装 |
 | **Amazon API Gateway (REST)** | API ゲート | Cognito Authorizer を全認証必須エンドポイントに適用、Stage Throttling = 100 req/s / Burst 200 |
 | **AWS Amplify Hosting** | Frontend 配信 | Application Design 確定（PR #10）、Amplify Auth 統合の利点を活用 |
