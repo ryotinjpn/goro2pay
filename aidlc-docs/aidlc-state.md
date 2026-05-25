@@ -69,7 +69,7 @@
 - [x] NFR Requirements (Unit E, 2026-05-25) — nfr-requirements.md (NFRE-E01〜E10) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N5 全 5 問ヒアリング完了、ユーザ承認済み
 - [x] NFR Design (Unit E, 2026-05-25) — nfr-design-patterns.md (P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種) / logical-components.md (LC-ME-01〜11 の 11 コンポーネント) 生成済み、Q-DD1〜Q-DD5 全 A/B 確定、ユーザ承認待ち
 - [x] Infrastructure Design (Unit E, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 module なし、routes.tf に 3 route 追記 + tf テスト 4 assert 追記のみ。Q-I1〜Q-I3 全 A。ユーザ承認待ち
-- [ ] Code Generation (Unit E) - **EXECUTE**
+- [x] Code Generation (Unit E, 2026-05-25) — 全 26 Step 完了。Backend (metrics/budget_raise 2 パッケージ + handlers 2 + main.go DI) + Frontend (hooks 2 + components 2 + page 1 + tests 4 + page.tsx 修正) + Infrastructure (routes.tf 3 route + tf テスト 4 assert) + Docs (code-summary.md)。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。ユーザ承認待ち
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**

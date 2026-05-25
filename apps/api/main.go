@@ -19,8 +19,10 @@ import (
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/adapters/delivery"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/adapters/fallback"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/auth"
+	budgetraise "github.com/ryotinjpn/goro2pay/apps/api/internal/budget_raise"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/handlers"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/logging"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/metrics"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/middleware"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/order"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/budget_reset_log"
@@ -103,6 +105,12 @@ func main() {
 	suggestHandler := handlers.NewSuggestHandler(suggestSvc)
 	walletHandler := wallet.NewHandler(walletSvc)
 
+	// Unit E: MetricsService + BudgetRaiseService (P-DI-01)
+	metricsSvc := metrics.NewService(settingsRepo, walletRepo, orderHistoryRepo)
+	metricsHandler := handlers.NewMetricsHandler(metricsSvc)
+	budgetRaiseSvc := budgetraise.NewService(settingsRepo, settingsRepo)
+	budgetRaiseHandler := handlers.NewBudgetRaiseHandler(budgetRaiseSvc)
+
 	// /health は認証不要 (LWA / load balancer 用)
 	r.GET("/health", handlers.Health)
 
@@ -117,7 +125,10 @@ func main() {
 		api.POST("/wallet/budget", walletHandler.SetBudget)
 		// Unit D (suggest) ルート
 		api.GET("/suggest", suggestHandler.GetSuggestion)
-		// Unit E が後続 PR で route を追加する
+		// Unit E (metrics) ルート
+		api.GET("/metrics", metricsHandler.GetMetrics)
+		api.GET("/budget/raise/recommendation", budgetRaiseHandler.GetRecommendation)
+		api.POST("/budget/raise", budgetRaiseHandler.RaiseBudget)
 	}
 
 	// LWA は localhost:8080 を期待する

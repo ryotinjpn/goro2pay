@@ -83,3 +83,33 @@ resource "aws_apigatewayv2_route" "get_suggest" {
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
+
+# ----------------------------------------------------------------------------
+# Unit E: GET /api/metrics / GET /api/budget/raise/recommendation /
+#          POST /api/budget/raise (LC-ME-02 / LC-ME-04)
+# 既存 api_lambda integration を再利用。全エンドポイント JWT 認証必須。
+# ----------------------------------------------------------------------------
+
+resource "aws_apigatewayv2_route" "get_metrics" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/metrics"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "get_budget_raise_recommendation" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/budget/raise/recommendation"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "post_budget_raise" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /api/budget/raise"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
