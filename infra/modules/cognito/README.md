@@ -5,7 +5,7 @@ Amazon Cognito User Pool + App Client + Pre Sign-up Lambda Trigger をまとめ�
 ## リソース
 
 - `aws_cognito_user_pool.main` — User Pool (PW 8 文字+英大小+数字, MFA OFF, deletion_protection INACTIVE)
-- `aws_cognito_user_pool_client.web` — App Client (no secret, Token 8h/30d)
+- `aws_cognito_user_pool_client.web` — App Client (no secret, Token 8h/30d, auth flows: SRP + REFRESH_TOKEN)
 - `aws_lambda_function.pre_signup` — Pre Sign-up Trigger (Node.js 20 arm64, auto-confirm)
 - `aws_lambda_permission.cognito_invoke_pre_signup`
 - `aws_iam_role.pre_signup_lambda` + inline policy (CloudWatch Logs のみ)
