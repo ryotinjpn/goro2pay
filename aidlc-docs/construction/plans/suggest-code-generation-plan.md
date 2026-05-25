@@ -119,11 +119,11 @@ Part 2（実コード生成）は大規模。どう進めるか。
 
 ## 4. 作業手順（Part 2、承認後に実行）
 
-- [ ] Step 1: 共有 BedrockAdapter に InferSuggestion + prompt + mock 追加
-- [ ] Step 2: suggest パッケージ生成（types/builder/service/logsummary + tests + PBT）
-- [ ] Step 3: suggestion repository 生成（repository/inmemory + tests）
-- [ ] Step 4: suggest_handler 生成 + main.go 配線（route + DI + Q-DG1 の order 接続）
-- [ ] Step 5: Backend 検証（`go build` / `go test` / `go vet`）
+- [x] Step 1: 共有 BedrockAdapter に InferSuggestion + prompt + mock 追加（inferWithPrompt 共通化、InferOrderPlan 挙動保持）
+- [x] Step 2: suggest パッケージ生成（types/builder/service/logsummary/order_adapter + service_test/builder_test/pbt_test）
+- [x] Step 3: suggestion repository 生成（repository/inmemory + repository_test）
+- [x] Step 4: suggest_handler 生成 + main.go 配線（GET /api/suggest route + DI + Q-DG1=B の order SuggestResolver 接続）
+- [x] Step 5: Backend 検証（`go build` PASS / `go test ./...` 16 pkg PASS / `go vet` PASS / `gofmt` 適用）
 - [ ] Step 6: Frontend（useSuggestion / SuggestBubble / GoroButton 連携 + tests）
 - [ ] Step 7: Frontend 検証（`vitest` / `tsc --noEmit`）
 - [ ] Step 8: Infra（modules/suggestion + routes/envs 追記 + tftest）

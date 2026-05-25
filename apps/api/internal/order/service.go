@@ -26,11 +26,12 @@ type OrderService interface {
 // OrderHistoryRepository を interface として受け取り、本体実装にもテスト
 // (PBT / 統合) にも mock を差し替え可能にする。
 type Service struct {
-	historyRepo orderhistory.OrderHistoryRepository
-	planBuilder PlanBuilder
-	delivery    delivery.DeliveryAdapter
-	wallet      WalletService
-	now         func() time.Time // テスト時刻固定用 (注入式)
+	historyRepo     orderhistory.OrderHistoryRepository
+	planBuilder     PlanBuilder
+	delivery        delivery.DeliveryAdapter
+	wallet          WalletService
+	suggestResolver SuggestResolver  // Unit D 配線 (任意、未設定時は Bedrock 推論のみ)
+	now             func() time.Time // テスト時刻固定用 (注入式)
 }
 
 // NewService は production 用 Service を返す。
@@ -95,13 +96,30 @@ func (s *Service) PlaceOrder(ctx context.Context, userID string, req PlaceOrderR
 	}
 	summary.SetHistoryCount(len(history))
 
-	// 2. PlanBuilder で plan 生成
+	// 2. plan 生成: suggestionId があれば保存済み提案を優先 (Q-DG1=B / FD §2.3 / BR-C09)、
+	//    失効・未配線・解決失敗時は通常の Bedrock 推論にフォールバック (BR-C10、透過)。
 	historyForPlan := toServiceHistory(history)
-	planResult, _, err := observability.Measure(ctx, "plan_build", func() (*Plan, error) {
-		return s.planBuilder.Build(ctx, historyForPlan, dayOfWeek, req.Category)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("plan: %w", err)
+	var planResult *Plan
+	if req.SuggestionID != nil && s.suggestResolver != nil {
+		if resolved, rerr := s.suggestResolver.ResolveSuggestion(ctx, *req.SuggestionID); rerr == nil && resolved != nil {
+			planResult = &Plan{
+				StoreName:         resolved.StoreName,
+				MenuName:          resolved.MenuName,
+				Amount:            resolved.Amount,
+				Category:          resolved.Category,
+				Source:            "suggestion",
+				FallbackTriggered: false,
+			}
+		}
+	}
+	if planResult == nil {
+		built, _, berr := observability.Measure(ctx, "plan_build", func() (*Plan, error) {
+			return s.planBuilder.Build(ctx, historyForPlan, dayOfWeek, req.Category)
+		})
+		if berr != nil {
+			return nil, fmt.Errorf("plan: %w", berr)
+		}
+		planResult = built
 	}
 	summary.SetBedrockLatencyMs(planResult.BedrockLatencyMs)
 	summary.SetBedrockAttempt(planResult.BedrockAttempt)

@@ -46,6 +46,37 @@ func BuildPrompt(history []HistoryItem, dayOfWeek string, category string) (stri
 	return b.String(), nil
 }
 
+// BuildSuggestPrompt は Bedrock Converse API に渡す「先回りサジェスト」用の
+// ユーザメッセージ本文を生成する (Unit D)。
+//
+// InferOrderPlan の BuildPrompt と同じ出力フォーマット (JSON 1 オブジェクト) を
+// 採用し、ParsePlanResponse を共有する (Q-DG3=A)。PII は含めない (NFRD-D16)。
+// 注文用との差分は「起動時に履歴を踏まえ "次に頼みそうなもの" を先回り提案する」
+// という指示文のみ。
+func BuildSuggestPrompt(history []HistoryItem, dayOfWeek string) (string, error) {
+	historyJSON, err := json.Marshal(history)
+	if err != nil {
+		return "", fmt.Errorf("marshal history: %w", err)
+	}
+
+	var b strings.Builder
+	b.WriteString("あなたは「人をダメにする」食事代行アプリのアシスタントです。\n")
+	b.WriteString("以下のユーザの直近の注文履歴と現在の曜日を踏まえ、ユーザがアプリを開いた瞬間に「次に頼みそうな」食事を 1 つ先回りで JSON 提案してください。\n")
+	b.WriteString("履歴の傾向 (曜日・店舗・メニューの偏り) を最優先で反映すること。\n\n")
+	b.WriteString("## 履歴\n")
+	b.Write(historyJSON)
+	b.WriteString("\n\n## 現在の曜日\n")
+	b.WriteString(dayOfWeek)
+	b.WriteString("\n\n## 出力フォーマット (JSON のみ、それ以外の文字列は一切含めないこと)\n")
+	b.WriteString(`{
+  "storeName": "店舗名 (短く)",
+  "menuName": "メニュー名",
+  "amount": 整数 (円、500〜3000 の範囲),
+  "category": "food"
+}`)
+	return b.String(), nil
+}
+
 // BedrockPlanResponse は Bedrock の出力 JSON をパースした構造体。
 type BedrockPlanResponse struct {
 	StoreName string `json:"storeName"`
