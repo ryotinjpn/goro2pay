@@ -1183,3 +1183,23 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: NFR Requirements 完了。PR レビュー・マージ後に ③ NFR Design (Unit D) へ進行。
 
 ---
+
+## Construction (Unit D) — NFR Design（Plan + 全 6 問回答 + Artifacts 生成）
+**Timestamp**: 2026-05-25T04:10:00Z
+**User Inputs**:
+- "マージした"（PR #101 マージ通知）→ #101 マージ・develop 反映を確認、最新 develop から `docs/construction-suggest-nfr-design` 作成
+- Q-DD1: "a" / Q-DD2 以降: "すべてAでいいよ。推奨で"（Q-DD1〜Q-DD6 全 A 採用、`interview-style` で開始し途中から一括）
+**AI Response**: 先行 Unit C NFR Design（P-* 14 パターン / LC-ORDER-* 34 コンポーネント）のカタログを把握し再利用。`suggest-nfr-design-plan.md` 作成（Q-DD1〜Q-DD6）。全 A 採用、矛盾なし。`suggest/nfr-design/` に成果物 2 種を生成:
+- **nfr-design-patterns.md**: Unit C パターン再利用マップ（P-RETRY-01/P-OBS-01〜03/P-INIT-01/P-DI-01/P-MOCK-01/P-FE-LOAD-01 再利用）+ 新規 P-SG-BUILD-01（SuggestionBuilder orchestration）/ P-SG-OBS-01（SuggestLogSummary）/ P-SG-PBT-01（軽量PBT）/ P-SG-FE-01（useSuggestion+SuggestBubble）。P-FE-ERR/TOAST/LOCK は不採用（表示のみ）
+- **logical-components.md**: LC-SUGGEST-01〜11（SuggestService/Handler/DTO/SuggestionStore/SuggestionBuilder/SuggestLogSummary/mock/useSuggestion/SuggestBubble）+ 共有 LC-ORDER-05/07/09/14/15 参照、依存図、NFR トレーサビリティ
+**Context**: ⛔ GATE: NFR Design 完了承認（2-option: Request Changes / Continue to Infrastructure Design）を待機中。
+
+---
+
+## Construction (Unit D) — NFR Design 完了承認 / push + PR
+**Timestamp**: 2026-05-25T04:20:00Z
+**User Input**: "ok"（2-option ゲートで Continue to Next Stage を承認 + push/PR 同意）
+**AI Response**: Unit D NFR Design を承認として受領。aidlc-state.md の Unit D NFR Design を [x] 完了に更新。`docs/construction-suggest-nfr-design` を push し develop 向け PR を作成（per-stage PR、マージ後に Infrastructure Design へ）。
+**Context**: NFR Design 完了。PR マージ後に ④ Infrastructure Design (Unit D) へ進行。
+
+---
