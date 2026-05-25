@@ -14,6 +14,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -45,6 +47,24 @@ type OrderHistoryRepository interface {
 	Insert(ctx context.Context, record *OrderRecord) error
 	GetItem(ctx context.Context, userID, orderID, orderedAt string) (*OrderRecord, error)
 	Query(ctx context.Context, userID string, limit int) ([]*OrderRecord, error)
+}
+
+// OrderHistoryReader は Unit D / E が読取参照する公開 interface (凍結契約 §4.2)。
+//
+// Unit C 内部の OrderHistoryRepository とは別に定義し、読取専用の依存を明示する。
+type OrderHistoryReader interface {
+	ListRecent(ctx context.Context, userID string, limit int) ([]OrderRecord, error)
+	CountThisMonth(ctx context.Context, userID string) (int, error)
+	SumThisMonth(ctx context.Context, userID string) (int, error)
+}
+
+// jstLocation は Asia/Tokyo タイムゾーン固定値。
+var jstLocation = time.FixedZone("Asia/Tokyo", 9*60*60)
+
+// thisMonthStartUTC は現在時刻をもとに当月 1 日 00:00 JST を UTC で返す。
+func thisMonthStartUTC() time.Time {
+	now := time.Now().In(jstLocation)
+	return time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, jstLocation).UTC()
 }
 
 // DynamoDBAPI は Repository 実装が依存する DynamoDB SDK の最小 interface。
@@ -207,6 +227,85 @@ func (r *Repository) GetItem(ctx context.Context, userID, orderID, orderedAt str
 		return nil, nil
 	}
 	return fromDynamoItem(out.Item)
+}
+
+// ListRecent は OrderHistoryReader.ListRecent の実装。Query をラップして値スライスで返す。
+func (r *Repository) ListRecent(ctx context.Context, userID string, limit int) ([]OrderRecord, error) {
+	ptrs, err := r.Query(ctx, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]OrderRecord, len(ptrs))
+	for i, p := range ptrs {
+		result[i] = *p
+	}
+	return result, nil
+}
+
+// CountThisMonth は当月 JST 内の注文件数を返す (凍結契約 §4.2 / Q-F1=A)。
+//
+// orderedAt は RFC3339 UTC 文字列で保存されているため、当月 1 日 00:00 JST を
+// UTC に変換した値で FilterExpression を適用する。
+func (r *Repository) CountThisMonth(ctx context.Context, userID string) (int, error) {
+	monthStart := thisMonthStartUTC().Format(time.RFC3339)
+	var total int32
+	var lastKey map[string]types.AttributeValue
+	for {
+		out, err := r.client.Query(ctx, &dynamodb.QueryInput{
+			TableName:              aws.String(r.tableName),
+			KeyConditionExpression: aws.String("PK = :pk"),
+			FilterExpression:       aws.String("orderedAt >= :monthStart"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":pk":         &types.AttributeValueMemberS{Value: pk(userID)},
+				":monthStart": &types.AttributeValueMemberS{Value: monthStart},
+			},
+			Select:            types.SelectCount,
+			ExclusiveStartKey: lastKey,
+		})
+		if err != nil {
+			return 0, fmt.Errorf("orderhistory: CountThisMonth: %w", err)
+		}
+		total += out.Count
+		if out.LastEvaluatedKey == nil {
+			break
+		}
+		lastKey = out.LastEvaluatedKey
+	}
+	return int(total), nil
+}
+
+// SumThisMonth は当月 JST 内の注文合計金額を返す (凍結契約 §4.2)。
+func (r *Repository) SumThisMonth(ctx context.Context, userID string) (int, error) {
+	monthStart := thisMonthStartUTC().Format(time.RFC3339)
+	var total int
+	var lastKey map[string]types.AttributeValue
+	for {
+		out, err := r.client.Query(ctx, &dynamodb.QueryInput{
+			TableName:              aws.String(r.tableName),
+			KeyConditionExpression: aws.String("PK = :pk"),
+			FilterExpression:       aws.String("orderedAt >= :monthStart"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":pk":         &types.AttributeValueMemberS{Value: pk(userID)},
+				":monthStart": &types.AttributeValueMemberS{Value: monthStart},
+			},
+			ProjectionExpression: aws.String("amount"),
+			ExclusiveStartKey:    lastKey,
+		})
+		if err != nil {
+			return 0, fmt.Errorf("orderhistory: SumThisMonth: %w", err)
+		}
+		for _, item := range out.Items {
+			if v, ok := item["amount"].(*types.AttributeValueMemberN); ok {
+				n, _ := strconv.Atoi(v.Value)
+				total += n
+			}
+		}
+		if out.LastEvaluatedKey == nil {
+			break
+		}
+		lastKey = out.LastEvaluatedKey
+	}
+	return total, nil
 }
 
 // Query は userID の履歴を降順 (新しい順) で limit 件返す。

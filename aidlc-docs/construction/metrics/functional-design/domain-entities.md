@@ -143,7 +143,7 @@ type BudgetSettingsWriter interface {
 
 ### 3.4 OrderHistoryReader（Unit C 所有）
 
-unit-interfaces.md で Unit D / E 向けに公開済みのインターフェース（変更不要）:
+unit-interfaces.md §4.2 で凍結済みのインターフェース。Unit C のコード生成時に実装が含まれていなかったため、このステージで追加実装が必要。
 
 ```go
 package order_history
@@ -154,6 +154,11 @@ type OrderHistoryReader interface {
     SumThisMonth(ctx context.Context, userID string) (int, error)
 }
 ```
+
+**Unit C への変更内容**（Functional Design ステージで実施）:
+- `OrderHistoryReader` interface を `repository.go` に追加
+- `Repository`（DynamoDB）: `ListRecent` / `CountThisMonth` / `SumThisMonth` を実装（FilterExpression で当月 JST 絞り込み）
+- `InmemoryRepository`（テスト用）: 同3メソッドを実装
 
 Unit E が使用するメソッド: `CountThisMonth`（DamageCount 取得）。`SumThisMonth` は参照しない（消化額は `monthlyBudget - remainingBalance` で Wallet から計算）。
 
