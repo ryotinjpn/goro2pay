@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sort"
 	"sync"
+	"time"
 )
 
 // ErrInmemoryDuplicate は InmemoryRepository.Insert で同一 PK+SK が衝突した場合に返す。
@@ -86,4 +87,53 @@ func (r *InmemoryRepository) Len() int {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return len(r.records)
+}
+
+// ListRecent は OrderHistoryReader.ListRecent の in-memory 実装。
+func (r *InmemoryRepository) ListRecent(ctx context.Context, userID string, limit int) ([]OrderRecord, error) {
+	ptrs, err := r.Query(ctx, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]OrderRecord, len(ptrs))
+	for i, p := range ptrs {
+		result[i] = *p
+	}
+	return result, nil
+}
+
+// CountThisMonth は当月 JST 内の注文件数を返す in-memory 実装。
+func (r *InmemoryRepository) CountThisMonth(ctx context.Context, userID string) (int, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	monthStart := thisMonthStartUTC()
+	count := 0
+	for _, rec := range r.byUser[userID] {
+		t, err := time.Parse(time.RFC3339, rec.OrderedAt)
+		if err != nil {
+			continue
+		}
+		if !t.Before(monthStart) {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// SumThisMonth は当月 JST 内の注文合計金額を返す in-memory 実装。
+func (r *InmemoryRepository) SumThisMonth(ctx context.Context, userID string) (int, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	monthStart := thisMonthStartUTC()
+	total := 0
+	for _, rec := range r.byUser[userID] {
+		t, err := time.Parse(time.RFC3339, rec.OrderedAt)
+		if err != nil {
+			continue
+		}
+		if !t.Before(monthStart) {
+			total += rec.Amount
+		}
+	}
+	return total, nil
 }

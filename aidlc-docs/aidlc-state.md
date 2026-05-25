@@ -64,12 +64,12 @@
 - [ ] Infrastructure Design (Unit D) - **EXECUTE**
 - [ ] Code Generation (Unit D) - **EXECUTE**
 
-**他 Unit (worktree 別、Unit E)**
-- [ ] Functional Design (per-unit, Unit E) - **EXECUTE**
-- [ ] NFR Requirements (per-unit, Unit E) - **EXECUTE**
-- [ ] NFR Design (per-unit, Unit E) - **EXECUTE**
-- [ ] Infrastructure Design (per-unit, Unit E) - **EXECUTE**
-- [ ] Code Generation (per-unit, Unit E) - **EXECUTE**
+**Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
+- [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認済み
+- [ ] NFR Requirements (Unit E) - **EXECUTE**
+- [ ] NFR Design (Unit E) - **EXECUTE**
+- [ ] Infrastructure Design (Unit E) - **EXECUTE**
+- [ ] Code Generation (Unit E) - **EXECUTE**
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
