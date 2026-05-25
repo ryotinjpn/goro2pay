@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `docs/superpowers/specs/2026-05-25-app-design.md` (v2.0) で定義した「Slot Machine」コンセプト & リヴァイ調コピーで、ゴロゴロPay の全主要画面 (ランディング / サインアップ / ログイン / メイン / 注文完了 / モーダル各種 / Toast) を刷新する。
+**Goal:** `aidlc-docs/construction/_design-system/design-spec.md` (v2.0) で定義した「Slot Machine」コンセプト & リヴァイ調コピーで、ゴロゴロPay の全主要画面 (ランディング / サインアップ / ログイン / メイン / 注文完了 / モーダル各種 / Toast) を刷新する。
+
+**AI-DLC 上の位置づけ:** 本プランは CONSTRUCTION PHASE の **横串成果物**。各 Unit (auth / budget / order / suggest / metrics) の Code Generation の「**補完プラン**」として実行する。実行順序は本プランの Task 1 から順だが、各 Unit の既存成果物 (LC-AUTH-* / LC-ORDER-* 等) と照合しながら進める。詳細は `_design-system/README.md` の §3「各 Unit との関係」を参照。
 
 **Architecture:**
 共通基盤として CSS 変数 (デザイントークン) と次フォントを導入し、`ScreenFrame` をラッパとして全画面に適用。状態管理は既存 react-query mutation + jotai を踏襲し、新規 hook は最小限。コピーは `lib/copy.ts` に集約してテスト可能にする。ビジュアル要素は CSS Modules で世界観を実装し、ロジック部分のみ unit test、画面全体の見た目は Playwright で動作確認する。

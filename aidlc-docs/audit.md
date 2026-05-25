@@ -1042,3 +1042,25 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は 5 PR への分割コミット作業。
 
 ---
+
+## 横串デザインシステム — brainstorming + spec v1.0
+**Timestamp**: 2026-05-24T10:00:00Z
+**User Input**: "aidlc-docsにドキュメントがあるので、そのコンセプトに沿ってuiuxを検討して一番最適を考えて"
+**AI Response**: superpowers:brainstorming + frontend-design を併用して UI/UX 検討開始。Visual Companion (ローカル HTTP サーバ) でモック比較を提示しつつ 1 問ずつ対話ヒアリング。トーン候補 4 種 (refined dark luxury / soft warm playful / retro neon / brutalist minimal) → ユーザ選好で C×A ハイブリッド (レトロ自販機ネオン × 金融的品格) → 「赤がきつい」修正で WARM (金主役+赤は警告差し色) に確定。コンセプト名は当初「Forbidden Vending」→「Pocket Casino」→ コンプラ配慮で最終「Slot Machine」。メイン画面 1 枚に集中する方針で v1.0 spec `docs/superpowers/specs/2026-05-24-main-screen-design.md` を作成、PR #94 として提出。
+**Context**: ハッカソン審査軸「創造性とテーマ適合性」最大化のための追加スコープ。v1.0 はメイン画面のみ。
+
+---
+
+## 横串デザインシステム — spec v2.0 + コピー全画面確定
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "他の画面のuiuxはどうする？" → 「他画面も同じ Slot Machine コンセプトに揃える (推奨)」を選択。続けて全画面のコピーを 1 問ずつヒアリング。「YES」→「押す。」、サジェスト吹き出しを「そろそろだろ。」、完了画面中央を「いい判断だ。」、DEAD 中央を「今月は、終わりだ。」、増額ボタンを「¥50,000。来月もこの調子だ。」、ログアウト見出しを「やめるのか？」、セッション切れ見出しを「離れすぎたな。」など、リヴァイ調 (進撃の巨人のリヴァイの口調をパロディ参照点とした、短文体言止め・終止形限定・上から目線) で全画面統一。「お前」「兵団用語 (任務 / 撤退 / 持ち場)」「金で消す」など強すぎる語彙はコンプラ配慮で除外。
+**AI Response**: spec を全画面分に拡張し、§1.6「コピーシステム」§5「他画面の詳細仕様」§6「共通アクセシビリティ」§9「オープン項目」を追加。ファイル名を `2026-05-25-app-design.md` にリネームしながら commit。続けて 22 タスクの implementation plan を作成し、PR #94 に積んだ。
+**Context**: spec v2.0 と implementation plan の 2 ファイルを `docs/superpowers/` 配下に置いて push 済み。
+
+---
+
+## 横串デザインシステム — AI-DLC 構造への組み込み
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "実装プランなんだけどaidlcの現状の状態に対してplan組まなくても大丈夫？"
+**AI Response**: 指摘を受け、現状 AI-DLC のフェーズ別ドキュメント (`aidlc-docs/construction/{auth,budget,order}/...`) と私の作った `docs/superpowers/...` が**整合していない**ことを認識。`aidlc-docs/construction/_design-system/` を新設し、git mv で spec/plan を移動 (`design-spec.md` / `implementation-plan.md`)。`README.md` を新規追加して AI-DLC 上の位置づけと各 Unit との関係を明記。spec の §0.5 に「デザイン哲学 (idea.md / personas.md との対応)」を追加し、なぜこのコンセプトとコピーが太郎ペルソナのフェーズ 1→2→3 に効くかを 5 サブ章で文書化。aidlc-state.md の CONSTRUCTION PHASE に「横串デザインシステム」を追記。PR #94 はクローズせず、本リファクタを追加 commit として上に積む方針を選択。
+**Context**: AI-DLC ワークフローからの逸脱を是正。実装担当者 (別ブランチ・別人) は `_design-system/README.md` から読み始めれば、spec → plan → 各 Unit 成果物 の順で context を組み立てられる。
