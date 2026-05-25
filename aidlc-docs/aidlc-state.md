@@ -66,7 +66,7 @@
 
 **Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
 - [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認済み
-- [ ] NFR Requirements (Unit E) - **EXECUTE**
+- [x] NFR Requirements (Unit E, 2026-05-25) — nfr-requirements.md (NFRE-E01〜E10) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N5 全 5 問ヒアリング完了、ユーザ承認待ち
 - [ ] NFR Design (Unit E) - **EXECUTE**
 - [ ] Infrastructure Design (Unit E) - **EXECUTE**
 - [ ] Code Generation (Unit E) - **EXECUTE**

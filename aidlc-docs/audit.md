@@ -1035,6 +1035,28 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## NFR Requirements (Unit E) — Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "unitEの続きをお願いします"
+**AI Response**: NFR Requirements ステージ開始。Q-N1〜Q-N5 の 5 問を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-N1: C — BudgetSettings + Wallet を errgroup で並列取得 → NotFound 確認後に CountThisMonth 直列呼び出し
+- Q-N2: A — いずれかの DynamoDB 読み取り失敗で HTTP 500（部分返却なし）
+- Q-N3: A — ConsumptionRate と ComputeRecommendedBudget の 2 関数に gopter で PBT 適用
+- Q-N4: B — 赤色 (text-red-500 / bg-red-500) + animate-pulse で不安の演出を最大化
+- Q-N5: A — BudgetEmptyScreen マウントのたびに RaiseModal を再表示（逃げられない退化ループ）
+
+矛盾チェック: 4 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/nfr-requirements/):
+- nfr-requirements.md: NFRE-E01〜E10 の 10 NFR（Performance / Reliability / Maintainability / Usability / Security）
+- tech-stack-decisions.md: 新規テックスタックなし、Unit A/B/C/D 継承のみ
+
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
