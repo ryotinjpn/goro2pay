@@ -9,11 +9,13 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { startTransition } from "react";
 
-import { placeOrder, type PlaceOrderRequest, type PlaceOrderResponse } from "@/lib/api/orders";
+import { ApiError, placeOrder, type PlaceOrderRequest, type PlaceOrderResponse } from "@/lib/api/orders";
 import { mapOrderError } from "@/lib/errorMappers";
+import { insufficientBalanceAtom } from "@/state/budget";
 
 import { useDisableLock } from "./useDisableLock";
 import { useToast } from "./useToast";
@@ -38,6 +40,7 @@ export function useOrder() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { isLocked, triggerLock } = useDisableLock(DISABLE_LOCK_MS);
+  const setInsufficientBalance = useSetAtom(insufficientBalanceAtom);
 
   const mutation = useMutation<PlaceOrderResponse, unknown, PlaceOrderRequest>({
     mutationFn: placeOrder,
@@ -49,6 +52,11 @@ export function useOrder() {
     },
     onError: (err) => {
       triggerLock();
+      // P-DEG-02: 402 INSUFFICIENT_BALANCE を atom 経由で InsufficientBalanceModal に伝播。
+      // mapOrderError の navigate 経路 (/budget-empty) は既存挙動のため維持。
+      if (err instanceof ApiError && err.status === 402) {
+        setInsufficientBalance(true);
+      }
       const action = mapOrderError(err);
       // F-I4 修正: action.refresh = true の場合は履歴/残高を invalidate。
       // 409 冪等性衝突時に履歴を最新化することで「もう注文済み」状態を反映。

@@ -23,7 +23,12 @@ import (
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/logging"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/middleware"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/order"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/budget_reset_log"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/budget_settings"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/idempotency"
 	orderhistory "github.com/ryotinjpn/goro2pay/apps/api/internal/repo/order_history"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/wallet_repo"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/wallet"
 )
 
 const shutdownTimeout = 5 * time.Second
@@ -69,13 +74,21 @@ func main() {
 	planBuilder := order.NewBedrockPlanBuilder(bedrockAdapter, fallbackProvider)
 	orderHistoryRepo := orderhistory.NewRepository()
 
-	// Unit B WalletService は本 PR では未配線 (Unit B Code Generation 完了後に
-	// ここで実装を注入する)。本 PR では unconfiguredWalletService をスタブとして
-	// 使い、route 登録の整合だけ確保する。Unit B 実装到達まで POST /api/orders は
-	// 503 SERVICE_UNAVAILABLE を返す (B-C2 修正後、誤 402 を出さないように変更)。
-	walletStub := newUnconfiguredWalletService()
-	orderSvc := order.NewService(orderHistoryRepo, planBuilder, deliveryAdapter, walletStub)
+	// Unit B WalletService 本実装 (Code Generation 完了で配線)。
+	// Repository は env から DDB_TABLE_* を読み込んで SDK Client を共有する
+	// (各 Repo の package-level init() で初期化済み、P-INIT-01)。
+	walletRepo := wallet_repo.NewRepository()
+	settingsRepo := budget_settings.NewRepository()
+	idemRepo := idempotency.NewRepository()
+	resetLogRepo := budget_reset_log.NewRepository()
+	walletSvc := wallet.NewService(walletRepo, settingsRepo, idemRepo, resetLogRepo)
+
+	// Unit C `order.WalletService` interface には引数順序 / 戻り値型の差異があるため
+	// Adapter を経由する (wallet.OrderAdapter)。
+	walletAdapter := wallet.NewOrderAdapter(walletSvc)
+	orderSvc := order.NewService(orderHistoryRepo, planBuilder, deliveryAdapter, walletAdapter)
 	orderHandler := handlers.NewOrderHandler(orderSvc)
+	walletHandler := wallet.NewHandler(walletSvc)
 
 	// /health は認証不要 (LWA / load balancer 用)
 	r.GET("/health", handlers.Health)
@@ -86,7 +99,10 @@ func main() {
 		api.POST("/auth/logout", handlers.Logout)
 		api.POST("/orders", orderHandler.PlaceOrder)
 		api.GET("/orders", orderHandler.GetHistory)
-		// Unit B/D/E が後続 PR で route を追加する
+		// Unit B (budget) ルート
+		api.GET("/wallet", walletHandler.GetBalance)
+		api.POST("/wallet/budget", walletHandler.SetBudget)
+		// Unit D/E が後続 PR で route を追加する
 	}
 
 	// LWA は localhost:8080 を期待する

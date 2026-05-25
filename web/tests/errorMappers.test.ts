@@ -12,13 +12,9 @@ describe("mapOrderError (LC-26 / P-FE-ERR-01)", () => {
 
   // ===== ApiError ベース =====
 
-  test("ApiError(402) → BudgetEmpty への即時遷移", () => {
-    const action = mapOrderError(new ApiError(402, "INSUFFICIENT_FUNDS", "no funds"));
-    expect(action).toEqual({
-      type: "navigate",
-      path: "/budget-empty",
-      transitionMs: 0,
-    });
+  test("ApiError(402) → silent (Unit B P-DEG-02: InsufficientBalanceModal を atom 経由で表示)", () => {
+    const action = mapOrderError(new ApiError(402, "INSUFFICIENT_BALANCE", "no funds"));
+    expect(action).toEqual({ type: "silent" });
   });
 
   test("ApiError(409) → 自虐トースト + refresh:true (F-I4 修正、BR-C39)", () => {

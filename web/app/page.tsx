@@ -2,6 +2,9 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { LandingScreen } from "@/components/auth/LandingScreen";
+// Unit B 残高表示 + 残高枯渇モーダル
+import { BalanceDisplay } from "@/components/budget/BalanceDisplay";
+import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
 // Unit C MainScreen 構成要素
 import { GoroButton } from "@/components/order/GoroButton";
 import { OrderHistoryList } from "@/components/order/OrderHistoryList";
@@ -23,12 +26,16 @@ export default function HomePage() {
     return <LandingScreen />;
   }
 
-  // authenticated: Unit C MainScreen
+  // authenticated: Unit C MainScreen + Unit B 残高表示 / 枯渇モーダル
   return (
     <main data-testid="main-screen" style={{ padding: 24, maxWidth: 480, margin: "0 auto" }}>
       <header style={{ marginBottom: 24, fontSize: 14, color: "#666" }}>
         ようこそ、{user?.email}
       </header>
+
+      <section style={{ marginBottom: 24 }}>
+        <BalanceDisplay />
+      </section>
 
       <section style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
         <GoroButton />
@@ -38,6 +45,8 @@ export default function HomePage() {
         <h2 style={{ fontSize: 16, color: "#444", marginBottom: 12 }}>履歴</h2>
         <OrderHistoryList />
       </section>
+
+      <InsufficientBalanceModal />
     </main>
   );
 }
