@@ -64,6 +64,12 @@
 - [ ] Infrastructure Design (per-unit, Unit D/E) - **EXECUTE**
 - [ ] Code Generation (per-unit, Unit D/E) - **EXECUTE**
 
+**横串デザインシステム** (worktree: add-desing)
+- [x] Design Spec v1.0 (2026-05-24) — メイン画面のみの design-spec
+- [x] Design Spec v2.0 (2026-05-25) — 全画面に拡張、`aidlc-docs/construction/_design-system/design-spec.md` 作成。Slot Machine コンセプト + リヴァイ調コピーシステム + デザイン哲学 (idea.md / personas.md との対応) を §0.5 に記述
+- [x] Implementation Plan (2026-05-25) — 22 タスク TDD ベースの `aidlc-docs/construction/_design-system/implementation-plan.md` 作成
+- [ ] Implementation (Code Generation 補完) — **EXECUTE** 別ブランチ / 別担当者で実施予定
+
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
 
