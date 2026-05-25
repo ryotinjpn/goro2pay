@@ -143,20 +143,19 @@ type BudgetSettingsWriter interface {
 
 ### 3.4 OrderHistoryReader（Unit C 所有）
 
-Unit E が必要とする機能:
+unit-interfaces.md で Unit D / E 向けに公開済みのインターフェース（変更不要）:
 
 ```go
-// Unit C の OrderHistoryReader に CountThisMonth を追加
-// (Unit C 実装時点では GetHistory のみ定義、Unit E 用に集計メソッドを追加)
+package order_history
+
 type OrderHistoryReader interface {
-    // ... 既存メソッド
-    CountSince(ctx context.Context, userID string, since time.Time) (int, error)
+    ListRecent(ctx context.Context, userID string, limit int) ([]OrderRecord, error)
+    CountThisMonth(ctx context.Context, userID string) (int, error)
+    SumThisMonth(ctx context.Context, userID string) (int, error)
 }
 ```
 
-`since` = 当月 1 日 00:00:00 JST を渡すことで当月件数を取得する。
-
-**注意**: Unit C が `OrderHistoryReader` を所有しているため、`CountSince` の追加は Unit C の repository 実装への修正になる。unit-interfaces.md の変更手順に従い、Unit C 担当者と調整が必要。
+Unit E が使用するメソッド: `CountThisMonth`（DamageCount 取得）。`SumThisMonth` は参照しない（消化額は `monthlyBudget - remainingBalance` で Wallet から計算）。
 
 ---
 

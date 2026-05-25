@@ -41,9 +41,9 @@ Unit E は「退化ループの完成点」として機能する。ユーザー�
 2. WalletReader.Get(userID)
    - NotFound → return ErrNoBudgetSet (BudgetSettings と Wallet は同時作成前提)
 
-3. OrderHistoryReader.CountThisMonth(userID, monthStart)
-   - monthStart = 当月 1 日 00:00:00 JST (time.Now() を Asia/Tokyo で切り捨て)
-   - 当月 CreatedAt >= monthStart の件数を返す
+3. OrderHistoryReader.CountThisMonth(ctx, userID)
+   - unit-interfaces.md 凍結済みメソッド（追加実装不要）
+   - 実装側が当月 JST で件数を返す
 
 4. ConsumptionRate 計算
    - spent = monthlyBudget - remainingBalance
