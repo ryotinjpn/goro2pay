@@ -124,8 +124,8 @@ Part 2（実コード生成）は大規模。どう進めるか。
 - [x] Step 3: suggestion repository 生成（repository/inmemory + repository_test）
 - [x] Step 4: suggest_handler 生成 + main.go 配線（GET /api/suggest route + DI + Q-DG1=B の order SuggestResolver 接続）
 - [x] Step 5: Backend 検証（`go build` PASS / `go test ./...` 16 pkg PASS / `go vet` PASS / `gofmt` 適用）
-- [ ] Step 6: Frontend（useSuggestion / SuggestBubble / GoroButton 連携 + tests）
-- [ ] Step 7: Frontend 検証（`vitest` / `tsc --noEmit`）
+- [x] Step 6: Frontend（lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 連携 + tests 2）
+- [x] Step 7: Frontend 検証（`npm ci` 632pkg / `vitest` 92 tests PASS / `tsc --noEmit` PASS）
 - [ ] Step 8: Infra（modules/suggestion + routes/envs 追記 + tftest）
 - [ ] Step 9: Infra 検証（`terraform validate` / `fmt` / `test`）
 - [ ] Step 10: code サマリ生成（aidlc-docs/construction/suggest/code/）
