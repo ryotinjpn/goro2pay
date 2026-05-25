@@ -1042,3 +1042,50 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は 5 PR への分割コミット作業。
 
 ---
+## Code Generation (Unit B) — Part 2 Generation 完了
+**Timestamp**: 2026-05-25T00:30:00Z
+**User Input**: "yes" (Plan 承認) → 途中サブエージェント並列起動 (Write 権限拒否で 5 件全失敗) → 主スレッドで逐次実装 → "develop取り込んで" → "デプロイ完了した" → 別ブランチ doc/cognito_auth_flow_srp 検出 → "work spaceに移動したら？" → worktree future-unit-b 作成・移行 → "a" 承認継続 → 全 Step 22-23 完了
+**AI Response**: Unit B Code Generation Step 1〜23 全完了。worktree feat/unit-b-code-generation で約 50 ファイル生成:
+
+成果物:
+- **Backend (apps/api/, 約 22 ファイル)**:
+  - `internal/wallet/` (doc/errors/types/validation + service + service_test 17 シナリオ + service_pbt_test gopter 3 props + handler + handler_test + order_adapter + order_adapter_test)
+  - `internal/repo/` 配下 4 種 (wallet_repo / budget_settings / idempotency / budget_reset_log)、各 types/repo + 必要なら test
+  - `cmd/scheduler/` (main + main_test + Makefile + README) — `apps/scheduler/` ではなく `apps/api/cmd/` 配下、Go の internal package 制約のため
+  - `main.go` への DI 配線追加 + `wallet_stub.go` 削除
+- **Frontend (web/, 約 11 ファイル)**:
+  - `lib/api/wallet.ts`, `hooks/useWallet.ts`, `hooks/useSetBudget.ts`, `state/budget.ts`
+  - `components/budget/{BalanceDisplay,BudgetForm,InsufficientBalanceModal}.tsx`
+  - `app/(authenticated)/budget/page.tsx` (BudgetSetupScreen)
+  - `app/page.tsx` への BalanceDisplay + InsufficientBalanceModal 埋込最小追記
+  - `hooks/useOrder.ts` への 402 → setInsufficientBalance(true) 最小追記
+  - `tests/` 5 ファイル (budget-state / wallet-api / BalanceDisplay / BudgetForm / InsufficientBalanceModal)
+- **Infrastructure (infra/, 約 14 ファイル)**:
+  - 新規 `modules/budget/` (versions/variables/locals/dynamodb/iam/log_groups/scheduler_lambda/outputs/README + tests 4)
+  - 既存 `modules/api_gateway/routes.tf` に Unit B ルート 2 本追記
+  - 既存 `modules/lambda_api/{variables,api_lambda}.tf` に 4 変数 + 4 env 注入追記
+  - 既存 `envs/dev/main.tf` に `module "budget"` 追加 + `module.lambda_api` への 4 注入
+- **Documentation (aidlc-docs/, 5 ファイル)**: code/{README,backend-summary,frontend-summary,infrastructure-summary,deployment-runbook}.md
+
+主要な実装上の決定:
+- `apps/scheduler/` は internal package 制約で動かないため `apps/api/cmd/scheduler/` に配置
+- `wallet_repo` ↔ `wallet` の循環 import 回避のため `wallet_repo.ErrInsufficientBalance` を repo 側 sentinel として定義し Service 層で `wallet.ErrInsufficientBalance` に変換
+- `useWallet` は凍結 IF §9 の 4 フィールドのみ公開、`BalanceDisplay` は内部で `useQuery({queryKey:['balance']})` を直接 subscribe (FD §3.1 注通り)
+- `useOrder.ts` への 402 受信時の atom セットは最小追記、既存の `mapOrderError` 経由 `/budget-empty` ナビゲートは保持
+- terraform tftest IAM Policy 検証は naming のみに簡略化 (jsonencode 結果は plan 時 unknown のため)
+- API Lambda env: Unit C `ORDER_HISTORY_TABLE_NAME` と Unit B `DDB_TABLE_*` を併存 (Unit C 既存維持 + Unit B は凍結 IF §10 採用)
+
+検証結果 (全 PASS):
+- Backend: `go build ./...` PASS / `go test ./...` 17 packages PASS / `go vet` PASS
+- Scheduler: `make build` で bootstrap 14MB Linux arm64 バイナリ生成 PASS
+- Frontend: `npx vitest run` 75 tests PASS (新規 21 + 既存 54) / `npx tsc --noEmit` PASS
+- Infrastructure: `terraform validate` PASS / `terraform fmt -recursive` 適用済 / `terraform test` budget 11 PASS + lambda_api 4 PASS + api_gateway 5 PASS (regression なし)
+- envs/dev: `terraform init -backend=false && terraform validate` PASS
+
+ブランチ移行: 途中で別ブランチ `doc/cognito_auth_flow_srp` (別作業 Cognito SRP) に切替えられていたため、`feat/unit-b-code-generation` worktree を develop ベースで新規作成し、Unit B 専用 untracked ファイルを移行 + 既存ファイル編集 (main.go DI / routes.tf / lambda_api / envs/dev / useOrder.ts / page.tsx) を再実行。元ブランチ `doc/cognito_auth_flow_srp` の Cognito SRP 関連変更は完全保持 (auth/amplify/cognito 関連 modified 14 + untracked 4)。
+
+aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit ループ全 5 ステージ完了。
+**Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は PR 分割コミット作業 (Unit C と同様、Backend / Frontend / Infrastructure / Docs の 4 PR 想定)。
+
+---
+
