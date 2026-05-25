@@ -70,3 +70,16 @@ resource "aws_apigatewayv2_route" "post_wallet_budget" {
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
+
+# ----------------------------------------------------------------------------
+# Unit D: GET /api/suggest (起動時の先回りサジェスト、凍結契約 §5.2)
+# 既存 api_lambda integration を再利用 (single Lambda、route 切替で済む)。
+# ----------------------------------------------------------------------------
+
+resource "aws_apigatewayv2_route" "get_suggest" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /api/suggest"
+  target             = "integrations/${aws_apigatewayv2_integration.api_lambda.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}

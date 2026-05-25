@@ -12,6 +12,7 @@ web/.env*.local
 web/coverage/
 web/playwright-report/
 web/test-results/
+web/*.tsbuildinfo
 
 # Backend (Go)
 apps/api/dist/

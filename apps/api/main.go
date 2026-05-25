@@ -27,7 +27,9 @@ import (
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/budget_settings"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/idempotency"
 	orderhistory "github.com/ryotinjpn/goro2pay/apps/api/internal/repo/order_history"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/suggestion"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/repo/wallet_repo"
+	"github.com/ryotinjpn/goro2pay/apps/api/internal/suggest"
 	"github.com/ryotinjpn/goro2pay/apps/api/internal/wallet"
 )
 
@@ -87,7 +89,18 @@ func main() {
 	// Adapter を経由する (wallet.OrderAdapter)。
 	walletAdapter := wallet.NewOrderAdapter(walletSvc)
 	orderSvc := order.NewService(orderHistoryRepo, planBuilder, deliveryAdapter, walletAdapter)
+
+	// Unit D (suggest) 配線。BedrockAdapter / FallbackProvider / OrderHistoryRepo は
+	// Unit C と共有 (P-DI-01)。suggestionStore は GoroPay_Suggestion repo。
+	suggestionStore := suggestion.NewRepository()
+	suggestionBuilder := suggest.NewBedrockSuggestionBuilder(bedrockAdapter, fallbackProvider)
+	suggestSvc := suggest.NewService(orderHistoryRepo, suggestionBuilder, suggestionStore)
+	// Q-DG1=B: OrderService に SuggestResolver を注入し、1 タップ注文で保存済み提案を
+	// 解決する (失効時は透過的に Bedrock 推論へ、BR-C10)。
+	orderSvc.SetSuggestResolver(suggest.NewOrderResolverAdapter(suggestSvc))
+
 	orderHandler := handlers.NewOrderHandler(orderSvc)
+	suggestHandler := handlers.NewSuggestHandler(suggestSvc)
 	walletHandler := wallet.NewHandler(walletSvc)
 
 	// /health は認証不要 (LWA / load balancer 用)
@@ -102,7 +115,9 @@ func main() {
 		// Unit B (budget) ルート
 		api.GET("/wallet", walletHandler.GetBalance)
 		api.POST("/wallet/budget", walletHandler.SetBudget)
-		// Unit D/E が後続 PR で route を追加する
+		// Unit D (suggest) ルート
+		api.GET("/suggest", suggestHandler.GetSuggestion)
+		// Unit E が後続 PR で route を追加する
 	}
 
 	// LWA は localhost:8080 を期待する
