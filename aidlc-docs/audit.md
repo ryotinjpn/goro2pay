@@ -1095,3 +1095,11 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は PR 分割コミット作業 (Unit C と同様、Backend / Frontend / Infrastructure / Docs の 4 PR 想定)。
 
 ---
+
+## Construction (Unit D) — Functional Design ステージ開始 / Plan 作成
+**Timestamp**: 2026-05-25T02:00:00Z
+**User Input**: "worktree-add-desingをみて、unitDのfunctional designを進めてほしい。"
+**AI Response**: 着手前に現状確認（git fetch）。Unit D (`suggest`) は develop に成果物なし・関連 PR なしで未着手であることを確認。横串デザインシステム（PR #94 `worktree-add-desing`、develop 未マージ）の `_design-system/{README,design-spec}.md` を読了し Unit D 関連を把握（SUGGESTED 状態 §3.3 = Unit D フロント表出 / `SuggestBubble`「そろそろだろ。」/ useSuggest マウント時 1 回 / 履歴十分判定はバックエンド / README §3 矛盾時デザイン spec 優先）。作業ブランチ起点を AskUserQuestion で確認 → 「develop から新ブランチ（推奨）」を選択。`docs/construction-suggest-functional-design` を develop（最新）から作成。`aidlc-docs/construction/plans/suggest-functional-design-plan.md` を作成し、Standard 深度の確認質問 Q-DF1〜Q-DF10 を [Answer] タグ付きで埋め込み（Q-DF1 履歴十分閾値 / Q-DF2 履歴不足時挙動 / Q-DF3 サジェスト抑制条件 / Q-DF4 InferSuggestion タイムアウト・リトライ / Q-DF5 Bedrock 失敗フォールバック / Q-DF6 Suggestion TTL・保存内容 / Q-DF7 ResolveSuggestion 挙動 / Q-DF8 hook/component 命名突合 / Q-DF9 Title 文言突合 / Q-DF10 取得タイミング）。凍結契約（IF 正）とデザイン spec（視覚正）の突合方針を明記。
+**Context**: ⛔ GATE: Functional Design Plan の Q-DF1〜Q-DF10 回答 + Plan 承認を待機中。
+
+---
