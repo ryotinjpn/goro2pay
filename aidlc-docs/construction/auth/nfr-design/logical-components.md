@@ -209,7 +209,7 @@ Q-D9=B「A + 推奨項目」に従う。
 | カテゴリ | パラメータ | 値 |
 |---|---|---|
 | 基本 | `AppClientName` | `goro2pay-web` 等 |
-| Auth Flow | `ExplicitAuthFlows` | `["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]` |
+| Auth Flow | `ExplicitAuthFlows` | `["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]`（SRP のみ。平文パスワードを Cognito に送らない / Amplify v6 default） |
 | Token 有効期限 | `IdTokenValidity` | **8** （単位: hours） |
 | Token 有効期限 | `AccessTokenValidity` | **8** （単位: hours） |
 | Token 有効期限 | `RefreshTokenValidity` | **30** （単位: days） |
