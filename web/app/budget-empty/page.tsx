@@ -10,6 +10,7 @@ import { useState } from "react";
 import { ScreenFrame } from "@/components/order/ScreenFrame";
 import { BrandHeader } from "@/components/order/BrandHeader";
 import { RaiseModal } from "@/components/metrics/RaiseModal";
+import { COPY } from "@/lib/copy";
 
 import styles from "./page.module.css";
 
@@ -21,8 +22,8 @@ export default function BudgetEmptyPage() {
       <BrandHeader showLogout />
       <div className={styles.body}>
         <div className={styles.glow} aria-hidden="true" />
-        <div className={styles.verdict}>もう、ダメになれない。</div>
-        <div className={styles.sub}>翌月 1 日に予算がリセットされる。</div>
+        <div className={styles.verdict}>{COPY.budgetEmpty.verdict}</div>
+        <div className={styles.sub}>{COPY.budgetEmpty.sub}</div>
       </div>
       <RaiseModal
         isOpen={isRaiseModalOpen}
