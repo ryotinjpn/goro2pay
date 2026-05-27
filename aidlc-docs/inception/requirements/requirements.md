@@ -157,9 +157,9 @@ flowchart LR
     Data -- "嗜好分析" --> CrossSell
     CrossSell -- "おすすめ商品<br/>レコメンド" --> User
 
-    CreditCard -- "加盟店手数料<br/>(1〜3%)" ==> Revenue(("収益"))
-    Cashing -- "キャッシング金利" ==> Revenue
-    CrossSell -- "クロスセル収益" ==> Revenue
+    CreditCard == "加盟店手数料<br/>(1〜3%)" ==> Revenue(("収益"))
+    Cashing == "キャッシング金利" ==> Revenue
+    CrossSell == "クロスセル収益" ==> Revenue
 ```
 
 #### 2.5.2 価値提案（Value Proposition）
