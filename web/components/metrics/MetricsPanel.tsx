@@ -2,52 +2,53 @@
 
 import { useMetrics } from "@/hooks/useMetrics";
 
-// MetricsPanel は MainScreen に埋め込まれる今月のダメ化メトリクス表示コンポーネント (LC-ME-09)。
-// P-ME-FE-DEG-01: ThresholdExceeded=true のとき animate-pulse + text-red-500 で演出 (NFRE-E08)。
+import styles from "./MetricsPanel.module.css";
+
+// MetricsPanel は MainScreen に埋め込まれる今月のダメ化メトリクス表示 (LC-ME-09)。
+// P-ME-FE-DEG-01: ThresholdExceeded=true のとき消化率を accent-danger でパルス演出 (NFRE-E08)。
+// 警告状態は data-warn 属性で表現し、CSS Module で世界観 (Slot Machine) に統一。
 export function MetricsPanel() {
   const { data: metrics, isLoading } = useMetrics();
 
   if (isLoading) {
     return (
-      <div data-testid="metrics-panel-loading" className="animate-pulse space-y-2">
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
+      <div data-testid="metrics-panel-loading" className={styles.skeleton}>
+        <div className={`${styles.skeletonBar} ${styles.skeletonBarLong}`} />
+        <div className={`${styles.skeletonBar} ${styles.skeletonBarShort}`} />
       </div>
     );
   }
 
   if (!metrics) return null;
 
-  const barClass = metrics.thresholdExceeded
-    ? "bg-red-500 animate-pulse"
-    : "bg-blue-500";
-
-  const rateClass = metrics.thresholdExceeded
-    ? "text-red-500 animate-pulse font-bold"
-    : "text-gray-700";
-
+  const warn = metrics.thresholdExceeded;
   const pct = Math.round(metrics.consumptionRate * 100);
 
   return (
-    <div data-testid="metrics-panel" className="space-y-3">
-      <p className="text-sm text-gray-500">今月のダメ化</p>
-      <p className="text-2xl font-bold">{metrics.damageCount} 回</p>
+    <div data-testid="metrics-panel" className={styles.panel}>
+      <div className={styles.label}>今月のダメ化</div>
+      <div className={styles.count}>{metrics.damageCount} 回</div>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">消化率</span>
-          <span data-testid="consumption-rate" className={rateClass}>{pct}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            data-testid="consumption-bar"
-            className={`h-2 rounded-full ${barClass}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+      <div className={styles.rateRow}>
+        <span>消化率</span>
+        <span
+          data-testid="consumption-rate"
+          data-warn={warn}
+          className={styles.rateValue}
+        >
+          {pct}%
+        </span>
+      </div>
+      <div className={styles.bar}>
+        <div
+          data-testid="consumption-bar"
+          data-warn={warn}
+          className={styles.barFill}
+          style={{ width: `${pct}%` }}
+        />
       </div>
 
-      <p className="text-xs text-gray-400">{metrics.summaryText}</p>
+      <p className={styles.summary}>{metrics.summaryText}</p>
     </div>
   );
 }

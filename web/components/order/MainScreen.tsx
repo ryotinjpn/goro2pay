@@ -2,6 +2,8 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 
+import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
+import { MetricsPanel } from "@/components/metrics/MetricsPanel";
 import {
   monthlyBudgetAtom,
   screenStateAtom,
@@ -28,6 +30,7 @@ export function MainScreen() {
     <ScreenFrame screenState={screenState} testid="main-screen">
       <BrandHeader />
       <BalanceHero />
+      <MetricsPanel />
       <div className={styles.body}>
         <GoroButton />
       </div>
@@ -37,6 +40,7 @@ export function MainScreen() {
           <IncreaseBudgetButton onClick={handleIncrease} />
         </>
       )}
+      <InsufficientBalanceModal />
     </ScreenFrame>
   );
 }
