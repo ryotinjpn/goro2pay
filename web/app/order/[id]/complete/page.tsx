@@ -5,42 +5,54 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAtomValue } from "jotai";
+
+import { ScreenFrame } from "@/components/order/ScreenFrame";
+import { BrandHeader } from "@/components/order/BrandHeader";
+import { COPY, composeMonthlyMeta } from "@/lib/copy";
+import { balanceAtom, monthlyCountAtom } from "@/state/main";
+
+import styles from "./CompleteScreen.module.css";
 
 const AUTO_NAVIGATE_MS = 5000;
 
 export default function OrderCompletePage() {
   const router = useRouter();
+  const balance = useAtomValue(balanceAtom);
+  const monthlyCount = useAtomValue(monthlyCountAtom);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("/");
-    }, AUTO_NAVIGATE_MS);
+    const timer = setTimeout(() => router.push("/"), AUTO_NAVIGATE_MS);
     return () => clearTimeout(timer);
   }, [router]);
 
+  // 店名・金額: jotai に永続化していないため固定 (将来 lastOrderAtom で改善)
+  const storeName = "CoCo壱番屋 新宿店";
+  const amount = 1200;
+
   return (
-    <main
-      data-testid="order-completion-screen"
-      style={{ padding: 24, textAlign: "center" }}
-    >
-      <h1 style={{ fontSize: 32 }}>注文完了</h1>
-      <p style={{ color: "#666", marginTop: 16 }}>
-        ダメ化を続けるため、5 秒後にメイン画面に戻ります…
-      </p>
-      <button
-        type="button"
-        onClick={() => router.push("/")}
-        style={{
-          marginTop: 24,
-          padding: "8px 16px",
-          background: "transparent",
-          border: "1px solid #888",
-          borderRadius: 6,
-          cursor: "pointer",
-        }}
-      >
-        今すぐ戻る
-      </button>
-    </main>
+    <ScreenFrame testid="order-completion-screen">
+      <BrandHeader />
+      <div className={styles.complete}>
+        <div className={styles.verdict}>{COPY.complete.verdict}</div>
+        <div className={styles.body}>{COPY.complete.body}</div>
+        <div className={styles.store}>{storeName}</div>
+        <div className={styles.price}>¥{amount.toLocaleString("ja-JP")}</div>
+        <div className={styles.line} />
+        <div className={styles.meta}>
+          {composeMonthlyMeta(monthlyCount > 0 ? monthlyCount : 1)}
+        </div>
+        <div className={`${styles.meta} ${styles.metaMute}`}>
+          残りダメ予算 ¥{balance >= 0 ? balance.toLocaleString("ja-JP") : "---"}
+        </div>
+        <button
+          type="button"
+          className={styles.next}
+          onClick={() => router.push("/")}
+        >
+          {COPY.complete.next}
+        </button>
+      </div>
+    </ScreenFrame>
   );
 }
