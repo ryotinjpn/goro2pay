@@ -1,24 +1,14 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { LandingScreen } from "@/components/auth/LandingScreen";
-// Unit B 残高表示 + 残高枯渇モーダル
-import { BalanceDisplay } from "@/components/budget/BalanceDisplay";
-import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
-// Unit C MainScreen 構成要素
-import { GoroButton } from "@/components/order/GoroButton";
-import { OrderHistoryList } from "@/components/order/OrderHistoryList";
 
-// ルート / は認証状態で UI 切替 (Functional Design Q-A6=A、frontend-components.md §1)。
-// 認証 status を fetch するため Client Component 化が必要。
-//
-// 認証済みのとき Unit C の MainScreen を描画する。Unit B (BalanceDisplay) /
-// Unit D (Suggest) は後続 PR で追加。
+import { LandingScreen } from "@/components/auth/LandingScreen";
+import { MainScreen } from "@/components/order/MainScreen";
+
 export default function HomePage() {
-  const { status, user } = useAuth();
+  const { status } = useAuth();
 
   if (status === "loading") {
-    // AuthGuard を経由しないルートだが、Loading 中は空白で良い (NFR-DEG-01)
     return null;
   }
 
@@ -26,27 +16,5 @@ export default function HomePage() {
     return <LandingScreen />;
   }
 
-  // authenticated: Unit C MainScreen + Unit B 残高表示 / 枯渇モーダル
-  return (
-    <main data-testid="main-screen" style={{ padding: 24, maxWidth: 480, margin: "0 auto" }}>
-      <header style={{ marginBottom: 24, fontSize: 14, color: "#666" }}>
-        ようこそ、{user?.email}
-      </header>
-
-      <section style={{ marginBottom: 24 }}>
-        <BalanceDisplay />
-      </section>
-
-      <section style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-        <GoroButton />
-      </section>
-
-      <section>
-        <h2 style={{ fontSize: 16, color: "#444", marginBottom: 12 }}>履歴</h2>
-        <OrderHistoryList />
-      </section>
-
-      <InsufficientBalanceModal />
-    </main>
-  );
+  return <MainScreen />;
 }
