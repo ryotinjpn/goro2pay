@@ -3,7 +3,7 @@
 **Document Version**: 1.0
 **Created**: 2026-05-07
 **Depth**: Comprehensive
-**Persona**: ゴロゴロ太郎（[personas.md](../user-stories/personas.md)）／ requirements.md §2.2.1 では仮名「佐藤陽介」として提示（同一人物）
+**Persona**: 佐藤陽介（[personas.md](../user-stories/personas.md) / requirements.md §2.2.1）
 **Related Docs**: [components.md](./components.md), [component-methods.md](./component-methods.md), [services.md](./services.md), [component-dependency.md](./component-dependency.md)
 
 本ドキュメントは、ゴロゴロPay MVP の **Application Design** ステージ全成果物を集約する。詳細は各分冊に委ね、ここでは技術選択・全体構造・Intent との対応を俯瞰的に記述する。

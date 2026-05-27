@@ -97,7 +97,7 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as 太郎
+    participant U as 佐藤
     participant GB as GoroButton
     participant H as useOrder
     participant API as POST /orders

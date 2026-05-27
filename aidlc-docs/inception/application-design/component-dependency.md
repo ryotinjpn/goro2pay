@@ -345,7 +345,7 @@ flowchart TB
 
 ### 1.1.B 画面遷移図（ユーザージャーニー × ダメ化フェーズ）
 
-ペルソナ「ゴロゴロ太郎」のダメ化フェーズ 1→2→3 に対応する画面遷移を可視化する。
+ペルソナ「佐藤陽介」のダメ化フェーズ 1→2→3 に対応する画面遷移を可視化する。
 
 ```mermaid
 stateDiagram-v2
@@ -923,7 +923,7 @@ flowchart TB
         end
     end
 
-    USER((ゴロゴロ太郎<br/>PWA)) -->|HTTPS| CF
+    USER((佐藤陽介<br/>PWA)) -->|HTTPS| CF
     CF --> AMP_APP
     AMP_BRANCH -.->|provision| AMP_APP
 

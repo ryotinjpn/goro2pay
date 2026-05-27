@@ -14,7 +14,7 @@
 - **Problem Statement**: AI 時代の知的労働者が仕事で意思決定リソースを使い切っているにも関わらず、生活雑事は依然として「何を/どこに/いくらで」をユーザーに問い続ける。本サービスは生活雑事の意思決定そのものを AI に委任し、人間らしい時間と本来業務への集中を取り戻す（詳細: requirements.md §2.3）。
 - **Business Model**: 金融グループ連携モデル（クレカ加盟店手数料 + キャッシング金利 + ダメ化履歴データのクロスセル活用）。詳細: requirements.md §2.5。
 - **Requirements**: Comprehensive depth、機能要件 7 領域、独自 NFR「ダメ化UX」。
-- **User Stories**: 23 本 / 1 メインペルソナ「ゴロゴロ太郎」（requirements.md §2.2.1 では仮名「佐藤陽介」として同一人物を提示） / Epic-Based（フェーズ0/1/2/3 + ダメ化UX独立章） / Gherkin 受入基準。
+- **User Stories**: 23 本 / 1 メインペルソナ「佐藤陽介」（requirements.md §2.2.1 / personas.md） / Epic-Based（フェーズ0/1/2/3 + ダメ化UX独立章） / Gherkin 受入基準。
 - **Stack**: PWA + AWS サーバレス（Lambda / API Gateway / DynamoDB / Cognito / Bedrock / EventBridge Scheduler） + Terraform IaC。
 - **Extensions**: Security=No / PBT=Partial。
 

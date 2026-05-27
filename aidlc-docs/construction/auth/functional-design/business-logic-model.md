@@ -69,7 +69,7 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as 太郎
+    actor User as 佐藤
     participant UI as SignupScreen<br/>(Next.js)
     participant Auth as Amplify Auth<br/>(@aws-amplify/auth)
     participant Cog as Cognito User Pool
@@ -152,7 +152,7 @@ function handleSignup(email: string, password: string):
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as 太郎
+    actor User as 佐藤
     participant UI as LoginScreen
     participant Auth as Amplify Auth
     participant Cog as Cognito User Pool
@@ -221,7 +221,7 @@ Amplify SSR (Next.js App Router) を採用しているため、**ブラウザは
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as 太郎
+    actor User as 佐藤
     participant Browser as Browser<br/>(Client Component)
     participant NextSrv as Next.js Server<br/>(Route Handler /<br/> Server Action)
     participant Auth as Amplify Auth<br/>(@aws-amplify/auth)
