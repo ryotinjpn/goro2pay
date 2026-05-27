@@ -3,12 +3,14 @@
 
 import Link from "next/link";
 
+import styles from "./not-found.module.css";
+
 export default function NotFound() {
   return (
-    <main style={{ padding: 24, textAlign: "center" }}>
-      <h1>ページが見つかりません</h1>
-      <p>お探しのページは見つけられませんでした。</p>
-      <Link href="/" style={{ display: "inline-block", marginTop: 16 }}>
+    <main className={styles.main}>
+      <h1 className={styles.h1}>ページが見つかりません</h1>
+      <p className={styles.body}>お探しのページは見つけられませんでした。</p>
+      <Link href="/" className={styles.link}>
         トップに戻る
       </Link>
     </main>

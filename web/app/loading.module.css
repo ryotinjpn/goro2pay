@@ -1,0 +1,25 @@
+.main {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background:
+    radial-gradient(
+      ellipse at top,
+      var(--color-bg-warm) 0%,
+      var(--color-bg-mid) 60%,
+      var(--color-bg-deep) 100%
+    );
+  color: var(--color-paper);
+}
+
+.text {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-paper);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
