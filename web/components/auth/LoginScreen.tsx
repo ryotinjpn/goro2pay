@@ -5,6 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 
 import { useAuth } from "@/hooks/useAuth";
 import { authMessages, AuthErrorWithCode } from "@/lib/authMessages";
+import { COPY } from "@/lib/copy";
+
+import { ScreenFrame } from "@/components/order/ScreenFrame";
+import { BrandHeader } from "@/components/order/BrandHeader";
+
+import styles from "./LoginScreen.module.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -40,15 +46,21 @@ export function LoginScreen() {
   }
 
   return (
-    <main data-testid="login-screen" style={{ padding: 24 }}>
-      <h1>ログイン</h1>
+    <ScreenFrame testid="login-screen">
+      <BrandHeader />
+      <h1 className={styles.h1}>{COPY.login.h1}</h1>
+      <div className={styles.sub}>{COPY.login.sub}</div>
       {fromSessionExpired && (
-        <p data-testid="login-session-expired-hint" role="status">
+        <p
+          className={styles.sessionHint}
+          data-testid="login-session-expired-hint"
+          role="status"
+        >
           {authMessages.SESSION_EXPIRED}
         </p>
       )}
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className={styles.field}>
           <label htmlFor="login-email">メールアドレス</label>
           <input
             id="login-email"
@@ -60,7 +72,7 @@ export function LoginScreen() {
             required
           />
         </div>
-        <div>
+        <div className={styles.field}>
           <label htmlFor="login-password">パスワード</label>
           <input
             id="login-password"
@@ -73,18 +85,24 @@ export function LoginScreen() {
           />
         </div>
         {errorMessage && (
-          <p data-testid="login-error-message" role="alert" aria-live="polite">
+          <p
+            className={styles.error}
+            data-testid="login-error-message"
+            role="alert"
+            aria-live="polite"
+          >
             {errorMessage}
           </p>
         )}
         <button
           type="submit"
+          className={styles.submit}
           data-testid="login-submit-button"
           disabled={!canSubmit}
         >
-          {isSubmitting ? "ログイン中…" : "ログイン"}
+          {isSubmitting ? COPY.login.submitting : COPY.login.submit}
         </button>
       </form>
-    </main>
+    </ScreenFrame>
   );
 }
