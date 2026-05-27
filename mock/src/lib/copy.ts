@@ -20,7 +20,7 @@ export const COPY = {
     btnSuggestMain: '押す。',
     btnDeadSub: '— 上出来だ。使い切ったな。',
     deadVerdict: '今月は、終わりだ。',
-    winVerdict: '決まりだ。',
+    winVerdict: '決まりだ',
     increaseTemplate: (yen: number) =>
       `¥${yen.toLocaleString()}。来月もこの調子だ。`,
   },

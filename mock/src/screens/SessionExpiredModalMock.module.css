@@ -5,8 +5,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(20, 15, 10, 0.32);
+  backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
   z-index: 1200;
@@ -14,17 +14,19 @@
 }
 
 @keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .card {
-  background:
-    repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px),
-    radial-gradient(ellipse at top, var(--color-bg-warm) 0%, var(--color-bg-mid) 100%);
-  border: 1px solid var(--color-gold-500);
-  box-shadow: 0 0 30px rgba(201, 169, 107, 0.3);
-  padding: 22px 18px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 40px 80px -24px rgba(0, 0, 0, 0.3);
+  padding: 28px 22px;
   width: min(420px, 86%);
   text-align: center;
   border-radius: var(--radius-card);
@@ -32,37 +34,50 @@
 }
 
 @keyframes card-in {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .h2 {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 24px;
-  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 26px;
+  color: var(--color-ink);
   letter-spacing: -0.02em;
   margin: 0;
 }
 
 .sub {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  color: var(--color-paper);
-  margin-top: 8px;
-  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  margin-top: 10px;
+  letter-spacing: 0;
+  line-height: 1.6;
 }
 
 .button {
-  margin-top: 14px;
-  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
-  color: var(--color-bg-warm);
-  border: 1px solid var(--color-gold-500);
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 12px;
-  letter-spacing: 0.15em;
-  padding: 10px 24px;
+  margin-top: 18px;
+  background: var(--color-line-strong);
+  color: #fff;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 14px 28px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
+  transition: transform 160ms ease;
+}
+
+.button:active {
+  transform: scale(0.98);
 }

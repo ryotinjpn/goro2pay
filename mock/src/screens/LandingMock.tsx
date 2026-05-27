@@ -25,10 +25,10 @@ export default function LandingMock() {
       <BrandHeader />
 
       <div className={styles.hero}>
+        <p className={styles.eyebrow}>{COPY.landing.sub}</p>
         <h1 className={styles.h1}>{COPY.landing.h1Top}</h1>
         <h1 className={styles.h1}>{COPY.landing.h1Bottom}</h1>
       </div>
-      <div className={styles.sub}>{COPY.landing.sub}</div>
 
       <div className={styles.demoLabel}>{COPY.landing.demoLabel}</div>
       <div className={styles.demoAmount}>¥{remaining.toLocaleString()}</div>
@@ -46,9 +46,7 @@ export default function LandingMock() {
             onClick={onDemo}
             disabled={demo !== 'idle'}
           >
-            <span>
-              {demo === 'done' ? '済' : COPY.landing.demoButtonInitial}
-            </span>
+            <span>{demo === 'done' ? '済' : COPY.landing.demoButtonInitial}</span>
             {demo === 'done' && (
               <span className={styles.demoBtnSub}>
                 {COPY.landing.demoButtonDone}
@@ -67,6 +65,9 @@ export default function LandingMock() {
           onClick={() => navigate('/main')}
         >
           {COPY.landing.ctaPrimary}
+          <span className={styles.arrow} aria-hidden>
+            →
+          </span>
         </button>
         <button
           type="button"

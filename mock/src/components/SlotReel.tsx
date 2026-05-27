@@ -29,13 +29,6 @@ export default function SlotReel({ result }: Props) {
         </div>
         <div className={styles.scanline} />
       </div>
-      <div
-        key={`amt-${flashKey}`}
-        className={styles.amount}
-        data-pending={!stopped}
-      >
-        {stopped ? `¥${result.amount.toLocaleString()}` : ''}
-      </div>
     </>
   );
 }
