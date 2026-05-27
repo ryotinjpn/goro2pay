@@ -323,7 +323,7 @@ function LandingMock() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <GoldButton variant="primary">始めろ</GoldButton>
-        <GoldButton variant="secondary">戻る</GoldButton>
+        <GoldButton variant="secondary">ログイン</GoldButton>
       </div>
     </div>
   );
@@ -429,6 +429,129 @@ function LoginMock() {
         <GoldButton>ログイン</GoldButton>
       </div>
     </div>
+  );
+}
+
+function BudgetSetupMock() {
+  const QUICK = [10_000, 30_000, 50_000, 80_000, 100_000];
+  const selected = 30_000;
+  return (
+    <div style={SCREEN_INNER}>
+      <BrandHeader time="21:09" />
+      <div style={{ marginTop: 18 }}>
+        <div
+          style={{
+            fontFamily: "var(--font-display-serif)",
+            fontStyle: "italic",
+            fontWeight: 700,
+            fontSize: 24,
+            lineHeight: 1.2,
+            color: "var(--color-cream)",
+          }}
+        >
+          まず、線を引け。
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-body-mincho)",
+            fontSize: 10,
+            color: "var(--color-gold-500)",
+            marginTop: 8,
+            marginBottom: 18,
+            letterSpacing: "0.04em",
+          }}
+        >
+          引かなきゃ、始まらん。
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-mono-pixel)",
+            fontSize: 9,
+            color: "var(--color-mute)",
+            letterSpacing: "0.2em",
+            marginBottom: 8,
+          }}
+        >
+          月間ダメ予算
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            marginBottom: 14,
+          }}
+        >
+          {QUICK.map((v) => {
+            const isSel = v === selected;
+            return (
+              <div
+                key={v}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 4,
+                  border: isSel
+                    ? "1px solid var(--color-gold-100)"
+                    : "1px solid #4a3a18",
+                  background: isSel
+                    ? "linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700))"
+                    : "transparent",
+                  color: isSel ? "var(--color-bg-warm)" : "var(--color-cream)",
+                  fontFamily: "var(--font-mono-pixel)",
+                  fontSize: 10,
+                  letterSpacing: "0.06em",
+                  fontWeight: isSel ? 700 : 400,
+                }}
+              >
+                {v === 30_000 ? "★ " : ""}¥{v.toLocaleString()}
+              </div>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            background: "rgba(255,255,255,.04)",
+            border: "1px solid #4a3a18",
+            borderRadius: 4,
+            padding: "10px 12px",
+            color: "var(--color-cream)",
+            fontFamily: "var(--font-display-serif)",
+            fontStyle: "italic",
+            fontSize: 22,
+            letterSpacing: "0.02em",
+            textAlign: "right",
+          }}
+        >
+          ¥30,000
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-mono-pixel)",
+            fontSize: 8,
+            color: "var(--color-mute)",
+            letterSpacing: "0.16em",
+            marginTop: 6,
+          }}
+        >
+          1,000 〜 100,000 円 / 1,000 円刻み
+        </div>
+      </div>
+      <div style={{ marginTop: "auto" }}>
+        <GoldButton>線を引け</GoldButton>
+      </div>
+    </div>
+  );
+}
+
+function InsufficientModalMock() {
+  return (
+    <ModalMock
+      title="足りないか。"
+      sub="もっと欲しけりゃ、線を引き直せ。"
+      secondary="閉じろ。"
+      primary="引き直す。"
+      showBackground="suggest"
+    />
   );
 }
 
@@ -774,12 +897,14 @@ const SCREENS: Array<{
   { no: "01", title: "LANDING", desc: "未ログイン初見。ヒーロー＋デモボタン1回＋CTA", Mock: LandingMock },
   { no: "02", title: "SIGNUP", desc: "登録フォーム。見出しのみリヴァイ調、フォームは中立", Mock: SignupMock },
   { no: "03", title: "LOGIN", desc: "既存ユーザー復帰。見出しのみリヴァイ調", Mock: LoginMock },
-  { no: "04", title: "MAIN · IDLE", desc: "ログイン後の通常状態", Mock: MainIdleMock },
-  { no: "05", title: "MAIN · SUGGEST", desc: "先回り提案。吹き出しが上から目線で命令", Mock: MainSuggestMock },
-  { no: "06", title: "COMPLETE", desc: "注文完了。上から目線の褒め", Mock: CompleteMock },
-  { no: "07", title: "MAIN · DEAD", desc: "残高 0。脱色＋赤い増額ボタンだけ生きている", Mock: MainDeadMock },
-  { no: "08", title: "LOGOUT MODAL", desc: "ログアウト確認", Mock: LogoutModalMock },
-  { no: "09", title: "SESSION EXPIRED", desc: "セッション切れ通知", Mock: SessionExpiredModalMock },
+  { no: "04", title: "BUDGET SETUP", desc: "予算未設定時の強制セットアップ。線を引かなきゃ始まらない", Mock: BudgetSetupMock },
+  { no: "05", title: "MAIN · IDLE", desc: "ログイン後の通常状態", Mock: MainIdleMock },
+  { no: "06", title: "MAIN · SUGGEST", desc: "先回り提案。吹き出しが上から目線で命令", Mock: MainSuggestMock },
+  { no: "07", title: "COMPLETE", desc: "注文完了。上から目線の褒め", Mock: CompleteMock },
+  { no: "08", title: "MAIN · DEAD", desc: "残高 0。脱色＋赤い増額ボタンだけ生きている", Mock: MainDeadMock },
+  { no: "09", title: "INSUFFICIENT", desc: "注文時に予算不足。引き直せの命令", Mock: InsufficientModalMock },
+  { no: "10", title: "LOGOUT MODAL", desc: "ログアウト確認", Mock: LogoutModalMock },
+  { no: "11", title: "SESSION EXPIRED", desc: "セッション切れ通知", Mock: SessionExpiredModalMock },
 ];
 
 export default function DesignGalleryPage() {
@@ -815,7 +940,7 @@ export default function DesignGalleryPage() {
             letterSpacing: "0.1em",
           }}
         >
-          ランディング / サインアップ / ログイン / メイン (idle, suggest, dead) / 完了 / ログアウトモーダル / セッション切れモーダル
+          ランディング / サインアップ / ログイン / 予算セットアップ / メイン (idle, suggest, dead) / 完了 / 予算不足モーダル / ログアウトモーダル / セッション切れモーダル
         </p>
       </header>
 
