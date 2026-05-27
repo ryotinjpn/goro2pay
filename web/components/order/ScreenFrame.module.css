@@ -1,0 +1,46 @@
+.frame {
+  position: relative;
+  min-height: 100vh;
+  padding: var(--pad-screen);
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+.frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.025) 0 1px,
+    transparent 1px 4px
+  );
+  z-index: 0;
+}
+
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% -20%,
+    rgba(201, 169, 107, 0.22),
+    transparent 55%
+  );
+  z-index: 0;
+}
+
+.frame > * {
+  position: relative;
+  z-index: 1;
+}
+
+.frame[data-screen-state="dead"] {
+  filter: saturate(0.2) brightness(0.7);
+  transition: filter var(--duration-dead) ease-out;
+}
