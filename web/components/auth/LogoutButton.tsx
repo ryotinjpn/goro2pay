@@ -6,7 +6,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoutConfirmModal } from "./LogoutConfirmModal";
 
-export function LogoutButton() {
+type Props = {
+  // 呼び出し側 (BrandHeader 等) から世界観装飾を当てるための class 名。
+  // 子孫セレクタで装飾しようとすると LogoutConfirmModal の内部 button まで
+  // 巻き込むため、トリガ button 自身に直接 className を渡す方式にする (PR ⑤ レビュー指摘)。
+  className?: string;
+};
+
+export function LogoutButton({ className }: Props = {}) {
   const { logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -35,6 +42,7 @@ export function LogoutButton() {
         data-testid="logout-button"
         onClick={() => setOpen(true)}
         aria-label="ログアウト"
+        className={className}
       >
         ⏏︎ ログアウト
       </button>

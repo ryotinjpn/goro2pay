@@ -17,7 +17,7 @@ export default function BudgetSetupScreen() {
 
   return (
     <ScreenFrame testid="budget-setup-screen">
-      <BrandHeader />
+      <BrandHeader showLogout />
       <h1 className={styles.h1}>
         {isExisting ? "ダメ予算を変更する" : "ダメ予算を設定する"}
       </h1>
