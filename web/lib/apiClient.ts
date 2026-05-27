@@ -29,29 +29,26 @@ export function _resetSessionExpiredHandling(): void {
   getDefaultStore().set(sessionExpiredAtom, null);
 }
 
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+
 export const apiClient = {
   async request(input: ApiClientRequestInit): Promise<Response> {
-    // Authorization の優先順:
-    //   (1) input.headers.Authorization が呼出側で明示されていればそれを優先
-    //       (テスト時の手動注入や、特殊ケース用)
-    //   (2) fetchAuthSession() から AccessToken を取得して付与 (本番経路)
-    //   (3) fetchAuthSession 自体が throw した場合は NETWORK_ERROR
-    //       (オフラインや Cognito 接続障害を SESSION_EXPIRED と誤分類しない)
     const headers = new Headers(input.headers);
 
     if (!headers.has("Authorization")) {
-      let accessToken: string | undefined;
-      try {
-        const session = await fetchAuthSession();
-        accessToken = session.tokens?.accessToken?.toString();
-      } catch {
-        // fetchAuthSession の throw はネットワーク全断や Cognito 接続障害が主因。
-        // SESSION_EXPIRED modal を出してログイン画面に飛ばすのは UX 的に誤り
-        // (ログインしていたのに切れたと誤認させる) なので NETWORK_ERROR に分類。
-        throw new AuthErrorWithCode("NETWORK_ERROR");
-      }
-      if (accessToken) {
-        headers.set("Authorization", `Bearer ${accessToken}`);
+      if (USE_MOCK) {
+        headers.set("Authorization", "Bearer mock-token");
+      } else {
+        let accessToken: string | undefined;
+        try {
+          const session = await fetchAuthSession();
+          accessToken = session.tokens?.accessToken?.toString();
+        } catch {
+          throw new AuthErrorWithCode("NETWORK_ERROR");
+        }
+        if (accessToken) {
+          headers.set("Authorization", `Bearer ${accessToken}`);
+        }
       }
     }
 
