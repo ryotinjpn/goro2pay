@@ -1,7 +1,10 @@
+// BrandHeader: mock/src/components/BrandHeader.tsx ベースに移植 (PR ⑤)。
+// 左に「ゴロゴロPay」、右に時刻 + ログアウトボタン (web 独自) を並べる。
 "use client";
 
 import { useEffect, useState } from "react";
 
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { COPY } from "@/lib/copy";
 
 import styles from "./BrandHeader.module.css";
@@ -16,7 +19,9 @@ export function BrandHeader() {
   const [time, setTime] = useState<string>(() => formatTime(new Date()));
 
   useEffect(() => {
-    const id = setInterval(() => setTime(formatTime(new Date())), 60_000);
+    // mock 同様 30 秒間隔。1 分単位の表示なので 60 秒にしても良いが、
+    // ユーザが画面を開いた直後に分が変わったときに最大 60 秒のラグが出るのを防ぐ。
+    const id = setInterval(() => setTime(formatTime(new Date())), 30_000);
     return () => clearInterval(id);
   }, []);
 
@@ -28,10 +33,15 @@ export function BrandHeader() {
   return (
     <header className={styles.header}>
       <span className={styles.brand}>
-        {left}
-        {right && <span className={styles.pay}>{right}</span>}
+        <span className={styles.brandKana}>{left}</span>
+        {right && <span className={styles.brandLatin}>{right}</span>}
       </span>
-      <span className={styles.time}>{time}</span>
+      <div className={styles.right}>
+        <span className={styles.time}>{time}</span>
+        <span className={styles.logoutSlot}>
+          <LogoutButton />
+        </span>
+      </div>
     </header>
   );
 }

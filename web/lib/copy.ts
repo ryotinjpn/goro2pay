@@ -39,6 +39,8 @@ export const COPY = {
     slotCaption: "▼ 選定中 ▼",
     deadVerdict: "今月は、終わりだ。",
     deadButtonSub: "— 上出来だ。使い切ったな。",
+    /* 注文成功時に画面中央に弾けるリヴァイ調の判決語 (PR ⑤ winVerdict 演出)。 */
+    winVerdict: "決まりだ。",
   },
   complete: {
     verdict: "いい判断だ。",

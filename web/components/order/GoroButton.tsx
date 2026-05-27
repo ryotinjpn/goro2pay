@@ -16,9 +16,11 @@ import { generateUlid } from "@/lib/ulid";
 import { COPY, composeSuggestSubLabel } from "@/lib/copy";
 import {
   balanceAtom,
+  lastOrderAtom,
   monthlyCountAtom,
   screenStateAtom,
   suggestionAtom,
+  winFlashCounterAtom,
   type ScreenState,
 } from "@/state/main";
 
@@ -35,6 +37,8 @@ export function GoroButton() {
   const setScreenState = useSetAtom(screenStateAtom);
   const setBalance = useSetAtom(balanceAtom);
   const setMonthlyCount = useSetAtom(monthlyCountAtom);
+  const setLastOrder = useSetAtom(lastOrderAtom);
+  const setWinFlash = useSetAtom(winFlashCounterAtom);
   const suggestion = useAtomValue(suggestionAtom);
   const setSuggestion = useSetAtom(suggestionAtom);
   const { mutate, disabled, isPending } = useOrder();
@@ -92,6 +96,17 @@ export function GoroButton() {
             setWinningText(`${res.storeName} ¥${res.amount.toLocaleString("ja-JP")}`);
             setBalance(res.remainingBalance);
             setMonthlyCount((c) => c + 1);
+            // PR ⑤: 注文成功と同時にグローバル演出を発火。
+            //   - winFlashCounterAtom を increment → MainScreen の win-flash-screen
+            //     / win-verdict-pop が `key={counter}` で remount されて再走
+            //   - lastOrderAtom に確定情報を書き込んで Complete 画面 (PR ⑧) で参照
+            setWinFlash((c) => c + 1);
+            setLastOrder({
+              orderId: res.orderId,
+              storeName: res.storeName,
+              menuName: res.menuName,
+              amount: res.amount,
+            });
             setTimeout(() => {
               setScreenState(res.remainingBalance === 0 ? "dead" : "idle");
               router.push(`/order/${res.orderId}/complete`);
