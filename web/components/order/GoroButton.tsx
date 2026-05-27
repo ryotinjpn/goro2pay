@@ -1,54 +1,135 @@
-// LC-21 GoroButton
-//
-// メイン画面の「ご飯めんどくさい」ボタン。useOrder hook 経由で
-// PlaceOrder mutation を発火する。disabled 属性で連打抑制 1 秒 + ローディング表示。
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useState } from "react";
 
 import { useOrder } from "@/hooks/useOrder";
 import { generateUlid } from "@/lib/ulid";
+import { COPY, composeSuggestSubLabel } from "@/lib/copy";
+import {
+  balanceAtom,
+  monthlyCountAtom,
+  screenStateAtom,
+  suggestionAtom,
+  type ScreenState,
+} from "@/state/main";
+
+import { SlotReel } from "./SlotReel";
+import { SuggestBubble } from "./SuggestBubble";
+
+import styles from "./GoroButton.module.css";
+
+const SLOT_MIN_DURATION_MS = 1200;
 
 export function GoroButton() {
   const router = useRouter();
+  const screenState = useAtomValue(screenStateAtom);
+  const setScreenState = useSetAtom(screenStateAtom);
+  const setBalance = useSetAtom(balanceAtom);
+  const setMonthlyCount = useSetAtom(monthlyCountAtom);
+  const suggestion = useAtomValue(suggestionAtom);
   const { mutate, disabled, isPending } = useOrder();
+  void isPending;
+
+  const [winningText, setWinningText] = useState<string | null>(null);
+  const [slotStartedAt, setSlotStartedAt] = useState<number>(0);
+
+  useEffect(() => {
+    if (screenState !== "slot") {
+      setWinningText(null);
+    }
+  }, [screenState]);
 
   const handleClick = () => {
+    if (screenState !== "idle" && screenState !== "suggested") return;
+    if (disabled) return;
+
+    setScreenState("slot");
+    setSlotStartedAt(Date.now());
+    setWinningText(null);
+
     mutate(
       {
         category: "food",
         idempotencyKey: generateUlid(),
+        suggestionId: suggestion?.suggestionId,
       },
       {
         onSuccess: (res) => {
-          // 完了画面に遷移 (LC-32)
-          router.push(`/order/${res.orderId}/complete`);
+          const elapsed = Date.now() - slotStartedAt;
+          const remaining = Math.max(0, SLOT_MIN_DURATION_MS - elapsed);
+          setTimeout(() => {
+            setWinningText(`${res.storeName} ¥${res.amount.toLocaleString("ja-JP")}`);
+            setBalance(res.remainingBalance);
+            setMonthlyCount((c) => c + 1);
+            setTimeout(() => {
+              setScreenState(res.remainingBalance === 0 ? "dead" : "idle");
+              router.push(`/order/${res.orderId}/complete`);
+            }, 800);
+          }, remaining);
+        },
+        onError: () => {
+          setScreenState("idle");
         },
       },
     );
   };
 
+  const labelMain = labelMainFor(screenState);
+  const labelSub = labelSubFor(screenState, suggestion);
+  const ariaLabel = ariaLabelFor(screenState, suggestion);
+
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled}
-      data-testid="goro-button"
-      aria-label="ご飯めんどくさい"
-      style={{
-        padding: "20px 32px",
-        fontSize: 24,
-        fontWeight: 700,
-        background: disabled ? "#bbb" : "#ff7043",
-        color: "#fff",
-        border: "none",
-        borderRadius: 12,
-        cursor: disabled ? "not-allowed" : "pointer",
-        boxShadow: disabled ? "none" : "0 4px 12px rgba(255,112,67,0.4)",
-        minWidth: 240,
-      }}
-    >
-      {isPending ? "ダメ化中…" : "ご飯めんどくさい"}
-    </button>
+    <div className={styles.wrap}>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled || screenState === "slot" || screenState === "dead"}
+        data-testid="goro-button"
+        data-state={screenState}
+        aria-label={ariaLabel}
+        className={styles.button}
+      >
+        {screenState === "suggested" && <SuggestBubble />}
+        {screenState === "slot" ? (
+          <SlotReel winningText={winningText} />
+        ) : (
+          <div>
+            <div className={styles.labelMain}>{labelMain}</div>
+            {labelSub && <div className={styles.labelSub}>{labelSub}</div>}
+          </div>
+        )}
+      </button>
+    </div>
   );
+}
+
+function labelMainFor(state: ScreenState): string {
+  if (state === "suggested") return COPY.main.suggestMain;
+  return COPY.main.idleMain;
+}
+
+function labelSubFor(
+  state: ScreenState,
+  suggestion: { storeName: string; amount: number } | null,
+): string | null {
+  if (state === "dead") return COPY.main.deadButtonSub;
+  if (state === "slot") return null;
+  if (state === "suggested" && suggestion) {
+    return composeSuggestSubLabel(suggestion.storeName, suggestion.amount);
+  }
+  return COPY.main.idleSub;
+}
+
+function ariaLabelFor(
+  state: ScreenState,
+  suggestion: { storeName: string; amount: number } | null,
+): string {
+  if (state === "dead") return "残高不足のため注文できません";
+  if (state === "slot") return "注文処理中";
+  if (state === "suggested" && suggestion) {
+    return `${suggestion.storeName} ¥${suggestion.amount.toLocaleString("ja-JP")} を注文`;
+  }
+  return "ご飯めんどくさい";
 }
