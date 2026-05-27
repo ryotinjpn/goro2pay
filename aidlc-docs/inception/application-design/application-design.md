@@ -3,7 +3,7 @@
 **Document Version**: 1.0
 **Created**: 2026-05-07
 **Depth**: Comprehensive
-**Persona**: ゴロゴロ太郎（[personas.md](../user-stories/personas.md)）
+**Persona**: ゴロゴロ太郎（[personas.md](../user-stories/personas.md)）／ requirements.md §2.2.1 では仮名「佐藤陽介」として提示（同一人物）
 **Related Docs**: [components.md](./components.md), [component-methods.md](./component-methods.md), [services.md](./services.md), [component-dependency.md](./component-dependency.md)
 
 本ドキュメントは、ゴロゴロPay MVP の **Application Design** ステージ全成果物を集約する。詳細は各分冊に委ね、ここでは技術選択・全体構造・Intent との対応を俯瞰的に記述する。
@@ -288,6 +288,7 @@ infra/                                   # Terraform
 | 審査観点 | 本ドキュメント群での対応 |
 |---|---|
 | ビジネス意図（Intent）の明確さ | §1 / §9 / §10 でダメ化UX と各コンポーネントの対応を明示。Intent は Presentation 層からサービス層まで名前空間レベルで保持 |
+| 課題と解決策の整合（Problem-Solution Fit） | requirements.md §2.3 Problem Statement で定義した「意思決定リソースの委任」課題に対し、§5 SuggestService（先回り提案）/ OrderService（1タップ実行）/ MetricsService（消費可視化）が解決手段として一貫して接続 |
 | 創造性とテーマ適合性 | §5 で SuggestService / BudgetRaiseService / FallbackSuggestProvider / MetricsService をダメ化UX 専用コンポーネントとして明記 |
 | Unit 分解の適切さ | §10 で 6 Unit 境界と依存関係を明示、Units Generation ステージの直接の入力 |
 | ドキュメント品質 | components.md / component-methods.md / services.md / component-dependency.md の 4 分冊 + 本集約ドキュメントで立体構造を提供 |

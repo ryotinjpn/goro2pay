@@ -1416,3 +1416,25 @@ aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ�
 **Context**: §2 を「抽象→具体」順で再編し、ペルソナ起点で Problem → Solution → Positive Inversion へ縦串が通った。プレゼン台本では §2.2 → §2.3 → §2.4 → §2.5 を順に語ることで、「人間／市場／ビジネスモデル」の三層を一気通貫で説明できる構造になった。「ダメになる」テーマは保持しつつ、その反転メリット（時間・集中）を §2.3.3 で明示し、ハッカソン場面でも提案として成立する形に。
 
 ---
+
+## Inception (Requirements) — §2 改訂を下流ドキュメントへ反映
+**Timestamp**: 2026-05-27T05:30:00Z
+**User Inputs**:
+- "マージした。他のドキュメント成果物で修正が必要な箇所を精査して"
+- Q（修正範囲）: "High + Medium を 1 PR で対応"
+
+**AI Response**:
+1. **personas.md (冒頭)**: 「※ 本ドキュメントの『ゴロゴロ太郎』と requirements.md §2.2.1 の仮名『佐藤陽介』は同一人物」の Note を追加。基本属性（27 歳・Web ディレクター・年収 550 万・一人暮らし）が完全一致することを明記。
+2. **application-design.md (line 6)**: ヘッダの Persona 行に「requirements.md §2.2.1 では仮名『佐藤陽介』として提示（同一人物）」を併記。
+3. **application-design.md §11 審査観点**: 「課題と解決策の整合（Problem-Solution Fit）」行を新設。requirements.md §2.3 Problem Statement で定義した課題と、§5 SuggestService / OrderService / MetricsService との接続を明示。
+4. **execution-plan.md §1 背景サマリ**: 「Problem Statement」「Business Model」の 2 行を追加し、それぞれ requirements.md §2.3 / §2.5 へリンク。User Stories 行にもペルソナ名橋渡しを 1 文追加。
+5. **execution-plan.md §10 トレーサビリティ表**: 既存の「ビジネス意図」「創造性とテーマ適合性」行に Problem Statement (§2.3) と Business Model (§2.5) への参照を追記。
+
+**精査済み・修正不要**:
+- audit.md の旧表現「ダメ受容層」等 → 履歴ログとして保持が正当
+- aidlc-state.md の Key Decisions → 内容は正確、構造変化のみで実害なし
+- construction/* 配下の各 Unit 成果物 → §2 の旧番号を直接参照していないため影響なし
+
+**Context**: PR #109（§2 全面改訂）のマージを受け、下流ドキュメントとの整合性を取った。Problem Statement (§2.3) と Business Model (§2.5) という新規追加内容が、実装計画・設計ドキュメントから参照される形でトレーサビリティを確保。ペルソナ命名の差異（ゴロゴロ太郎 vs 佐藤陽介）も双方向の橋渡し注記で曖昧さを解消。
+
+---
