@@ -17,6 +17,11 @@ applications:
       phases:
         preBuild:
           commands:
+            # Amplify Hosting (Next.js SSR) は Branch env vars を build container にしか
+            # 注入しない。NEXT_PUBLIC_* 以外を SSR runtime で読むには .env.production に
+            # 書き出して next build にバンドルさせる必要がある。
+            # 参考: https://docs.aws.amazon.com/amplify/latest/userguide/ssr-environment-variables.html
+            - echo "API_ENDPOINT=$API_ENDPOINT" >> .env.production
             - npm ci
         build:
           commands:
