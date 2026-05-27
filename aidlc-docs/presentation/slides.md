@@ -2,6 +2,7 @@
 marp: true
 theme: default
 paginate: true
+html: true
 style: |
   :root {
     --bg-deep: #050402;
@@ -72,6 +73,13 @@ style: |
     padding: 10px 16px;
     border: 1px solid var(--gold-500);
     font-weight: 700;
+  }
+  video.demo {
+    display: block;
+    margin: 0 auto;
+    height: 360px;
+    width: auto;
+    border-radius: 8px;
   }
   td {
     padding: 10px 16px;
@@ -299,6 +307,10 @@ AWS Summit Japan 2026 AI-DLC ハッカソン 予選会
 ## Demo
 
 # 実際に動くものを<br>ご覧ください。
+
+---
+
+<video src="./assets/demo.mov" controls class="demo"></video>
 
 ---
 
