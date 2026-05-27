@@ -11,8 +11,10 @@
 
 - **User Request**: AI-DLC を使って、idea.md に記載のサービス「ゴロゴロPay」を作成する。
 - **Business Intent**: 「人をダメにする」を最優先価値とするライフスタイル代行 PWA（AWS Summit Japan 2026 AI-DLC ハッカソン応募）。
+- **Problem Statement**: AI 時代の知的労働者が仕事で意思決定リソースを使い切っているにも関わらず、生活雑事は依然として「何を/どこに/いくらで」をユーザーに問い続ける。本サービスは生活雑事の意思決定そのものを AI に委任し、人間らしい時間と本来業務への集中を取り戻す（詳細: requirements.md §2.3）。
+- **Business Model**: 金融グループ連携モデル（クレカ加盟店手数料 + キャッシング金利 + ダメ化履歴データのクロスセル活用）。詳細: requirements.md §2.5。
 - **Requirements**: Comprehensive depth、機能要件 7 領域、独自 NFR「ダメ化UX」。
-- **User Stories**: 23 本 / 1 メインペルソナ「ゴロゴロ太郎」 / Epic-Based（フェーズ0/1/2/3 + ダメ化UX独立章） / Gherkin 受入基準。
+- **User Stories**: 23 本 / 1 メインペルソナ「佐藤陽介」（requirements.md §2.2.1 / personas.md） / Epic-Based（フェーズ0/1/2/3 + ダメ化UX独立章） / Gherkin 受入基準。
 - **Stack**: PWA + AWS サーバレス（Lambda / API Gateway / DynamoDB / Cognito / Bedrock / EventBridge Scheduler） + Terraform IaC。
 - **Extensions**: Security=No / PBT=Partial。
 
@@ -264,7 +266,7 @@ AWS Summit Japan 2026 AI-DLC ハッカソンの **Inception フェーズ成果�
 
 | 審査観点 | 本計画での対応箇所 |
 |---|---|
-| ビジネス意図（Intent）の明確さ | §1, §7.1, 次の Application Design / Units Generation で Intent を全 Unit に展開 |
-| 創造性とテーマ適合性 | §6 Adaptive Depth で Application Design / Units Generation を Comprehensive、stories.md の Epic X（ダメ化UX）との連続性を保つ |
+| ビジネス意図（Intent）の明確さ | §1, §7.1, 次の Application Design / Units Generation で Intent を全 Unit に展開。requirements.md §2.3 Problem Statement で「意思決定リソースの委任」という解くべき課題を言語化済み |
+| 創造性とテーマ適合性 | §6 Adaptive Depth で Application Design / Units Generation を Comprehensive、stories.md の Epic X（ダメ化UX）との連続性を保つ。requirements.md §2.5 Business Model で金融グループ連携モデル（クレカ + キャッシング + データ活用）として独自性を提示 |
 | Unit 分解の適切さ | §4 の Units Generation を EXECUTE、stories.md 末尾の 6 Unit 候補を基礎に設計 |
 | ドキュメント品質 | §7.2 Key Deliverables 全達成、§7.3 Quality Gates を維持 |
