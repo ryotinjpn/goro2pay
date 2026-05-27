@@ -64,6 +64,8 @@
 }
 
 .yen {
+  /* 親 .amount は italic だが、通貨記号は upright を維持する (mock との意図的な差)。
+     italic にすると桁数の揃った数値の前で記号が傾いて視覚的に不安定になる。 */
   font-style: normal;
   font-size: 0.6em;
   margin-right: 4px;
