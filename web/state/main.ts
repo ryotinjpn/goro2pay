@@ -29,3 +29,18 @@ export type Suggestion = {
 };
 
 export const suggestionAtom = atom<Suggestion | null>(null);
+
+// 直近の注文結果。Complete 画面で実データを出すために onSuccess 時に setter で書き込む。
+// orderId は冪等性検証で使う可能性があるが、現状は表示用 (storeName/menuName/amount) のみ参照。
+export type LastOrder = {
+  orderId: string;
+  storeName: string;
+  menuName: string;
+  amount: number;
+};
+
+export const lastOrderAtom = atom<LastOrder | null>(null);
+
+// 注文成功時の金色フラッシュ + verdict ポップ演出を再走させるための counter。
+// useOrder.onSuccess で increment し、MainScreen の演出層が `key={counter}` で remount する。
+export const winFlashCounterAtom = atom<number>(0);
