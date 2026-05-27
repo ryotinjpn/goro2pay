@@ -17,4 +17,7 @@ locals {
 
   # API Lambda attach 用 DynamoDB Policy
   dynamodb_access_policy_name = "${local.prefix}-budget-dynamodb-policy"
+
+  # Scheduler Lambda の bootstrap バイナリパス (Code Review Minor 12)
+  bootstrap_path = var.scheduler_bootstrap_path != "" ? var.scheduler_bootstrap_path : "${path.module}/../../../apps/api/cmd/scheduler/bootstrap"
 }
