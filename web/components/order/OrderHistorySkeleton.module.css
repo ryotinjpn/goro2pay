@@ -1,0 +1,28 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar {
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid var(--color-gold-900);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-warm) 0%,
+    rgba(201, 169, 107, 0.08) 50%,
+    var(--color-bg-warm) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
