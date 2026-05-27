@@ -88,6 +88,18 @@
   letter-spacing: 0.04em;
 }
 
+/* AddBudgetForm 用: 追加後の予算合計プレビュー (合計 ¥X (現在 ¥Y)) を出す。
+   入力中の追加額に応じて即時更新される。 */
+.preview {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-top: -8px;
+}
+
 .submit {
   display: block;
   width: 100%;
