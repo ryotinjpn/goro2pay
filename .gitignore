@@ -12,6 +12,8 @@ web/.env*.local
 web/coverage/
 web/playwright-report/
 web/test-results/
+web/next-env.d.ts
+web/*.tsbuildinfo
 
 # Backend (Go)
 apps/api/dist/
@@ -37,3 +39,6 @@ infra/modules/**/.terraform.lock.hcl
 # Misc
 *.log
 node_modules/
+
+# Superpowers brainstorming session files
+.superpowers/

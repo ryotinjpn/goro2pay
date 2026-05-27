@@ -49,6 +49,7 @@ export function useOrder() {
       triggerLock();
       queryClient.invalidateQueries({ queryKey: ["orderHistory"] });
       queryClient.invalidateQueries({ queryKey: ["balance"] }); // unit-interfaces.md §9.1
+      queryClient.invalidateQueries({ queryKey: ["metrics"] }); // BR-FE03: Unit E MetricsPanel 自動更新
     },
     onError: (err) => {
       triggerLock();

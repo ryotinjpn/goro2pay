@@ -1035,6 +1035,28 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## NFR Requirements (Unit E) — Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "unitEの続きをお願いします"
+**AI Response**: NFR Requirements ステージ開始。Q-N1〜Q-N5 の 5 問を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-N1: C — BudgetSettings + Wallet を errgroup で並列取得 → NotFound 確認後に CountThisMonth 直列呼び出し
+- Q-N2: A — いずれかの DynamoDB 読み取り失敗で HTTP 500（部分返却なし）
+- Q-N3: A — ConsumptionRate と ComputeRecommendedBudget の 2 関数に gopter で PBT 適用
+- Q-N4: B — 赤色 (text-red-500 / bg-red-500) + animate-pulse で不安の演出を最大化
+- Q-N5: A — BudgetEmptyScreen マウントのたびに RaiseModal を再表示（逃げられない退化ループ）
+
+矛盾チェック: 4 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/nfr-requirements/):
+- nfr-requirements.md: NFRE-E01〜E10 の 10 NFR（Performance / Reliability / Maintainability / Usability / Security）
+- tech-stack-decisions.md: 新規テックスタックなし、Unit A/B/C/D 継承のみ
+
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
@@ -1077,6 +1099,14 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は 5 PR への分割コミット作業。
 
 ---
+## 横串デザインシステム — brainstorming + spec v1.0
+**Timestamp**: 2026-05-24T10:00:00Z
+**User Input**: "aidlc-docsにドキュメントがあるので、そのコンセプトに沿ってuiuxを検討して一番最適を考えて"
+**AI Response**: superpowers:brainstorming + frontend-design を併用して UI/UX 検討開始。Visual Companion (ローカル HTTP サーバ) でモック比較を提示しつつ 1 問ずつ対話ヒアリング。トーン候補 4 種 (refined dark luxury / soft warm playful / retro neon / brutalist minimal) → ユーザ選好で C×A ハイブリッド (レトロ自販機ネオン × 金融的品格) → 「赤がきつい」修正で WARM (金主役+赤は警告差し色) に確定。コンセプト名は当初「Forbidden Vending」→「Pocket Casino」→ コンプラ配慮で最終「Slot Machine」。メイン画面 1 枚に集中する方針で v1.0 spec `docs/superpowers/specs/2026-05-24-main-screen-design.md` を作成、PR #94 として提出。
+**Context**: ハッカソン審査軸「創造性とテーマ適合性」最大化のための追加スコープ。v1.0 はメイン画面のみ。
+
+---
+
 ## Bugfix — Cognito Auth Flow ミスマッチ (USER_PASSWORD_AUTH → USER_SRP_AUTH)
 **Timestamp**: 2026-05-25T00:00:00Z
 **User Input**: "https://develop.d1m43i53iuty35.amplifyapp.com/このurlからユーザー登録したんだけど、dev-kyoto-sso-administrator cognioには登録されているが、フロントでエラーになってる" → 画面エラー文言「メールアドレスの形式が正しくないようです」 → DevTools Network: cognito-idp.ap-northeast-1.amazonaws.com への POST が 400 Bad Request、Request Body は AuthFlow="USER_SRP_AUTH" の InitiateAuth → "そのあたりaidlc-docsに定義してなかったの？" → "どれがセキュアなの？" → "yes" (design doc + infra を SRP に揃える方針承認) → "全体的に直して別のブランチで"
@@ -1128,6 +1158,14 @@ aidlc-state.md に Unit C Code Generation を [x] に更新。Unit C per-unit �
 
 aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit ループ全 5 ステージ完了。
 **Context**: ⛔ GATE: Code Generation 完了承認を待機中。次は PR 分割コミット作業 (Unit C と同様、Backend / Frontend / Infrastructure / Docs の 4 PR 想定)。
+
+---
+
+## 横串デザインシステム — spec v2.0 + コピー全画面確定
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "他の画面のuiuxはどうする？" → 「他画面も同じ Slot Machine コンセプトに揃える (推奨)」を選択。続けて全画面のコピーを 1 問ずつヒアリング。「YES」→「押す。」、サジェスト吹き出しを「そろそろだろ。」、完了画面中央を「いい判断だ。」、DEAD 中央を「今月は、終わりだ。」、増額ボタンを「¥50,000。来月もこの調子だ。」、ログアウト見出しを「やめるのか？」、セッション切れ見出しを「離れすぎたな。」など、リヴァイ調 (進撃の巨人のリヴァイの口調をパロディ参照点とした、短文体言止め・終止形限定・上から目線) で全画面統一。「お前」「兵団用語 (任務 / 撤退 / 持ち場)」「金で消す」など強すぎる語彙はコンプラ配慮で除外。
+**AI Response**: spec を全画面分に拡張し、§1.6「コピーシステム」§5「他画面の詳細仕様」§6「共通アクセシビリティ」§9「オープン項目」を追加。ファイル名を `2026-05-25-app-design.md` にリネームしながら commit。続けて 22 タスクの implementation plan を作成し、PR #94 に積んだ。
+**Context**: spec v2.0 と implementation plan の 2 ファイルを `docs/superpowers/` 配下に置いて push 済み。
 
 ---
 
@@ -1225,6 +1263,71 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 
 ---
 
+
+## Construction (Unit E) — NFR Requirements PR 作成
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "ブランチ切ってprつくって"（前セッション末尾の継続）
+**AI Response**: `docs/construction-metrics-nfr-requirements` ブランチを push し PR #104 を作成。NFR 要件 E01〜E10 / tech-stack-decisions.md を含む。
+**Context**: Unit E NFR Requirements ステージ完了。
+
+---
+
+## Construction (Unit E) — NFR Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:10:00Z
+**User Input**: "次お願いします"
+**AI Response**: Q-DD1〜Q-DD5 を全推奨選択肢で確定。nfr-design-patterns.md（P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種）/ logical-components.md（LC-ME-01〜11）を生成。aidlc-state.md の Unit E NFR Design を [x] に更新。
+**Context**: Unit E NFR Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:20:00Z
+**User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic テストファイル（4 assert 追記）のみ。
+**Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit D) — Code Generation Part 1（Plan + 全 4 問回答）
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Inputs**:
+- "マージした"（#103）→ 最新 develop から `docs/construction-suggest-code-generation` 作成。既存コード構造調査で BedrockAdapter に InferSuggestion 未実装・FallbackProvider.BuildFromHistory 既存・OrderService が SuggestResolver 未配線（ギャップ）を確認
+- Q-DG1: "コード見せて" → handler/service 実コード提示後 "bで"（B: OrderService に SuggestResolver 注入）
+- Q-DG2: "小さいって大体どれくらい" → 約 38 ファイル見積提示後 "b"（1 PR にまとめる）
+- Q-DG3: "a"（InferOrderPlan プロンプト様式踏襲）/ Q-DG4: "a"（レイヤ順生成+検証）
+**AI Response**: `suggest-code-generation-plan.md` 作成（ファイル manifest 約 38 + Q-DG1〜Q-DG4 + Part 2 手順 Step 1〜11）。Q-DG1=B により Unit C の order/service.go・NewService・main.go に SuggestResolver 注入の変更が入ることを明記。Part 1 完了、Part 2（実コード生成）へ移行。
+**Context**: ⛔ Code Generation Part 2（Backend → Frontend → Infra → サマリ）実行中。
+
+---
+
+## Construction (Unit D) — Code Generation Part 2 完了（実コード生成 + 検証）
+**Timestamp**: 2026-05-25T06:30:00Z
+**User Input**: 各層ごとに「ok」（"各層が終わったら一旦俺に報告して、承認してから次の層へ" の方針で Backend / Frontend / Infra / Docs を順次承認）
+**AI Response**: Q-DG4=A のレイヤ順で生成・各層検証・承認ゲートを実施:
+- **Backend**: suggest pkg (types/service/builder/logsummary/order_adapter + tests + PBT) / repo/suggestion / handlers/suggest_handler / bedrock に InferSuggestion 追加 (inferWithPrompt 共通化) / order に SuggestResolver 注入 (Q-DG1=B、service.go・NewService・main.go) / main.go DI+route。検証 `go test ./...` 16pkg PASS（Unit C リグレッションなし）。
+- **Frontend**: lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 改修 + tests。`npm ci` 632pkg → vitest 92 PASS / tsc PASS。※途中 exact 固定を試みたが React 19 peer 解決が重く caret に戻した（package.json 復元）。
+- **Infra**: modules/suggestion (DynamoDB + IAM + tftest) / api_gateway routes / lambda_api / envs/dev。terraform v1.15.4 を公式 zip 導入（brew は CLT 古さで失敗）し suggestion `terraform test` 4 PASS / envs/dev `validate` Success。
+- **Docs**: suggest/code/ にサマリ 6 種。
+aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ全 5 ステージ完了**。Q-DG2=B により 1 PR で push 予定。
+**Context**: ⛔ GATE: Code Generation 完了承認（2-option）+ PR 作成。Unit D 全ステージ完了。
+
+---
+
+## Construction (Unit E) — Code Generation 全 26 Step 完了
+**Timestamp**: 2026-05-25T07:45:00Z
+**User Input**: "開始"（前セッション継続）
+**AI Response**: 26 Step 全完了。Backend: metrics/types.go + compute.go + service.go (goroutine group P-ME-PARALLEL-01) + service_test.go (PBT P-E-PBT-01); budget_raise/types.go + compute.go + service.go + service_test.go (PBT P-E-PBT-02); handlers/metrics_handler.go + budget_raise_handler.go + テスト 2 ファイル; main.go DI 配線。Frontend: lib/api/metrics.ts + hooks/useMetrics.ts + hooks/useBudgetRaise.ts + hooks/useOrder.ts (invalidateQueries 追加) + components/metrics/MetricsPanel.tsx (DEG UX) + components/metrics/RaiseModal.tsx (ダメコピー) + app/budget-empty/page.tsx + app/page.tsx 修正 + テスト 4 ファイル。Infrastructure: routes.tf 3 route 追記 + テストファイル 4 assert 追記。Docs: code-summary.md。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。
+**Context**: Unit E Code Generation ステージ完了。ユーザ承認待ち。
+
+---
+
+## 横串デザインシステム — AI-DLC 構造への組み込み
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "実装プランなんだけどaidlcの現状の状態に対してplan組まなくても大丈夫？"
+**AI Response**: 指摘を受け、現状 AI-DLC のフェーズ別ドキュメント (`aidlc-docs/construction/{auth,budget,order}/...`) と私の作った `docs/superpowers/...` が**整合していない**ことを認識。`aidlc-docs/construction/_design-system/` を新設し、git mv で spec/plan を移動 (`design-spec.md` / `implementation-plan.md`)。`README.md` を新規追加して AI-DLC 上の位置づけと各 Unit との関係を明記。spec の §0.5 に「デザイン哲学 (idea.md / personas.md との対応)」を追加し、なぜこのコンセプトとコピーが太郎ペルソナのフェーズ 1→2→3 に効くかを 5 サブ章で文書化。aidlc-state.md の CONSTRUCTION PHASE に「横串デザインシステム」を追記。PR #94 はクローズせず、本リファクタを追加 commit として上に積む方針を選択。
+**Context**: AI-DLC ワークフローからの逸脱を是正。実装担当者 (別ブランチ・別人) は `_design-system/README.md` から読み始めれば、spec → plan → 各 Unit 成果物 の順で context を組み立てられる。
+
+---
 ## Inception (Requirements) — Business Context 具体化 + Business Model 追加（プレゼン用補強）
 **Timestamp**: 2026-05-27T02:33:50Z
 **User Inputs**:

@@ -1,0 +1,37 @@
+:root {
+  --color-bg-deep: #050402;
+  --color-bg-mid: #0e0a06;
+  --color-bg-warm: #1a1208;
+  --color-gold-100: #f4d990;
+  --color-gold-500: #c9a96b;
+  --color-gold-700: #8a6f3a;
+  --color-gold-900: #3a2a14;
+  --color-cream: #f4ecd8;
+  --color-paper: #ffe7c2;
+  --color-mute: #8a7a5a;
+  --color-accent-warn: #ffb14a;
+  --color-accent-danger: #ff4f4f;
+  --color-dead-gray: #6a6a6a;
+
+  --font-display-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-body-mincho: var(--font-zen-mincho), "Zen Old Mincho", "Yu Mincho", serif;
+  --font-mono-pixel: var(--font-dotgothic), "DotGothic16", monospace;
+  --font-body-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg-deep);
+  color: var(--color-cream);
+  font-family: var(--font-body-sans);
+}
+
+button {
+  font-family: inherit;
+}

@@ -62,14 +62,20 @@
 - [x] NFR Requirements (Unit D, 2026-05-25) — nfr-requirements.md (NFRD-D01〜D20) / tech-stack-decisions.md 生成済み。Q-ND1〜Q-ND8 全 8 問対話ヒアリング完了（全 A）。Bedrock 横串は Unit C NFRC-Cxx を継承、新規技術なし。ユーザ承認済み
 - [x] NFR Design (Unit D, 2026-05-25) — nfr-design-patterns.md (P-SG-BUILD-01 / P-SG-OBS-01 / P-SG-PBT-01 / P-SG-FE-01 + Unit C パターン再利用) / logical-components.md (LC-SUGGEST-01〜11 + 共有 LC-ORDER-* 参照) 生成済み。Q-DD1〜Q-DD6 全 A。ユーザ承認済み
 - [x] Infrastructure Design (Unit D, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 modules/suggestion/（GoroPay_Suggestion 1RCU1WCU/TTL30分）+ GET /api/suggest ルート + lambda_api policy/env 追記。bedrock/observability は Unit C module 再利用。Q-DI1〜Q-DI6 全 A。ユーザ承認済み
-- [ ] Code Generation (Unit D) - **EXECUTE**
+- [x] Code Generation (Unit D, 2026-05-25) — Plan(Q-DG1〜4) + 実装。Backend (suggest pkg 5 + repo + handler + bedrock InferSuggestion + order SuggestResolver 注入〔Q-DG1=B〕+ main.go) / Frontend (lib/api/suggest + useSuggestion + SuggestBubble + GoroButton) / Infra (modules/suggestion + routes + lambda_api + envs) / Docs (code サマリ 6)。検証: Go test 16pkg PASS / Vitest 92 PASS / tsc PASS / terraform test 4 PASS + validate Success。1 PR(Q-DG2=B)。**Unit D per-unit ループ全 5 ステージ完了**
 
 **Unit E `metrics` 進捗** (Standard 深度、Unit D と並列実施中)
 - [x] Functional Design (Unit E, 2026-05-25) — business-logic-model / business-rules / domain-entities / frontend-components 生成済み、ユーザ承認済み
-- [ ] NFR Requirements (Unit E) - **EXECUTE**
-- [ ] NFR Design (Unit E) - **EXECUTE**
-- [ ] Infrastructure Design (Unit E) - **EXECUTE**
-- [ ] Code Generation (Unit E) - **EXECUTE**
+- [x] NFR Requirements (Unit E, 2026-05-25) — nfr-requirements.md (NFRE-E01〜E10) / tech-stack-decisions.md 生成済み、Q-N1〜Q-N5 全 5 問ヒアリング完了、ユーザ承認済み
+- [x] NFR Design (Unit E, 2026-05-25) — nfr-design-patterns.md (P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種) / logical-components.md (LC-ME-01〜11 の 11 コンポーネント) 生成済み、Q-DD1〜Q-DD5 全 A/B 確定、ユーザ承認待ち
+- [x] Infrastructure Design (Unit E, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 module なし、routes.tf に 3 route 追記 + tf テスト 4 assert 追記のみ。Q-I1〜Q-I3 全 A。ユーザ承認待ち
+- [x] Code Generation (Unit E, 2026-05-25) — 全 26 Step 完了。Backend (metrics/budget_raise 2 パッケージ + handlers 2 + main.go DI) + Frontend (hooks 2 + components 2 + page 1 + tests 4 + page.tsx 修正) + Infrastructure (routes.tf 3 route + tf テスト 4 assert) + Docs (code-summary.md)。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。ユーザ承認待ち
+
+**横串デザインシステム** (worktree: add-desing)
+- [x] Design Spec v1.0 (2026-05-24) — メイン画面のみの design-spec
+- [x] Design Spec v2.0 (2026-05-25) — 全画面に拡張、`aidlc-docs/construction/_design-system/design-spec.md` 作成。Slot Machine コンセプト + リヴァイ調コピーシステム + デザイン哲学 (idea.md / personas.md との対応) を §0.5 に記述
+- [x] Implementation Plan (2026-05-25) — 22 タスク TDD ベースの `aidlc-docs/construction/_design-system/implementation-plan.md` 作成
+- [ ] Implementation (Code Generation 補完) — **EXECUTE** 別ブランチ / 別担当者で実施予定
 
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**

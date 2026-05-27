@@ -7,8 +7,10 @@ import "context"
 // テストごとに InferOrderPlanFunc を再代入してシナリオを切替える。
 // 連続呼出時は Calls カウンタを参照することで attempt 回数の検証も可能。
 type MockBedrockAdapter struct {
-	InferOrderPlanFunc func(ctx context.Context, history []HistoryItem, dayOfWeek string, category string) (*Plan, error)
-	Calls              int
+	InferOrderPlanFunc  func(ctx context.Context, history []HistoryItem, dayOfWeek string, category string) (*Plan, error)
+	InferSuggestionFunc func(ctx context.Context, history []HistoryItem, dayOfWeek string) (*Plan, error)
+	Calls               int
+	SuggestCalls        int
 }
 
 // InferOrderPlan は MockBedrockAdapter の interface 実装。
@@ -27,6 +29,25 @@ func (m *MockBedrockAdapter) InferOrderPlan(ctx context.Context, history []Histo
 		Category:         "food",
 		Source:           "bedrock",
 		BedrockLatencyMs: 100,
-		BedrockAttempt:  1,
+		BedrockAttempt:   1,
+	}, nil
+}
+
+// InferSuggestion は MockBedrockAdapter の interface 実装 (Unit D)。
+//
+// InferSuggestionFunc 未設定時はデフォルト成功応答を返す。
+func (m *MockBedrockAdapter) InferSuggestion(ctx context.Context, history []HistoryItem, dayOfWeek string) (*Plan, error) {
+	m.SuggestCalls++
+	if m.InferSuggestionFunc != nil {
+		return m.InferSuggestionFunc(ctx, history, dayOfWeek)
+	}
+	return &Plan{
+		StoreName:        "ゴロゴロ食堂",
+		MenuName:         "おまかせ定食",
+		Amount:           1000,
+		Category:         "food",
+		Source:           "bedrock",
+		BedrockLatencyMs: 100,
+		BedrockAttempt:   1,
 	}, nil
 }

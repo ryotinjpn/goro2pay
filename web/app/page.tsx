@@ -5,6 +5,8 @@ import { LandingScreen } from "@/components/auth/LandingScreen";
 // Unit B 残高表示 + 残高枯渇モーダル
 import { BalanceDisplay } from "@/components/budget/BalanceDisplay";
 import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
+// Unit E メトリクス表示
+import { MetricsPanel } from "@/components/metrics/MetricsPanel";
 // Unit C MainScreen 構成要素
 import { GoroButton } from "@/components/order/GoroButton";
 import { OrderHistoryList } from "@/components/order/OrderHistoryList";
@@ -35,6 +37,10 @@ export default function HomePage() {
 
       <section style={{ marginBottom: 24 }}>
         <BalanceDisplay />
+      </section>
+
+      <section style={{ marginBottom: 24 }}>
+        <MetricsPanel />
       </section>
 
       <section style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
