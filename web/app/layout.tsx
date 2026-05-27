@@ -1,35 +1,49 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Zen_Old_Mincho, DotGothic16 } from "next/font/google";
-import "./globals.css";
+import {
+  Cormorant_Garamond,
+  Zen_Old_Mincho,
+  DotGothic16,
+  Inter,
+} from "next/font/google";
+
 import { AppProviders } from "./providers";
 // Unit C: 全画面共通のトースト Host (P-FE-TOAST-02)
 import { ToastHost } from "@/components/order/ToastHost";
 
-const cormorant = Cormorant_Garamond({
+import "./globals.css";
+
+const fontDisplaySerif = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["700"],
-  style: ["italic"],
+  weight: ["500", "700"],
+  style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-cormorant",
+  variable: "--font-display-serif",
 });
 
-const zenMincho = Zen_Old_Mincho({
+const fontBodyMincho = Zen_Old_Mincho({
   subsets: ["latin"],
-  weight: ["700", "900"],
+  weight: ["500", "700", "900"],
   display: "swap",
-  variable: "--font-zen-mincho",
+  variable: "--font-body-mincho",
 });
 
-const dotGothic = DotGothic16({
+const fontMonoPixel = DotGothic16({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap",
-  variable: "--font-dotgothic",
+  variable: "--font-mono-pixel",
+});
+
+const fontBodySans = Inter({
+  subsets: ["latin"],
+  weight: ["600", "800"],
+  display: "swap",
+  variable: "--font-body-sans",
 });
 
 export const metadata: Metadata = {
   title: "ゴロゴロPay",
-  description: "めんどくさいを丸投げ",
+  description: "面倒は、こちらで引き受ける。",
 };
 
 export default function RootLayout({
@@ -40,7 +54,12 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${cormorant.variable} ${zenMincho.variable} ${dotGothic.variable}`}
+      className={[
+        fontDisplaySerif.variable,
+        fontBodyMincho.variable,
+        fontMonoPixel.variable,
+        fontBodySans.variable,
+      ].join(" ")}
     >
       <body>
         <AppProviders>
