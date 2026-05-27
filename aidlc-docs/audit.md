@@ -1481,3 +1481,26 @@ aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ�
 **Context**: PR ⑧ で MainScreen に useWallet sync を入れて残高表示は直したが、「予算を設定しても画面に反映されない」の本質は backend のメンタルモデル (差額調整) と UI (総額入力) のズレだった。AddBudgetForm 追加で「追加した金額そのまま残高に足したい」というユーザの直感に揃えた。
 
 ---
+
+## design-system を requirements §2 再編に追従
+**Timestamp**: 2026-05-28T00:30:00Z
+**User Inputs**:
+- "ここの内容をを最新の requirements.md の内容にそうようにしないといけない" (2 回)
+
+**AI Response**:
+1. 差分調査: design-system 配下 3 ファイル (README.md / design-spec.md / implementation-plan.md) と requirements.md (最新) を Explore agent で全棚卸し。
+2. 確認した古い参照:
+   - `design-spec.md:102` の「requirements.md `§2.3` で定義されたハッカソン審査軸」 → 旧名。`a13a6fc` の §2 再編で §2.3 は Problem Statement に変わり、ハッカソン審査基準は §2.6 に移動
+3. 修正:
+   - design-spec.md §0.5.5: 参照 §2.3 → §2.6 に更新 (旧番号注記付き)
+   - design-spec.md §0.5.6 を新設: requirements §2.3 (Problem Statement / Positive Inversion) との 1:1 対応表を追加。デザインの「考えさせない志向」が単なる怠惰演出ではなく「意思決定リソースの戦略的配分を支える仕掛け」であることを明文化
+4. ペルソナ名「佐藤陽介」「ダメ予算 30,000 円初期値」「月初 1 日 00:00 JST」「ダメ化ループ 3 フェーズ」「ハッカソン審査 4 軸」等は既に design 側で正しく反映されており、追加変更不要
+
+**Decision Records**:
+- requirements.md は最新版が正、_design-system 側を追従させる方針
+- design-spec の Source 列挙には §番号を入れない (§番号は再編で変動するため、本文中のピンポイント参照のみ更新する)
+- §0.5.6 の追加は requirements §2 再編の本質 (Problem Statement / Positive Inversion) を design 側で受け止めるための最小限の追記。哲学パートは既に §0.5.1〜0.5.5 で充実しているため、§0.5.6 は接続表 1 つに圧縮
+
+**Context**: requirements §2 再編 (`a13a6fc`, 2026-05-27 12:04) では §2.2 ペルソナ拡張 / §2.3 Problem Statement / §2.4 Market & Competitive / §2.5 Business Model が新規追加されたが、design-system 側は同期 commit が無かった。本対応で §2.3 と §2.6 の参照差分を解消。§2.4 (Market) / §2.5 (Business Model) は design に直接影響しないため反映不要と判断。
+
+---
