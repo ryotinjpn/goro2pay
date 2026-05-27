@@ -59,7 +59,7 @@ export function LoginScreen() {
           {authMessages.SESSION_EXPIRED}
         </p>
       )}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
           <label htmlFor="login-email">メールアドレス</label>
           <input

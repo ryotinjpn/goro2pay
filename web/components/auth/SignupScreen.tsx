@@ -72,7 +72,7 @@ export function SignupScreen() {
         <div>{COPY.signup.h1Line2}</div>
       </h1>
       <div className={styles.sub}>{COPY.signup.sub}</div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
           <label htmlFor="signup-email">メールアドレス</label>
           <input
