@@ -15,7 +15,7 @@ export const COPY = {
     demoButtonMain: "押す。",
     demoButtonAfter: "— 上出来だ。",
     ctaPrimary: "始めろ",
-    ctaSecondary: "戻る",
+    ctaSecondary: "ログイン",
   },
   signup: {
     h1Line1: "面倒は、",
