@@ -1,3 +1,6 @@
+// IncreaseBudgetButton: mock/src/components/IncreaseBudgetButton.tsx ベースに移植 (PR ⑦)。
+// 旧来の画面下端 absolute 配置 + saturate filter からフロー内挿入 (.wrap で flex center) に変更。
+// MainScreen の dead 状態で DeadVerdict の直下に自然に並ぶ。
 "use client";
 
 import { useAtomValue } from "jotai";
@@ -18,13 +21,15 @@ export function IncreaseBudgetButton({ onClick }: Props) {
   const label = composeIncreaseBudgetLabel(nextBudget);
 
   return (
-    <button
-      type="button"
-      className={styles.button}
-      onClick={() => onClick(nextBudget)}
-      data-testid="increase-budget-button"
-    >
-      {label}
-    </button>
+    <div className={styles.wrap}>
+      <button
+        type="button"
+        className={styles.button}
+        onClick={() => onClick(nextBudget)}
+        data-testid="increase-budget-button"
+      >
+        {label}
+      </button>
+    </div>
   );
 }
