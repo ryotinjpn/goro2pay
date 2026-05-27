@@ -64,3 +64,25 @@ run "authorizer_ttl_is_zero" {
     error_message = "authorizer_result_ttl_in_seconds must be 0 (HTTP API JWT Authorizer は cache 非対応)"
   }
 }
+
+run "unit_e_routes_present" {
+  command = plan
+
+  # Unit E: GET /api/metrics / GET /api/budget/raise/recommendation / POST /api/budget/raise
+  assert {
+    condition     = aws_apigatewayv2_route.get_metrics.route_key == "GET /api/metrics"
+    error_message = "GET /api/metrics route が存在すること (LC-ME-02)"
+  }
+  assert {
+    condition     = aws_apigatewayv2_route.get_budget_raise_recommendation.route_key == "GET /api/budget/raise/recommendation"
+    error_message = "GET /api/budget/raise/recommendation route が存在すること (LC-ME-04)"
+  }
+  assert {
+    condition     = aws_apigatewayv2_route.post_budget_raise.route_key == "POST /api/budget/raise"
+    error_message = "POST /api/budget/raise route が存在すること (LC-ME-04)"
+  }
+  assert {
+    condition     = aws_apigatewayv2_route.get_metrics.authorization_type == "JWT"
+    error_message = "GET /api/metrics は JWT 認証必須であること"
+  }
+}

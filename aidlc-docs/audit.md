@@ -1035,6 +1035,28 @@ aidlc-state.md に Unit C NFR Design を [x] に更新（PR #78 マージ済み�
 
 ---
 
+## NFR Requirements (Unit E) — Plan 作成 & 成果物生成完了
+**Timestamp**: 2026-05-25T01:00:00Z
+**User Input**: "unitEの続きをお願いします"
+**AI Response**: NFR Requirements ステージ開始。Q-N1〜Q-N5 の 5 問を対話ヒアリング。
+
+対話ヒアリング結果:
+- Q-N1: C — BudgetSettings + Wallet を errgroup で並列取得 → NotFound 確認後に CountThisMonth 直列呼び出し
+- Q-N2: A — いずれかの DynamoDB 読み取り失敗で HTTP 500（部分返却なし）
+- Q-N3: A — ConsumptionRate と ComputeRecommendedBudget の 2 関数に gopter で PBT 適用
+- Q-N4: B — 赤色 (text-red-500 / bg-red-500) + animate-pulse で不安の演出を最大化
+- Q-N5: A — BudgetEmptyScreen マウントのたびに RaiseModal を再表示（逃げられない退化ループ）
+
+矛盾チェック: 4 観点すべて整合確認。
+
+生成成果物 (aidlc-docs/construction/metrics/nfr-requirements/):
+- nfr-requirements.md: NFRE-E01〜E10 の 10 NFR（Performance / Reliability / Maintainability / Usability / Security）
+- tech-stack-decisions.md: 新規テックスタックなし、Unit A/B/C/D 継承のみ
+
+**Context**: ⛔ GATE: NFR Requirements 完了承認を待機中（2-option: Request Changes / Continue to Next Stage）
+
+---
+
 ## Infrastructure Design (Unit C) — 成果物生成完了
 **Timestamp**: 2026-05-24T02:00:00Z
 **User Input**: "確定"
@@ -1241,10 +1263,198 @@ aidlc-state.md に Unit B Code Generation を [x] に更新。Unit B per-unit �
 
 ---
 
+
+## Construction (Unit E) — NFR Requirements PR 作成
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Input**: "ブランチ切ってprつくって"（前セッション末尾の継続）
+**AI Response**: `docs/construction-metrics-nfr-requirements` ブランチを push し PR #104 を作成。NFR 要件 E01〜E10 / tech-stack-decisions.md を含む。
+**Context**: Unit E NFR Requirements ステージ完了。
+
+---
+
+## Construction (Unit E) — NFR Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:10:00Z
+**User Input**: "次お願いします"
+**AI Response**: Q-DD1〜Q-DD5 を全推奨選択肢で確定。nfr-design-patterns.md（P-ME-PARALLEL-01 / P-ME-FE-DEG-01 / P-E-PBT-01〜02 + Unit C パターン再利用 6 種）/ logical-components.md（LC-ME-01〜11）を生成。aidlc-state.md の Unit E NFR Design を [x] に更新。
+**Context**: Unit E NFR Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit E) — Infrastructure Design ヒアリング＆成果物生成
+**Timestamp**: 2026-05-25T05:20:00Z
+**User Input**: "a" / "a" / "a"（Q-I1〜Q-I3 全 A 回答）
+**AI Response**: Q-I1=A（新規 module 不要）/ Q-I2=A（全 JWT 認証）/ Q-I3=A（既存 tf テストに追記）で確定。infrastructure-design.md / deployment-architecture.md を生成。変更ファイルは routes.tf（3 route 追記）+ api_gateway_basic テストファイル（4 assert 追記）のみ。
+**Context**: Unit E Infrastructure Design ステージ完了、ユーザ承認待ち。
+
+---
+
+## Construction (Unit D) — Code Generation Part 1（Plan + 全 4 問回答）
+**Timestamp**: 2026-05-25T05:00:00Z
+**User Inputs**:
+- "マージした"（#103）→ 最新 develop から `docs/construction-suggest-code-generation` 作成。既存コード構造調査で BedrockAdapter に InferSuggestion 未実装・FallbackProvider.BuildFromHistory 既存・OrderService が SuggestResolver 未配線（ギャップ）を確認
+- Q-DG1: "コード見せて" → handler/service 実コード提示後 "bで"（B: OrderService に SuggestResolver 注入）
+- Q-DG2: "小さいって大体どれくらい" → 約 38 ファイル見積提示後 "b"（1 PR にまとめる）
+- Q-DG3: "a"（InferOrderPlan プロンプト様式踏襲）/ Q-DG4: "a"（レイヤ順生成+検証）
+**AI Response**: `suggest-code-generation-plan.md` 作成（ファイル manifest 約 38 + Q-DG1〜Q-DG4 + Part 2 手順 Step 1〜11）。Q-DG1=B により Unit C の order/service.go・NewService・main.go に SuggestResolver 注入の変更が入ることを明記。Part 1 完了、Part 2（実コード生成）へ移行。
+**Context**: ⛔ Code Generation Part 2（Backend → Frontend → Infra → サマリ）実行中。
+
+---
+
+## Construction (Unit D) — Code Generation Part 2 完了（実コード生成 + 検証）
+**Timestamp**: 2026-05-25T06:30:00Z
+**User Input**: 各層ごとに「ok」（"各層が終わったら一旦俺に報告して、承認してから次の層へ" の方針で Backend / Frontend / Infra / Docs を順次承認）
+**AI Response**: Q-DG4=A のレイヤ順で生成・各層検証・承認ゲートを実施:
+- **Backend**: suggest pkg (types/service/builder/logsummary/order_adapter + tests + PBT) / repo/suggestion / handlers/suggest_handler / bedrock に InferSuggestion 追加 (inferWithPrompt 共通化) / order に SuggestResolver 注入 (Q-DG1=B、service.go・NewService・main.go) / main.go DI+route。検証 `go test ./...` 16pkg PASS（Unit C リグレッションなし）。
+- **Frontend**: lib/api/suggest / useSuggestion / SuggestBubble / GoroButton 改修 + tests。`npm ci` 632pkg → vitest 92 PASS / tsc PASS。※途中 exact 固定を試みたが React 19 peer 解決が重く caret に戻した（package.json 復元）。
+- **Infra**: modules/suggestion (DynamoDB + IAM + tftest) / api_gateway routes / lambda_api / envs/dev。terraform v1.15.4 を公式 zip 導入（brew は CLT 古さで失敗）し suggestion `terraform test` 4 PASS / envs/dev `validate` Success。
+- **Docs**: suggest/code/ にサマリ 6 種。
+aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ全 5 ステージ完了**。Q-DG2=B により 1 PR で push 予定。
+**Context**: ⛔ GATE: Code Generation 完了承認（2-option）+ PR 作成。Unit D 全ステージ完了。
+
+---
+
+## Construction (Unit E) — Code Generation 全 26 Step 完了
+**Timestamp**: 2026-05-25T07:45:00Z
+**User Input**: "開始"（前セッション継続）
+**AI Response**: 26 Step 全完了。Backend: metrics/types.go + compute.go + service.go (goroutine group P-ME-PARALLEL-01) + service_test.go (PBT P-E-PBT-01); budget_raise/types.go + compute.go + service.go + service_test.go (PBT P-E-PBT-02); handlers/metrics_handler.go + budget_raise_handler.go + テスト 2 ファイル; main.go DI 配線。Frontend: lib/api/metrics.ts + hooks/useMetrics.ts + hooks/useBudgetRaise.ts + hooks/useOrder.ts (invalidateQueries 追加) + components/metrics/MetricsPanel.tsx (DEG UX) + components/metrics/RaiseModal.tsx (ダメコピー) + app/budget-empty/page.tsx + app/page.tsx 修正 + テスト 4 ファイル。Infrastructure: routes.tf 3 route 追記 + テストファイル 4 assert 追記。Docs: code-summary.md。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。
+**Context**: Unit E Code Generation ステージ完了。ユーザ承認待ち。
+
+---
+
 ## 横串デザインシステム — AI-DLC 構造への組み込み
 **Timestamp**: 2026-05-25T05:00:00Z
 **User Input**: "実装プランなんだけどaidlcの現状の状態に対してplan組まなくても大丈夫？"
 **AI Response**: 指摘を受け、現状 AI-DLC のフェーズ別ドキュメント (`aidlc-docs/construction/{auth,budget,order}/...`) と私の作った `docs/superpowers/...` が**整合していない**ことを認識。`aidlc-docs/construction/_design-system/` を新設し、git mv で spec/plan を移動 (`design-spec.md` / `implementation-plan.md`)。`README.md` を新規追加して AI-DLC 上の位置づけと各 Unit との関係を明記。spec の §0.5 に「デザイン哲学 (idea.md / personas.md との対応)」を追加し、なぜこのコンセプトとコピーが太郎ペルソナのフェーズ 1→2→3 に効くかを 5 サブ章で文書化。aidlc-state.md の CONSTRUCTION PHASE に「横串デザインシステム」を追記。PR #94 はクローズせず、本リファクタを追加 commit として上に積む方針を選択。
 **Context**: AI-DLC ワークフローからの逸脱を是正。実装担当者 (別ブランチ・別人) は `_design-system/README.md` から読み始めれば、spec → plan → 各 Unit 成果物 の順で context を組み立てられる。
+
+---
+## Inception (Requirements) — Business Context 具体化 + Business Model 追加（プレゼン用補強）
+**Timestamp**: 2026-05-27T02:33:50Z
+**User Inputs**:
+- 初回: "https://github.com/ryotinjpn/goro2pay/blob/develop/aidlc-docs/inception/requirements/requirements.md ここにビジネスモデルを追加したい"
+- 軌道修正: "2. Business Contextをもっと具体化したいし、そこからのビジネスモデルを作りたい"
+- Q1（深掘り要素）: "市場・競合状況"
+- Q2（市場記述視点）: "3つ全部をミックスして記述"
+- Q3（競合名の出し方）: "カテゴリ名のみ"
+- Q4（競合関係の位置付け）: "どれがブレゼンに刺さりそうですか？" → 推薦依頼として解釈
+- 追加指示: "調査はwebとか使ったらいいよ"
+- Q4 再回答: "その二段構えで OK"（補完関係（上位レイヤー）+ 別セグメント）
+- Q5（収益モデル）: "クレジットカードの手数料やキャッシングなどで金融ドメインの収益モデル"
+- Q6（収益仕組み）: "両方併用（クレカ枠 + キャッシング枠オーバーフロー）"
+- Q7（データ活用）: "データが貯まるのでおすすめ商品とかわアプローチできそうだよね？"（明示記述として解釈）
+- Q8（コスト/KPI）: "両方含める"
+- 追加指示: "マーメイドで図を書いてくれるとわかりやすい"
+
+**AI Response**:
+1. requirements.md §2 に **§2.7 Market & Competitive Landscape** を追加。
+   - §2.7.1 隣接サービスカテゴリ表（デリバリー/家事代行/サブスク代行/キャッシング）
+   - §2.7.2 補完関係（上位レイヤー＝意思決定インターフェース）+ 別セグメント（ダメ受容層）の二段構え
+   - §2.7.3 差別化軸表（統合度/意思決定/認知負荷/価値命題/コピーのトーン）
+2. requirements.md §2 に **§2.8 Business Model** を追加。
+   - §2.8.0 Business Model Canvas 概観（Mermaid flowchart LR）
+   - §2.8.1 価値提案（ステークホルダ別）
+   - §2.8.2 顧客セグメント
+   - §2.8.3 収益モデル（A: クレカ手数料 / B: キャッシング金利 / C: クロスセル）
+   - §2.8.3.1 ダメ化ループとマネタイズの対応関係（Mermaid flowchart TD、フェーズ↔収益の対応）
+   - §2.8.4 コスト構造表
+   - §2.8.5 ダメ化 KPI（North Star + エンゲージメント系 + 収益系）
+3. Mermaid 図 2 種を埋め込み（Business Model Canvas / ダメ化ループ-マネタイズ対応）。
+4. Web 調査（Statista/Wikipedia/PRTimes 等）は十分な詳細データ取得不可だったが、推薦根拠の補強として参照を試みた。最終的にカテゴリ名のみで記述（Q3 回答に従う）。
+
+**Context**: プレゼン用補強として §2 Business Context を具体化し、新規 §2.8 Business Model を追加。インテント・テーマ整合・収益構造・ダメ化 KPI・Mermaid 図の縦串が完成。後続の User Stories / Workflow Planning / Application Design / Units Generation には影響なし（既存セクション番号は維持）。
+
+---
+
+## Inception (Requirements) — §2 トーン中立化（プレゼン向け表現調整）
+**Timestamp**: 2026-05-27T02:55:00Z
+**User Inputs**:
+- "「究極の利便性がいかに人をダメにするか」というアンチテーゼを表現する。これちょっと強烈すぎるよね"
+- Q1（トーン選択）: "トーンを全面的に中立化"（プレビュー: 「利便性が高度化した限界でユーザー体験がどう変わるかを探索する。」）
+- Q2（調整範囲）: "§2 全体を調整"
+
+**AI Response**:
+1. §2.1 Background 3行目を「思考実験としての企画」表現に差し替え。
+2. §2.3 Success Criteria 表内の「人をダメにする」を「テーマ『人をダメにする』」とテーマ名としての引用に明示化。「『ダメにする』物語のフェーズ」→「テーマの物語フェーズ」。
+3. §2.6 Constraints の「テーマ『人をダメにするサービスを考えよう』への整合が最優先」を「ハッカソンテーマへの整合が最優先（テーマ表現の詳細は §1.5 / §4.1）」に。
+4. §2.7.2 (B) の「ダメ化を受容して楽しむ」「自分で決めること自体を放棄する快感」「ダメ受容層」→「意思決定の委任」「選ばずに済む状態を能動的に選ぶ」「意思決定委任層」に統一。
+5. §2.7.3 差別化軸表の「ダメ化（自立を快適に退化させる）」→「委任（意思決定そのものを引き受ける）」、コピー例の直接引用を削除し §4.1 NFR-DEG-05 への参照に変更。
+6. §2.8.0 Mermaid 図のラベル「ダメ受容層」→「意思決定委任層」、§2.8.1 価値提案表も同様に統一。
+7. §1.5 / §4.1 / §11 等の強い表現は調整範囲外として保持（§2 全体限定）。
+
+**Context**: §2 Business Context 全体のトーンを中立化。テーマ性自体は §1.5 / §4.1 / §11 で保持。プレゼン場面で「ダメにする」の直接表現を §2 から最小限に抑え、市場・競合・ビジネスモデル説明を中立的な語彙で展開できる状態に。
+
+---
+
+## Inception (Requirements) — §2 並び順再編 + Persona/Problem Statement 強化
+**Timestamp**: 2026-05-27T03:25:00Z
+**User Inputs**:
+- "この可惜は技術や具体のことなので並び順をもう少し考えて"
+- "ここも## 2. Business Contextこれの一番最後がいい"（Constraints を §2 末尾へ）
+- "ダメ化を少しポジティブな言い方でダメにするを表現できないかな？"
+- "ペルソナから解決したい問題を定義して解決策としてのゴロゴロpayであることを入れておいきたい"
+- "ペルソナを負荷ボッタ方がいい...ダメになることで他の何かがよくなる系がいい...AI時代に人間的に遊ぶ時間が作れる...本来集中する業務ができる時間が増える"
+- "ペルソナは何歳ぐらい想定だっけ？ゴロゴロ太郎は？" → 27 歳・Web ディレクター（personas.md 確認）
+- "ゴロゴロ太郎の名前も他の仮名称でいそうな人にしていいよ"
+- Q（並び順）: "抽象→具体順（推奨）"
+- Q（ペルソナ方針）: "太郎をメインにし、拡張セグメントだけ軽く言及"
+- Q（仮名）: "佐藤 陽介（さとう ようすけ）"
+
+**AI Response**:
+1. **§2 全体の並び順を再編**: §2.1 Background → §2.2 Persona → §2.3 Problem Statement（**新設**） → §2.4 Market → §2.5 Business Model → §2.6 Success Criteria → §2.7 Scope → §2.8 Assumptions → §2.9 Constraints。Constraints を §2 末尾に。
+2. **§2.2 Target Persona を具体化**:
+   - §2.2.1 メインペルソナ「佐藤 陽介（27歳・Web ディレクター・年収550万）」を表形式で。User Stories の「ゴロゴロ太郎」との同一性を注記。
+   - 生活の輪郭・特性に「仕事で意思決定リソースを使い切っている」「自分の時間が捻出できない」を明示。
+   - §2.2.2 拡張セグメント: 仕事没頭型専門職、共働き子育て世帯を軽く言及。
+3. **§2.3 Problem Statement を新設**:
+   - §2.3.1 Problem: AI 時代の知的労働者が仕事で意思決定リソースを使い切っているのに、生活雑事は依然として意思決定をユーザーに問い続ける。既存サービスは「実行レイヤー」を効率化したが「意思決定そのもの」は残っている。
+   - §2.3.2 Solution — ゴロゴロPay: 生活雑事の意思決定そのものを AI に委任するインターフェース。
+   - §2.3.3 Positive Inversion: 「ダメになる」ことで取り戻す「人間らしい時間」「本来の集中」「意思決定の選択と集中」。テーマ反転構造を明示。
+4. **§2.5.3 顧客セグメント** をペルソナ更新に合わせて「仕事で意思決定リソースを使い切る一人暮らしの知的労働者」に。
+5. ファイル分割→awk による split → 新順序で結合 → 番号リネーム（§2.4 Market & Competitive Landscape の小節 §2.4.1〜§2.4.3、§2.5 Business Model の小節 §2.5.1〜§2.5.7）を整合的に実施。
+6. §2 内のラベル「ダメ受容層」→「意思決定委任層」、Mermaid 図含めて統一済み（前回作業の継続）。
+
+**Context**: §2 を「抽象→具体」順で再編し、ペルソナ起点で Problem → Solution → Positive Inversion へ縦串が通った。プレゼン台本では §2.2 → §2.3 → §2.4 → §2.5 を順に語ることで、「人間／市場／ビジネスモデル」の三層を一気通貫で説明できる構造になった。「ダメになる」テーマは保持しつつ、その反転メリット（時間・集中）を §2.3.3 で明示し、ハッカソン場面でも提案として成立する形に。
+
+---
+
+## Inception (Requirements) — §2 改訂を下流ドキュメントへ反映
+**Timestamp**: 2026-05-27T05:30:00Z
+**User Inputs**:
+- "マージした。他のドキュメント成果物で修正が必要な箇所を精査して"
+- Q（修正範囲）: "High + Medium を 1 PR で対応"
+
+**AI Response**:
+1. **personas.md (冒頭)**: 「※ 本ドキュメントの『ゴロゴロ太郎』と requirements.md §2.2.1 の仮名『佐藤陽介』は同一人物」の Note を追加。基本属性（27 歳・Web ディレクター・年収 550 万・一人暮らし）が完全一致することを明記。
+2. **application-design.md (line 6)**: ヘッダの Persona 行に「requirements.md §2.2.1 では仮名『佐藤陽介』として提示（同一人物）」を併記。
+3. **application-design.md §11 審査観点**: 「課題と解決策の整合（Problem-Solution Fit）」行を新設。requirements.md §2.3 Problem Statement で定義した課題と、§5 SuggestService / OrderService / MetricsService との接続を明示。
+4. **execution-plan.md §1 背景サマリ**: 「Problem Statement」「Business Model」の 2 行を追加し、それぞれ requirements.md §2.3 / §2.5 へリンク。User Stories 行にもペルソナ名橋渡しを 1 文追加。
+5. **execution-plan.md §10 トレーサビリティ表**: 既存の「ビジネス意図」「創造性とテーマ適合性」行に Problem Statement (§2.3) と Business Model (§2.5) への参照を追記。
+
+**精査済み・修正不要**:
+- audit.md の旧表現「ダメ受容層」等 → 履歴ログとして保持が正当
+- aidlc-state.md の Key Decisions → 内容は正確、構造変化のみで実害なし
+- construction/* 配下の各 Unit 成果物 → §2 の旧番号を直接参照していないため影響なし
+
+**Context**: PR #109（§2 全面改訂）のマージを受け、下流ドキュメントとの整合性を取った。Problem Statement (§2.3) と Business Model (§2.5) という新規追加内容が、実装計画・設計ドキュメントから参照される形でトレーサビリティを確保。ペルソナ命名の差異（ゴロゴロ太郎 vs 佐藤陽介）も双方向の橋渡し注記で曖昧さを解消。
+
+---
+
+## Inception (全体) — ペルソナ名「ゴロゴロ太郎」→「佐藤陽介」全置換
+**Timestamp**: 2026-05-27T05:50:00Z
+**User Inputs**:
+- "ゴロゴロ太郎を修正して名前を合わせておいて"
+- Q（audit/req の扱い）: "audit.md は保持 / requirements.md は修正"
+- Q（「太郎」単独表記の置換先）: "「佐藤」に置換"
+
+**AI Response**:
+1. `audit.md` を除く 15 ファイルで「ゴロゴロ太郎」→「佐藤陽介」、「太郎」（単独）→「佐藤」を一括置換。
+2. リネームに伴い不要になった橋渡し注記を削除/簡素化:
+   - `requirements.md` §2.2.1 の「※ User Stories での識別子は『ゴロゴロ太郎』」を削除
+   - `personas.md` 冒頭の「Note: 同一人物」注記を削除
+   - `application-design.md` line 6 の「※ requirements.md §2.2.1 では仮名『佐藤陽介』として提示」を簡潔なリンクに置換
+   - `execution-plan.md` line 17 の同様注記を簡潔化
+3. `audit.md` 内の旧名「ゴロゴロ太郎」表記は履歴記録として保持（ユーザ方針）。
+
+**Context**: PR #110（ペルソナ橋渡し方針）後、ユーザがフルリネーム方針に切り替え。ドキュメント全体で「佐藤陽介」に統一され、不自然な「両方とも佐藤陽介」注記も解消。audit.md だけは過去のセッション記録として「ゴロゴロ太郎」を残す。
 
 ---

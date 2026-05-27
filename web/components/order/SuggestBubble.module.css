@@ -27,6 +27,23 @@
   border-top-color: var(--color-gold-500);
 }
 
+.title {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-cream);
+}
+
+.plan {
+  margin-top: 2px;
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--color-gold-500);
+}
+
 @keyframes bubble-in {
   from {
     opacity: 0;

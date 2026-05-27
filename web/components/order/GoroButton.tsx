@@ -1,3 +1,8 @@
+// LC-21 GoroButton (+ LC-SUGGEST-11 連携)
+//
+// メイン画面の「めんどくさい」ボタン。useOrder hook 経由で PlaceOrder mutation を発火。
+// Unit D: useSuggestion で先回り提案がある場合は suggestionAtom に流し込み、
+// SuggestBubble をボタン上部に出して suggested 状態へ遷移する。
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -5,6 +10,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 
 import { useOrder } from "@/hooks/useOrder";
+import { useSuggestion } from "@/hooks/useSuggestion";
 import { generateUlid } from "@/lib/ulid";
 import { COPY, composeSuggestSubLabel } from "@/lib/copy";
 import {
@@ -29,8 +35,25 @@ export function GoroButton() {
   const setBalance = useSetAtom(balanceAtom);
   const setMonthlyCount = useSetAtom(monthlyCountAtom);
   const suggestion = useAtomValue(suggestionAtom);
+  const setSuggestion = useSetAtom(suggestionAtom);
   const { mutate, disabled, isPending } = useOrder();
   void isPending;
+
+  const { suggestion: suggestionResponse } = useSuggestion();
+  const plan = suggestionResponse?.hasSuggestion ? suggestionResponse.plan : undefined;
+
+  // Unit D: useSuggestion 結果を suggestionAtom に流し込み、状態を suggested へ遷移
+  useEffect(() => {
+    if (!suggestionResponse?.hasSuggestion || !suggestionResponse.plan) {
+      return;
+    }
+    setSuggestion({
+      storeName: suggestionResponse.plan.storeName,
+      amount: suggestionResponse.plan.amount,
+      suggestionId: suggestionResponse.suggestionId ?? "",
+    });
+    setScreenState((current) => (current === "idle" ? "suggested" : current));
+  }, [suggestionResponse, setSuggestion, setScreenState]);
 
   const [winningText, setWinningText] = useState<string | null>(null);
   const [slotStartedAt, setSlotStartedAt] = useState<number>(0);
@@ -53,7 +76,8 @@ export function GoroButton() {
       {
         category: "food",
         idempotencyKey: generateUlid(),
-        suggestionId: suggestion?.suggestionId,
+        // BR-D13/BR-C10: suggested 表示中なら suggestionId を送る (Unit C が解決)
+        suggestionId: suggestion?.suggestionId || undefined,
       },
       {
         onSuccess: (res) => {
@@ -91,7 +115,7 @@ export function GoroButton() {
         aria-label={ariaLabel}
         className={styles.button}
       >
-        {screenState === "suggested" && <SuggestBubble />}
+        {screenState === "suggested" && <SuggestBubble plan={plan} />}
         {screenState === "slot" ? (
           <SlotReel winningText={winningText} />
         ) : (

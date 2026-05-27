@@ -55,6 +55,14 @@ variable "order_history_table_name" {
   default     = ""
 }
 
+# Unit D で追加: API Lambda の environment に注入する Suggestion テーブル名。
+# 凍結 IF (unit-interfaces.md §10) の DDB_TABLE_SUGGESTION 命名に従う。
+variable "suggestion_table_name" {
+  type        = string
+  description = "Suggestion DynamoDB テーブル名 (環境変数 DDB_TABLE_SUGGESTION、空文字なら env 注入をスキップ)"
+  default     = ""
+}
+
 # Unit B で追加: API Lambda の environment に注入する Budget Unit テーブル名。
 # 凍結 IF (unit-interfaces.md §10) の DDB_TABLE_* 命名規則に従う。
 variable "wallet_table_name" {

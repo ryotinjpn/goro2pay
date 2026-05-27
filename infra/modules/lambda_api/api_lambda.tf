@@ -40,6 +40,10 @@ resource "aws_lambda_function" "api" {
       var.budget_reset_log_table_name != "" ? {
         DDB_TABLE_BUDGET_RESET_LOG = var.budget_reset_log_table_name
       } : {},
+      # Unit D: Suggestion テーブル名を env 経由で注入 (凍結 IF §10 DDB_TABLE_SUGGESTION)
+      var.suggestion_table_name != "" ? {
+        DDB_TABLE_SUGGESTION = var.suggestion_table_name
+      } : {},
     )
   }
 
