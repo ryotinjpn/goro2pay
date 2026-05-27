@@ -1,29 +1,33 @@
+// BudgetEmptyScreen は残高 0 時に表示される画面 (LC-ME-10 / US-3-03)。
+// P-ME-FE-DEG-01 §4.2: マウント時に useState(true) で RaiseModal を自動表示 (退化ループ)。
+//
+// PR ⑧ で Tailwind 直書きの素朴版から、ScreenFrame + 世界観準拠 (BrandHeader + 中央寄せ
+// 演出) に書き直した。😔 emoji と grey 文字は世界観に合わないため廃止。
 "use client";
 
 import { useState } from "react";
 
+import { ScreenFrame } from "@/components/order/ScreenFrame";
+import { BrandHeader } from "@/components/order/BrandHeader";
 import { RaiseModal } from "@/components/metrics/RaiseModal";
 
-// BudgetEmptyScreen は残高 0 時に表示される画面 (LC-ME-10 / US-3-03)。
-// P-ME-FE-DEG-01 §4.2: マウント時に useState(true) で RaiseModal を自動表示（退化ループ）。
+import styles from "./page.module.css";
+
 export default function BudgetEmptyPage() {
   const [isRaiseModalOpen, setIsRaiseModalOpen] = useState(true);
 
   return (
-    <main
-      data-testid="budget-empty-screen"
-      className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
-    >
-      <div className="space-y-4 max-w-sm">
-        <p className="text-4xl">😔</p>
-        <h1 className="text-xl font-bold text-gray-800">今月はもうダメになれません</h1>
-        <p className="text-sm text-gray-500">翌月 1 日に予算がリセットされます</p>
+    <ScreenFrame testid="budget-empty-screen">
+      <BrandHeader showLogout />
+      <div className={styles.body}>
+        <div className={styles.glow} aria-hidden="true" />
+        <div className={styles.verdict}>もう、ダメになれない。</div>
+        <div className={styles.sub}>翌月 1 日に予算がリセットされる。</div>
       </div>
-
       <RaiseModal
         isOpen={isRaiseModalOpen}
         onClose={() => setIsRaiseModalOpen(false)}
       />
-    </main>
+    </ScreenFrame>
   );
 }

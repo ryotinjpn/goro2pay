@@ -1,3 +1,8 @@
+/* CompleteScreen: mock/src/screens/CompleteMock.module.css ベースに移植 (PR ⑧)。
+   旧 web 実装はほぼ同等の演出だったが、@keyframes 名が独自命名 (verdict-in / glow-in /
+   stagger-in) だったので mock 命名 (verdict-letter-tighten-cm / fade-in-cm / fade-up-cm) に
+   統一。.glow はフローテング層 (旧 .complete::before) ではなく明示的な div に変更。 */
+
 .complete {
   flex: 1;
   display: flex;
@@ -7,39 +12,30 @@
   text-align: center;
   gap: 8px;
   position: relative;
+  padding-top: 28px;
 }
 
-.complete::before {
-  content: "";
-  position: absolute;
-  inset: -40px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(201, 169, 107, 0.32),
-    transparent 60%
-  );
-  pointer-events: none;
-  opacity: 0;
-  animation: glow-in 800ms ease forwards;
+@keyframes fade-in-cm {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-@keyframes glow-in {
-  to { opacity: 1; }
+@keyframes fade-up-cm {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.verdict {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 38px;
-  color: var(--color-cream);
-  letter-spacing: -0.02em;
-  position: relative;
-  opacity: 0;
-  animation: verdict-in 700ms var(--easing-spring) forwards;
-}
-
-@keyframes verdict-in {
+@keyframes verdict-letter-tighten-cm {
   from {
     opacity: 0;
     letter-spacing: 0.1em;
@@ -50,6 +46,33 @@
   }
 }
 
+.glow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(201, 169, 107, 0.32),
+    transparent 60%
+  );
+  pointer-events: none;
+  animation: fade-in-cm 800ms ease both;
+}
+
+.verdict {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 38px;
+  color: var(--color-cream);
+  letter-spacing: -0.02em;
+  position: relative;
+  text-shadow: 0 0 24px rgba(244, 236, 216, 0.25);
+  animation: verdict-letter-tighten-cm 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* mock のステージング: body 200ms / store 280ms / price 360ms / line 440ms /
+   meta 520ms / next 600ms と段階的に立ち上がる。delay は維持し animation を
+   fade-up-cm に統一する。 */
 .body,
 .store,
 .price,
@@ -57,9 +80,7 @@
 .meta,
 .next {
   position: relative;
-  opacity: 0;
-  transform: translateY(8px);
-  animation: stagger-in 500ms ease forwards;
+  animation: fade-up-cm 500ms ease both;
 }
 
 .body { animation-delay: 200ms; }
@@ -68,10 +89,6 @@
 .line  { animation-delay: 440ms; }
 .meta  { animation-delay: 520ms; }
 .next  { animation-delay: 600ms; }
-
-@keyframes stagger-in {
-  to { opacity: 1; transform: translateY(0); }
-}
 
 .body {
   font-family: var(--font-mono-pixel), monospace;
