@@ -46,8 +46,16 @@ export type LastOrder = {
 
 export const lastOrderAtom = atom<LastOrder | null>(null);
 
-// 注文成功時の金色フラッシュ + verdict ポップ演出を再走させるための counter。
-// useOrder.onSuccess で increment し、MainScreen の演出層が `key={counter}` で remount する。
-// 初期値 0 は「未発火」を表す。consumer は `counter > 0` でガードすること
-// (初回 mount 時にスタブ演出が一瞬出るのを防ぐ)。
+// 注文成功時の金色フラッシュ + verdict ポップ演出を再走させるためのキー。
+//
+// GoroButton.handleClick の責務:
+//   1. クリック時に setWinFlash(0) でリセット → MainScreen の showWinEffects=false
+//      に倒し、API 応答前に前回の演出が "double-fire" するのを防ぐ
+//   2. onSuccess で setWinFlash(Date.now()) を立てる → クリックごとにユニーク値で
+//      `key={counter}` が更新され演出が clean に remount される (c=>c+1 にすると
+//      リセット 0 → 1 で同じキーが繰り返され React が remount しない bug)
+//
+// MainScreen consumer の責務:
+//   - `counter > 0` ガードで初期 mount 時のスタブ演出を防ぐ
+//   - counter の値そのものは意味を持たない (タイムスタンプ or 0)
 export const winFlashCounterAtom = atom<number>(0);
