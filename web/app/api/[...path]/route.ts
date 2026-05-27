@@ -6,6 +6,45 @@
 
 import { NextRequest } from "next/server";
 
+function mockResponse(pathSegments: string[], method: string): Response | null {
+  const route = pathSegments.join("/");
+  const now = new Date().toISOString();
+
+  if (route === "wallet" && method === "GET") {
+    return Response.json({ balance: 25000, monthlyBudget: 30000, updatedAt: now });
+  }
+  if (route === "wallet/budget" && method === "POST") {
+    return Response.json({ monthlyBudget: 30000, appliedFrom: "2026-06-01" });
+  }
+  if (route === "metrics" && method === "GET") {
+    return Response.json({ damageCount: 3, consumptionRate: 17, monthlyBudget: 30000, remainingBalance: 25000, thresholdExceeded: false, summaryText: "今月はまだいける。" });
+  }
+  if (route === "orders" && method === "GET") {
+    return Response.json({
+      items: [
+        { orderId: "mock-01", storeName: "松屋", menuName: "牛めし", amount: 480, createdAt: now },
+        { orderId: "mock-02", storeName: "吉野家", menuName: "牛丼", amount: 426, createdAt: now },
+      ],
+    });
+  }
+  if (route === "orders" && method === "POST") {
+    return Response.json({ orderId: "mock-new", storeName: "すき家", menuName: "牛丼", amount: 430, remainingBalance: 24570, idempotent: false });
+  }
+  if (route === "suggest" && method === "GET") {
+    return Response.json({ hasSuggestion: true, suggestionId: "mock-s1", title: "今日のおすすめ", plan: { storeName: "松屋", menuName: "牛めし", amount: 480, category: "food" } });
+  }
+  if (route === "budget/raise/recommendation" && method === "GET") {
+    return Response.json({ currentMonthlyBudget: 30000, recommendedMonthlyBudget: 35000 });
+  }
+  if (route === "budget/raise" && method === "POST") {
+    return Response.json({ newMonthlyBudget: 35000, appliedFrom: "2026-06-01" });
+  }
+  if (route === "auth/logout" && method === "POST") {
+    return new Response(null, { status: 204 });
+  }
+  return null;
+}
+
 // Next.js 15 の breaking change により、Route Handler の `context.params` は
 // Promise<{...}> 型になった。同期アクセスは型エラー & ランタイム警告になる。
 // 参考: https://nextjs.org/docs/app/api-reference/file-conventions/route#context-optional
@@ -36,6 +75,11 @@ async function proxy(request: NextRequest, pathSegments: string[]): Promise<Resp
   const apiEndpoint = process.env.API_ENDPOINT;
   if (!apiEndpoint) {
     return new Response("API_ENDPOINT not configured", { status: 500 });
+  }
+  if (apiEndpoint === "mock") {
+    const mock = mockResponse(pathSegments, request.method);
+    if (mock) return mock;
+    return new Response("Mock not found", { status: 404 });
   }
 
   // CSRF: 本 BFF は Authorization: Bearer 必須なので、cookie 自動送信に

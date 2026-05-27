@@ -73,11 +73,19 @@ export function mapAmplifyErrorToCode(err: unknown): AuthErrorCode {
   }
 }
 
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+const MOCK_USER: UseAuthUser = { userId: "mock-user-id", email: "demo@example.com" };
+
 export function useAuth(): UseAuthReturn {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<UseAuthUser | null>(null);
 
   const refreshSession = useCallback(async () => {
+    if (USE_MOCK) {
+      setUser(MOCK_USER);
+      setStatus("authenticated");
+      return;
+    }
     try {
       const current = await getCurrentUser();
       const session = await fetchAuthSession();

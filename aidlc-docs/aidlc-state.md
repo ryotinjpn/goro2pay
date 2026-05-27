@@ -71,6 +71,12 @@
 - [x] Infrastructure Design (Unit E, 2026-05-25) — infrastructure-design.md / deployment-architecture.md 生成済み。新規 module なし、routes.tf に 3 route 追記 + tf テスト 4 assert 追記のみ。Q-I1〜Q-I3 全 A。ユーザ承認待ち
 - [x] Code Generation (Unit E, 2026-05-25) — 全 26 Step 完了。Backend (metrics/budget_raise 2 パッケージ + handlers 2 + main.go DI) + Frontend (hooks 2 + components 2 + page 1 + tests 4 + page.tsx 修正) + Infrastructure (routes.tf 3 route + tf テスト 4 assert) + Docs (code-summary.md)。Backend Go テスト PASS / Frontend Vitest 11 PASS / TypeScript clean。ユーザ承認待ち
 
+**横串デザインシステム** (worktree: add-desing)
+- [x] Design Spec v1.0 (2026-05-24) — メイン画面のみの design-spec
+- [x] Design Spec v2.0 (2026-05-25) — 全画面に拡張、`aidlc-docs/construction/_design-system/design-spec.md` 作成。Slot Machine コンセプト + リヴァイ調コピーシステム + デザイン哲学 (idea.md / personas.md との対応) を §0.5 に記述
+- [x] Implementation Plan (2026-05-25) — 22 タスク TDD ベースの `aidlc-docs/construction/_design-system/implementation-plan.md` 作成
+- [ ] Implementation (Code Generation 補完) — **EXECUTE** 別ブランチ / 別担当者で実施予定
+
 **全 Unit 統合**
 - [ ] Build and Test - **EXECUTE**
 

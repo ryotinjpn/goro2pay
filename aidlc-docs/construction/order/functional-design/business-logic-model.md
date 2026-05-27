@@ -482,7 +482,7 @@ Unit C が **やること / やらないこと** を Comprehensive 深度で明�
 |---|---|
 | NFR-DEG-01: 1 タップ完結 | UC-C-01 が「ボタン押下 → 完了画面」の単一ユースケース。中間画面なし |
 | NFR-DEG-01: 体感 3 秒以内 | Bedrock 1.5s × 2 + Wallet/Delivery/History の合算でワースト 3 秒（NFR-PERF-01） |
-| NFR-DEG-02: 自己委譲 | `InferOrderPlan` が太郎の履歴を読み取り Bedrock に渡す。太郎は何も選ばない |
+| NFR-DEG-02: 自己委譲 | `InferOrderPlan` が佐藤の履歴を読み取り Bedrock に渡す。佐藤は何も選ばない |
 | NFR-DEG-03: 残高即時可視化 | `RemainingBalance` を 201 応答に含める → Frontend が即時更新 |
 | NFR-DEG-05: 失敗の透過性 | Bedrock 失敗 / suggestionId 失効 / フォールバック発動 → 全てユーザに気づかせず注文完了 |
 | US-X-01: 決定疲れの解放 | UC-C-01 全体がこれを具現化。Bedrock が選び、Wallet が引き、Delivery が手配 |
