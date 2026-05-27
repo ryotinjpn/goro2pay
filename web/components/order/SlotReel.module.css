@@ -1,44 +1,121 @@
+/* SlotReel: mock/src/components/SlotReel.module.css ベースに移植 (PR ②)。
+   web の API 契約 (winningText: string | null) は維持しつつ、内部レイアウトを
+   mock の縦 flex 構造 + scanline + flash 演出に揃える。
+   当選金額バブルは PR ⑧ (lastOrderAtom 経由) で別途 wiring 予定。 */
+
+/* GoroButton 内に center 配置するためのラッパ。mock では <></> + screens 側で配置していたが、
+   web は GoroButton の中央に置きたいので reelWrap を残して flex 中央寄せを担う。 */
 .reelWrap {
-  width: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  width: 100%;
+  gap: 4px;
 }
 
 .window {
-  width: 100%;
+  width: 70%;
+  max-width: 200px;
+  height: 48px;
   background: #0a0405;
-  border: 2px solid var(--color-gold-500);
-  padding: 10px 4px;
+  border: 1px solid var(--color-gold-500);
+  border-radius: 6px;
   overflow: hidden;
   position: relative;
-  height: 56px;
-  border-radius: 4px;
+  box-shadow: inset 0 0 14px rgba(201, 169, 107, 0.4);
+  transition: box-shadow 600ms ease;
 }
 
-/* slot-spin は globals.css から SlotReel 専用にローカル化 (mock 構造へ寄せる準備、PR ① 基盤整備)。
-   translateY(-100%) は親 .window に対する -100% で、items を 2 倍化したループの 1 周ぶん。
-   PR ② で mock 構造 (translateY 0 → -240px の固定値、各 line height 48px 明示) に書き直す予定。 */
+.window[data-flash="true"] {
+  animation: slot-frame-flash 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 @keyframes slot-spin {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
+  from {
+    transform: translateY(0);
+  }
+  to {
+    /* 各 line height 48px × 5 行ぶん。SLOT_LINES の長さと整合させること。
+       SLOT_LINES を変更したら必ずこの数値も追従させる (-line_count * 48px)。 */
+    transform: translateY(-240px);
+  }
+}
+
+@keyframes slot-frame-flash {
+  0% {
+    box-shadow:
+      inset 0 0 14px rgba(201, 169, 107, 0.4),
+      0 0 0 rgba(244, 217, 144, 0);
+    border-color: var(--color-gold-500);
+  }
+  35% {
+    box-shadow:
+      inset 0 0 26px rgba(244, 217, 144, 1),
+      0 0 36px rgba(244, 217, 144, 0.85),
+      0 0 80px rgba(244, 217, 144, 0.45);
+    border-color: var(--color-gold-100);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 14px rgba(201, 169, 107, 0.4),
+      0 0 0 rgba(244, 217, 144, 0);
+    border-color: var(--color-gold-500);
+  }
+}
+
+@keyframes win-line-name {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.4em;
+  }
+  100% {
+    opacity: 1;
+    letter-spacing: 0.04em;
+  }
 }
 
 .strip {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 14px;
-  color: var(--color-gold-100);
-  text-shadow: 0 0 8px rgba(244, 217, 144, 0.6);
-  letter-spacing: 0.04em;
-  line-height: 1.4;
-  animation: slot-spin 0.4s linear infinite;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  animation: slot-spin 0.8s linear infinite;
+  padding: 0;
+  will-change: transform;
 }
 
 .strip[data-stopped="true"] {
   animation: none;
-  transition: transform 600ms var(--easing-spring);
+  transform: translateY(0) !important;
+  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.line {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 18px;
+  color: var(--color-gold-100);
+  text-align: center;
+  height: 48px;
+  line-height: 48px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(244, 217, 144, 0.55);
+}
+
+.strip[data-stopped="true"] .line {
+  animation: win-line-name 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  text-shadow:
+    0 0 14px rgba(244, 217, 144, 0.95),
+    0 0 28px rgba(201, 169, 107, 0.6);
+}
+
+.scanline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.04) 0 1px,
+    transparent 1px 3px
+  );
+  pointer-events: none;
 }
 
 .caption {
@@ -46,4 +123,6 @@
   font-size: 9px;
   color: var(--color-paper);
   letter-spacing: 0.25em;
+  margin-top: 8px;
+  text-align: center;
 }
