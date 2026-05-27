@@ -108,15 +108,20 @@ export function GoroButton() {
   const labelMain = labelMainFor(screenState);
   const labelSub = labelSubFor(screenState, suggestion);
   const ariaLabel = ariaLabelFor(screenState, suggestion);
+  // winning 時に button-jolt + win-flare-burst を 1 度だけ走らせる。
+  // key 切り替えで <button> を remount して animation を再発火させる方式 (mock 流)。
+  const winning = winningText !== null;
 
   return (
     <div className={styles.wrap}>
       <button
+        key={winning ? `win-${winningText}` : "btn"}
         type="button"
         onClick={handleClick}
         disabled={disabled || screenState === "slot" || screenState === "dead"}
         data-testid="goro-button"
         data-state={screenState}
+        data-winning={winning}
         aria-label={ariaLabel}
         className={styles.button}
       >
@@ -124,12 +129,13 @@ export function GoroButton() {
         {screenState === "slot" ? (
           <SlotReel winningText={winningText} />
         ) : (
-          <div>
-            <div className={styles.labelMain}>{labelMain}</div>
-            {labelSub && <div className={styles.labelSub}>{labelSub}</div>}
-          </div>
+          <>
+            <span className={styles.labelMain}>{labelMain}</span>
+            {labelSub && <span className={styles.labelSub}>{labelSub}</span>}
+          </>
         )}
       </button>
+      {winning && <span className={styles.flare} aria-hidden="true" />}
     </div>
   );
 }
