@@ -1,0 +1,36 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 32px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.brandKana {
+  font-family: var(--font-body-mincho);
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  color: var(--color-cream);
+}
+
+.brandLatin {
+  font-family: var(--font-display-serif);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-gold-500);
+  margin-left: 2px;
+}
+
+.time {
+  font-family: var(--font-mono-pixel);
+  font-size: 11px;
+  color: var(--color-mute);
+  letter-spacing: 0.15em;
+}

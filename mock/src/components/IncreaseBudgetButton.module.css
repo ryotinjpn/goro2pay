@@ -1,0 +1,40 @@
+@keyframes increase-rise-ib {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wrap {
+  margin-top: 0;
+  display: flex;
+  justify-content: center;
+  animation: increase-rise-ib 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 600ms both;
+}
+
+.btn {
+  background: var(--color-danger);
+  color: #ffffff;
+  font-family: var(--font-body-mincho);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  padding: 14px 22px;
+  border-radius: 12px;
+  width: 86%;
+  max-width: 360px;
+  box-shadow: 0 0 24px rgba(255, 79, 79, 0.55), 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 120ms ease-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
