@@ -1,48 +1,49 @@
+/* GoroButton: mock/src/components/GoroButton.module.css ベースに移植 (PR ③)。
+   web の API (jotai screenStateAtom + useOrder) は維持しつつ、見た目と演出を mock 準拠に揃える。
+   主な変更:
+   - radial gradient stop 比率を mock の 0/38/78/100 に
+   - 旧来の `border: 4px solid rgba(0,0,0,.4)` と `box-shadow: 0 0 0 4px gold-500` を削除
+     (mock の inset shadow + outer shadow に統一)
+   - `suggest-breath-local` (inset も光るバージョン) で globals.css の suggest-breath を上書き
+   - `button-jolt` (winning 時の左右ぶれ) と `win-flare-burst` (放射フレア) を新規追加
+   - main/sub label を `<div>` → `<span>` 化、フォントを mock 準拠に */
+
 .wrap {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
   position: relative;
 }
 
 .button {
-  width: 78%;
+  width: 78vw;
+  max-width: 360px;
   aspect-ratio: 1;
   border-radius: 50%;
+  border: none;
   background: radial-gradient(
-    circle at 35% 30%,
+    circle at 30% 25%,
     var(--color-gold-100) 0%,
-    var(--color-gold-500) 35%,
-    var(--color-gold-700) 70%,
+    var(--color-gold-500) 38%,
+    var(--color-gold-700) 78%,
     var(--color-gold-900) 100%
   );
   box-shadow:
-    0 0 0 4px var(--color-gold-500),
-    0 0 50px rgba(201, 169, 107, 0.4),
-    inset 0 -16px 28px rgba(0, 0, 0, 0.45),
-    inset 0 6px 14px rgba(255, 240, 200, 0.35);
-  border: 4px solid rgba(0, 0, 0, 0.4);
-  display: grid;
-  place-items: center;
-  text-align: center;
+    0 0 36px rgba(201, 169, 107, 0.4),
+    inset 0 4px 12px rgba(244, 217, 144, 0.55),
+    inset 0 -8px 18px rgba(58, 42, 20, 0.6);
+  color: #1a1208;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
-  transition: transform 200ms var(--easing-spring),
-    box-shadow 200ms ease;
+  transition: transform 120ms ease-out, box-shadow 200ms ease;
   position: relative;
-}
-
-.button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.button:active:not(:disabled) {
-  transform: scale(0.98);
-  box-shadow:
-    0 0 0 4px var(--color-gold-500),
-    0 0 30px rgba(201, 169, 107, 0.3),
-    inset 0 -8px 16px rgba(0, 0, 0, 0.5);
-  transition-duration: 120ms;
+  outline: none;
 }
 
 .button:focus-visible {
@@ -50,49 +51,121 @@
   outline-offset: 4px;
 }
 
-.button[data-state="suggested"] {
-  animation: suggest-breath 2.4s ease-in-out infinite;
+.button:active:not(:disabled),
+.button[data-state="slot"] {
+  transform: scale(0.98);
+  box-shadow:
+    0 0 22px rgba(201, 169, 107, 0.25),
+    inset 0 -4px 10px rgba(244, 217, 144, 0.45),
+    inset 0 8px 18px rgba(58, 42, 20, 0.7);
 }
 
-.button[data-state="slot"] {
+@keyframes suggest-breath-local {
+  0%,
+  100% {
+    box-shadow:
+      0 0 36px rgba(201, 169, 107, 0.4),
+      inset 0 4px 12px rgba(244, 217, 144, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 56px rgba(201, 169, 107, 0.6),
+      inset 0 4px 12px rgba(244, 217, 144, 0.8);
+  }
+}
+
+@keyframes button-jolt {
+  0% {
+    transform: scale(0.98) translateX(0);
+  }
+  12% {
+    transform: scale(1.04) translateX(-4px);
+  }
+  24% {
+    transform: scale(1.02) translateX(5px);
+  }
+  36% {
+    transform: scale(1.03) translateX(-3px);
+  }
+  48% {
+    transform: scale(1.01) translateX(3px);
+  }
+  60% {
+    transform: scale(1) translateX(-1px);
+  }
+  100% {
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes win-flare-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  35% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+
+.button[data-state="suggested"] {
+  animation: suggest-breath-local 2.4s ease-in-out infinite;
+}
+
+.button[data-winning="true"] {
+  animation: button-jolt 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.flare {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110%;
+  aspect-ratio: 1;
+  border-radius: 50%;
   background: radial-gradient(
-    circle at 35% 30%,
-    #6a4f1a 0%,
-    #3a2a14 100%
+    circle at center,
+    rgba(244, 217, 144, 0.7) 0%,
+    rgba(201, 169, 107, 0.35) 40%,
+    transparent 65%
   );
-  cursor: progress;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: win-flare-burst 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .button[data-state="dead"] {
-  background: radial-gradient(
-    circle at 35% 30%,
-    #6a6a6a 0%,
-    #3a3a3a 100%
-  );
-  box-shadow:
-    0 0 0 4px #4a4a4a,
-    inset 0 0 30px rgba(0, 0, 0, 0.7);
+  background: linear-gradient(180deg, #7a7a7a, #4a4a4a);
+  box-shadow: none;
+  color: #2a2a2a;
   cursor: not-allowed;
+  animation: none;
 }
 
 .labelMain {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 18px;
-  letter-spacing: 0.14em;
-  color: var(--color-bg-warm);
-}
-
-.button[data-state="dead"] .labelMain {
-  color: #4a4a4a;
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 0 rgba(244, 217, 144, 0.4);
 }
 
 .labelSub {
   font-family: var(--font-display-serif), serif;
   font-style: italic;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  color: var(--color-gold-900);
-  margin-top: 6px;
+  font-size: 14px;
+  color: rgba(26, 18, 8, 0.78);
+  letter-spacing: 0.02em;
+}
+
+.button[data-state="dead"] .labelMain {
+  color: #2a2a2a;
+  text-shadow: none;
 }
 
 .button[data-state="dead"] .labelSub {
