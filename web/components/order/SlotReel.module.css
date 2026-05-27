@@ -17,6 +17,14 @@
   border-radius: 4px;
 }
 
+/* slot-spin は globals.css から SlotReel 専用にローカル化 (mock 構造へ寄せる準備、PR ① 基盤整備)。
+   translateY(-100%) は親 .window に対する -100% で、items を 2 倍化したループの 1 周ぶん。
+   PR ② で mock 構造 (translateY 0 → -240px の固定値、各 line height 48px 明示) に書き直す予定。 */
+@keyframes slot-spin {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
 .strip {
   font-family: var(--font-mono-pixel), monospace;
   font-size: 14px;

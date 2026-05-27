@@ -15,6 +15,10 @@
   --color-accent-warn: #ffb14a;
   --color-accent-danger: #ff4f4f;
   --color-dead-gray: #6a6a6a;
+  /* mock 互換 alias (mock CSS が `var(--color-warn)` / `var(--color-danger)` を直接参照するため、
+     mock 側コンポーネントを web に移植する際に grep で全置換しなくて済むようにエイリアスを置く) */
+  --color-warn: var(--color-accent-warn);
+  --color-danger: var(--color-accent-danger);
 
   /* Spacing & shape */
   --radius-card: 18px;
@@ -42,17 +46,7 @@ body {
   font-family: var(--font-body-sans), system-ui, sans-serif;
 }
 
-/* Common animations (spec §4.1) */
-@keyframes slot-spin {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
-}
-
-@keyframes balance-tick {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-1em); }
-}
-
+/* Common animations (spec §4.1) — slot-spin / balance-tick はコンポーネントローカルに移動済み */
 @keyframes suggest-breath {
   0%, 100% { box-shadow: 0 0 30px rgba(201, 169, 107, 0.4); }
   50% { box-shadow: 0 0 30px rgba(201, 169, 107, 0.6); }
