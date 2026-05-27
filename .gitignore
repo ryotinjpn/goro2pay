@@ -21,6 +21,9 @@ apps/api/bin/
 apps/api/coverage.out
 apps/api/.env*
 
+# Scheduler Lambda bootstrap (terraform apply 前に make build で生成、コミット対象外)
+apps/api/cmd/scheduler/bootstrap
+
 # Lambda zip 中間
 infra/lambdas/**/dist/
 infra/**/.terraform/tmp/

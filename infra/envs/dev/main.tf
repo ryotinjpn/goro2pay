@@ -2,6 +2,15 @@
 # unit-of-work.md §4.1 の機能別 module 構成
 # (codestar_connection / cognito / api_gateway / lambda_api / amplify) に準拠。
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.46"
+    }
+  }
+}
+
 # CodeStar Connection (CodePipeline と Amplify で共有、env ごとに 1 つ)
 # 初回 apply 後は AWS Console で手動承認が必要 (deployment-runbook.md §4)。
 module "codestar_connection" {
@@ -92,6 +101,23 @@ module "observability" {
   api_log_group_name = module.lambda_api.api_log_group_name
 }
 
+# Amplify Hosting (Unit 横串、Frontend 配信)
+# GitHub PAT は data.tf の SSM Parameter から取得。
+module "amplify" {
+  source                      = "../../modules/amplify"
+  env                         = local.env
+  region                      = local.region
+  github_owner                = local.github_owner
+  github_repo_name            = local.github_repo
+  github_branch               = local.github_branch
+  cognito_user_pool_id        = module.cognito.user_pool_id
+  cognito_user_pool_client_id = module.cognito.user_pool_client_id
+  api_endpoint                = module.api_gateway.api_endpoint
+  amplify_yml_path            = "${path.root}/../../../web/amplify.yml"
+  codestar_connection_arn     = module.codestar_connection.connection_arn
+  github_oauth_token          = data.aws_ssm_parameter.amplify_github_token.value
+}
+
 # API Gateway → API Lambda invoke 許可
 # 両 module の output を必要とするため、循環依存を避けるため envs 側に置く。
 #
@@ -108,37 +134,4 @@ resource "aws_lambda_permission" "apigw_invoke_api" {
   function_name = module.lambda_api.api_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${module.api_gateway.api_execution_arn}/*/*"
-}
-
-# Amplify Hosting (Unit 横串、Frontend 配信)
-#
-# GitHub 接続には PAT (classic, admin:repo_hook + repo) が必要だが、リポジトリに
-# 残さないため SSM Parameter Store (SecureString) に事前格納し、Terraform は
-# data source 経由で取得する。
-#
-# 事前作業 (1 度だけ):
-#   aws ssm put-parameter \
-#     --name "/goro2pay/dev/amplify/github_oauth_token" \
-#     --type SecureString \
-#     --value "<GitHub PAT>" \
-#     --region ap-northeast-1 \
-#     --profile dev-kyoto-sso-administrator
-data "aws_ssm_parameter" "amplify_github_token" {
-  name            = "/goro2pay/${local.env}/amplify/github_oauth_token"
-  with_decryption = true
-}
-
-module "amplify" {
-  source                      = "../../modules/amplify"
-  env                         = local.env
-  region                      = local.region
-  github_owner                = local.github_owner
-  github_repo_name            = local.github_repo
-  github_branch               = local.github_branch
-  cognito_user_pool_id        = module.cognito.user_pool_id
-  cognito_user_pool_client_id = module.cognito.user_pool_client_id
-  api_endpoint                = module.api_gateway.api_endpoint
-  amplify_yml_path            = "${path.root}/../../../web/amplify.yml"
-  codestar_connection_arn     = module.codestar_connection.connection_arn
-  github_oauth_token          = data.aws_ssm_parameter.amplify_github_token.value
 }
