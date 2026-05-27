@@ -16,6 +16,10 @@
   --color-danger: #ff4f4f;
   --color-dead-gray: #6a6a6a;
 
+  /* aliases (web/app/globals.css 互換) */
+  --color-accent-warn: #ffb14a;
+  --color-accent-danger: #ff4f4f;
+
   --font-display-serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-body-mincho: 'Zen Old Mincho', 'Yu Mincho', serif;
   --font-mono-pixel: 'DotGothic16', 'Courier New', monospace;
@@ -23,4 +27,7 @@
 
   --radius-card: 18px;
   --pad-screen: 28px 22px 24px;
+
+  --easing-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 200ms;
 }
