@@ -5,6 +5,7 @@ applications:
       phases:
         preBuild:
           commands:
+            - echo "API_ENDPOINT=$API_ENDPOINT" >> .env.production
             - npm ci
         build:
           commands:
