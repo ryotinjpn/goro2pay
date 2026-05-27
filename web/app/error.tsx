@@ -8,6 +8,8 @@ import { useEffect } from "react";
 
 import { authMessages } from "@/lib/authMessages";
 
+import styles from "./error.module.css";
+
 export default function GlobalError({
   error,
   reset,
@@ -24,14 +26,10 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main
-      role="alert"
-      aria-live="assertive"
-      style={{ padding: 24, textAlign: "center" }}
-    >
-      <h1>申し訳ありません</h1>
-      <p>{authMessages.UNKNOWN}</p>
-      <button type="button" onClick={() => reset()} style={{ marginTop: 16 }}>
+    <main role="alert" aria-live="assertive" className={styles.main}>
+      <h1 className={styles.h1}>申し訳ありません</h1>
+      <p className={styles.body}>{authMessages.UNKNOWN}</p>
+      <button type="button" onClick={() => reset()} className={styles.button}>
         もう一度
       </button>
     </main>

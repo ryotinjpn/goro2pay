@@ -1,0 +1,94 @@
+.h1 {
+  margin-top: 14px;
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--color-cream);
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.sessionHint {
+  margin-top: 12px;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-paper);
+  letter-spacing: 0.04em;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: 14px;
+}
+
+.field {
+  margin-top: 14px;
+}
+
+.field:first-child {
+  margin-top: 0;
+}
+
+.field label {
+  display: block;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 9px;
+  color: var(--color-mute);
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+}
+
+.field input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-gold-900);
+  color: var(--color-cream);
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  font-family: var(--font-body-sans), system-ui, sans-serif;
+}
+
+.field input:focus {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 0;
+}
+
+.error {
+  margin-top: 8px;
+  color: var(--color-accent-danger);
+  font-size: 13px;
+}
+
+.submit {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+  background: linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700));
+  color: var(--color-bg-warm);
+  border: 1px solid var(--color-gold-500);
+  border-radius: 4px;
+  padding: 10px 0;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-align: center;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

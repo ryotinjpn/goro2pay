@@ -1,0 +1,128 @@
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.h1 {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--color-cream);
+  line-height: 0.95;
+}
+
+.h1 div {
+  display: block;
+}
+
+.sub {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.demoLabel {
+  margin-top: 14px;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  color: var(--color-mute);
+}
+
+.demoLabel b {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--color-cream);
+  letter-spacing: 0;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.demoButton {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--color-gold-100) 0%,
+    var(--color-gold-500) 35%,
+    var(--color-gold-700) 70%,
+    var(--color-gold-900) 100%
+  );
+  box-shadow:
+    0 0 0 3px var(--color-gold-500),
+    0 0 24px rgba(201, 169, 107, 0.4),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.45),
+    inset 0 4px 8px rgba(255, 240, 200, 0.35);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  cursor: pointer;
+  border: 3px solid rgba(0, 0, 0, 0.4);
+  margin: 12px auto 0;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--color-bg-warm);
+  transition: transform 200ms var(--easing-spring);
+}
+
+.demoButton:active {
+  transform: scale(0.96);
+}
+
+.demoButton:disabled {
+  background: radial-gradient(circle at 35% 30%, #6a6a6a 0%, #3a3a3a 100%);
+  box-shadow: 0 0 0 3px #4a4a4a;
+  color: #4a4a4a;
+  cursor: not-allowed;
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms ease, transform 500ms var(--easing-spring);
+}
+
+.cta[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cta a {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+  border-radius: 4px;
+}
+
+.ctaPrimary {
+  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
+  color: var(--color-bg-warm);
+  border: 1px solid var(--color-gold-500);
+}
+
+.ctaSecondary {
+  background: transparent;
+  color: var(--color-gold-500);
+  border: 1px solid var(--color-gold-900);
+}

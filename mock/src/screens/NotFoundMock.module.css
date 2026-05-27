@@ -1,0 +1,44 @@
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.h1 {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--color-cream);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.body {
+  font-family: var(--font-body-mincho), serif;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  letter-spacing: 0.04em;
+  margin-top: 14px;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.link {
+  display: inline-block;
+  margin-top: 24px;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  letter-spacing: 0.18em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.link:hover {
+  color: var(--color-gold-100);
+}

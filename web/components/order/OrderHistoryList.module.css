@@ -1,0 +1,92 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 200ms ease;
+}
+
+.listFetching {
+  opacity: 0.5;
+}
+
+.item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-gold-900);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.itemMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.storeName {
+  font-family: var(--font-body-mincho), serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-cream);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuName {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 9px;
+  color: var(--color-mute);
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amount {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-gold-500);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.error {
+  background: rgba(255, 79, 79, 0.12);
+  border: 1px solid var(--color-accent-danger);
+  color: var(--color-cream);
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.errorInline {
+  background: rgba(255, 79, 79, 0.12);
+  border: 1px solid var(--color-accent-danger);
+  color: var(--color-cream);
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.empty {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-mute);
+  letter-spacing: 0.18em;
+  text-align: center;
+  padding: 16px;
+}

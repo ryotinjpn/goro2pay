@@ -1,12 +1,19 @@
 "use client";
 
+import { COPY } from "@/lib/copy";
+import styles from "./LogoutConfirmModal.module.css";
+
 interface LogoutConfirmModalProps {
   open: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-export function LogoutConfirmModal({ open, onCancel, onConfirm }: LogoutConfirmModalProps) {
+export function LogoutConfirmModal({
+  open,
+  onCancel,
+  onConfirm,
+}: LogoutConfirmModalProps) {
   if (!open) return null;
   return (
     <div
@@ -14,24 +21,29 @@ export function LogoutConfirmModal({ open, onCancel, onConfirm }: LogoutConfirmM
       aria-modal="true"
       aria-labelledby="logout-confirm-title"
       data-testid="logout-confirm-modal"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className={styles.overlay}
     >
-      <div style={{ background: "white", padding: 24, borderRadius: 8 }}>
-        <h2 id="logout-confirm-title">もうダメ化を終わらせますか？</h2>
-        <p>もう一度入るには再ログインが必要です</p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-          <button type="button" onClick={onCancel} data-testid="logout-confirm-cancel">
-            キャンセル
+      <div className={styles.card}>
+        <h2 id="logout-confirm-title" className={styles.h2}>
+          {COPY.logout.h2}
+        </h2>
+        <p className={styles.sub}>{COPY.logout.sub}</p>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={onCancel}
+            data-testid="logout-confirm-cancel"
+            className={styles.secondary}
+          >
+            {COPY.logout.secondary}
           </button>
-          <button type="button" onClick={onConfirm} data-testid="logout-confirm-submit">
-            ログアウト
+          <button
+            type="button"
+            onClick={onConfirm}
+            data-testid="logout-confirm-submit"
+            className={styles.primary}
+          >
+            {COPY.logout.primary}
           </button>
         </div>
       </div>

@@ -1,4 +1,7 @@
+/* web/app/globals.css */
+
 :root {
+  /* Color tokens (spec §1.2) */
   --color-bg-deep: #050402;
   --color-bg-mid: #0e0a06;
   --color-bg-warm: #1a1208;
@@ -13,23 +16,68 @@
   --color-accent-danger: #ff4f4f;
   --color-dead-gray: #6a6a6a;
 
-  --font-display-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  --font-body-mincho: var(--font-zen-mincho), "Zen Old Mincho", "Yu Mincho", serif;
-  --font-mono-pixel: var(--font-dotgothic), "DotGothic16", monospace;
-  --font-body-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Spacing & shape */
+  --radius-card: 18px;
+  --pad-screen: 28px 22px 24px;
+
+  /* Motion (spec §1.5) */
+  --easing-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 200ms;
+  --duration-mid: 450ms;
+  --duration-dead: 600ms;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
-  background: var(--color-bg-deep);
+  background:
+    radial-gradient(ellipse at top, var(--color-bg-warm) 0%, var(--color-bg-mid) 60%, var(--color-bg-deep) 100%);
   color: var(--color-cream);
-  font-family: var(--font-body-sans);
+  min-height: 100vh;
+  font-family: var(--font-body-sans), system-ui, sans-serif;
+}
+
+/* Common animations (spec §4.1) */
+@keyframes slot-spin {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes balance-tick {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-1em); }
+}
+
+@keyframes suggest-breath {
+  0%, 100% { box-shadow: 0 0 30px rgba(201, 169, 107, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(201, 169, 107, 0.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* sr-only for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 button {

@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { type WalletResponse } from "@/lib/api/wallet";
 import { WALLET_QUERY_OPTIONS } from "@/hooks/useWallet";
 
+import styles from "./BalanceDisplay.module.css";
+
 function computeRemainingDays(now: Date): number {
   const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const diffMs = next.getTime() - now.getTime();
@@ -35,31 +37,10 @@ export function BalanceDisplay() {
       <div
         data-testid="budget-balance-skeleton"
         aria-busy="true"
-        style={{
-          padding: 16,
-          borderRadius: 12,
-          background: "#f3f4f6",
-          minHeight: 120,
-          animation: "pulse 1.4s ease-in-out infinite",
-        }}
+        className={styles.skeleton}
       >
-        <div
-          style={{
-            height: 14,
-            width: 96,
-            background: "#e5e7eb",
-            borderRadius: 4,
-            marginBottom: 12,
-          }}
-        />
-        <div
-          style={{
-            height: 36,
-            width: 160,
-            background: "#e5e7eb",
-            borderRadius: 6,
-          }}
-        />
+        <div className={styles.skeletonBar} />
+        <div className={styles.skeletonBarLg} />
       </div>
     );
   }
@@ -69,26 +50,13 @@ export function BalanceDisplay() {
       <div
         data-testid="budget-balance-display"
         role="status"
-        style={{
-          padding: 16,
-          borderRadius: 12,
-          background: "#fff7ed",
-          color: "#9a3412",
-        }}
+        className={styles.errorCard}
       >
-        残高取得に失敗しました
+        <span>残高取得に失敗しました</span>
         <button
           data-testid="budget-balance-retry"
           onClick={() => void query.refetch()}
-          style={{
-            marginLeft: 12,
-            background: "#9a3412",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "4px 10px",
-            cursor: "pointer",
-          }}
+          className={styles.retry}
         >
           再試行
         </button>
@@ -106,36 +74,18 @@ export function BalanceDisplay() {
       data-testid="budget-balance-display"
       role="status"
       aria-live="polite"
-      style={{
-        padding: 20,
-        borderRadius: 12,
-        background: "#ffffff",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        opacity: query.isFetching ? 0.5 : 1,
-        transition: "opacity 0.2s",
-      }}
+      className={`${styles.card} ${query.isFetching ? styles.cardFetching : ""}`}
     >
-      <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 6 }}>
-        残りダメ予算
-      </div>
+      <div className={styles.label}>残りダメ予算</div>
       <div
         data-testid="budget-balance-amount"
-        style={{
-          fontSize: 40,
-          fontWeight: 700,
-          color: isWarning ? "#dc2626" : "#111827",
-        }}
+        className={`${styles.amount} ${isWarning ? styles.amountWarning : ""}`}
       >
         {isWarning ? "⚠ " : ""}
         {formatYen(balance)}
       </div>
-      <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-        月間予算 {formatYen(monthlyBudget)}
-      </div>
-      <div
-        data-testid="budget-reset-countdown"
-        style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}
-      >
+      <div className={styles.meta}>月間予算 {formatYen(monthlyBudget)}</div>
+      <div data-testid="budget-reset-countdown" className={styles.metaCountdown}>
         月末リセットまで あと {remainingDays} 日
       </div>
     </div>

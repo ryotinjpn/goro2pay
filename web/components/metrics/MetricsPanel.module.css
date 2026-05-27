@@ -1,0 +1,128 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-gold-900);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 0 18px rgba(201, 169, 107, 0.1);
+}
+
+.label {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--color-mute);
+}
+
+.count {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--color-cream);
+  font-variant-numeric: tabular-nums;
+}
+
+.rateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--color-mute);
+  margin-top: 4px;
+}
+
+.rateValue {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--color-gold-500);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.rateValue[data-warn="true"] {
+  color: var(--color-accent-danger);
+  font-weight: 700;
+  animation: rate-pulse 1.4s ease-in-out infinite;
+}
+
+.bar {
+  height: 2px;
+  background: rgba(201, 169, 107, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+
+.barFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--color-gold-500);
+  transition: width var(--duration-fast) ease, background-color 400ms ease;
+}
+
+.barFill[data-warn="true"] {
+  background: var(--color-accent-danger);
+  animation: bar-pulse 1.4s ease-in-out infinite;
+}
+
+.summary {
+  margin-top: 6px;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--color-mute);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-gold-900);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.skeletonBar {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(201, 169, 107, 0.06) 0%,
+    rgba(201, 169, 107, 0.18) 50%,
+    rgba(201, 169, 107, 0.06) 100%
+  );
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonBarShort {
+  width: 50%;
+}
+
+.skeletonBarLong {
+  width: 75%;
+}
+
+@keyframes rate-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes bar-pulse {
+  0%, 100% { box-shadow: 0 0 0 var(--color-accent-danger); }
+  50% { box-shadow: 0 0 8px var(--color-accent-danger); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

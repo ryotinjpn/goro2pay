@@ -1,0 +1,100 @@
+.wrap {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  margin-top: 18px;
+  position: relative;
+}
+
+.button {
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--color-gold-100) 0%,
+    var(--color-gold-500) 35%,
+    var(--color-gold-700) 70%,
+    var(--color-gold-900) 100%
+  );
+  box-shadow:
+    0 0 0 4px var(--color-gold-500),
+    0 0 50px rgba(201, 169, 107, 0.4),
+    inset 0 -16px 28px rgba(0, 0, 0, 0.45),
+    inset 0 6px 14px rgba(255, 240, 200, 0.35);
+  border: 4px solid rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 200ms var(--easing-spring),
+    box-shadow 200ms ease;
+  position: relative;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow:
+    0 0 0 4px var(--color-gold-500),
+    0 0 30px rgba(201, 169, 107, 0.3),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.5);
+  transition-duration: 120ms;
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--color-gold-100);
+  outline-offset: 4px;
+}
+
+.button[data-state="suggested"] {
+  animation: suggest-breath 2.4s ease-in-out infinite;
+}
+
+.button[data-state="slot"] {
+  background: radial-gradient(
+    circle at 35% 30%,
+    #6a4f1a 0%,
+    #3a2a14 100%
+  );
+  cursor: progress;
+}
+
+.button[data-state="dead"] {
+  background: radial-gradient(
+    circle at 35% 30%,
+    #6a6a6a 0%,
+    #3a3a3a 100%
+  );
+  box-shadow:
+    0 0 0 4px #4a4a4a,
+    inset 0 0 30px rgba(0, 0, 0, 0.7);
+  cursor: not-allowed;
+}
+
+.labelMain {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  color: var(--color-bg-warm);
+}
+
+.button[data-state="dead"] .labelMain {
+  color: #4a4a4a;
+}
+
+.labelSub {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--color-gold-900);
+  margin-top: 6px;
+}
+
+.button[data-state="dead"] .labelSub {
+  color: #4a4a4a;
+}

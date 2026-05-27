@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 
 import { sessionExpiredAtom } from "@/state/auth";
 import { authMessages } from "@/lib/authMessages";
+import { COPY } from "@/lib/copy";
+
+import styles from "./SessionExpiredModalHost.module.css";
 
 const REDIRECT_DELAY_MS = 1500;
 
@@ -45,21 +48,20 @@ export function SessionExpiredModalHost() {
       aria-modal="true"
       aria-labelledby="session-expired-title"
       data-testid="session-expired-modal"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
+      className={styles.overlay}
     >
-      <div style={{ background: "white", padding: 24, borderRadius: 8 }}>
-        <h2 id="session-expired-title">お疲れ様でした</h2>
-        <p>{authMessages.SESSION_EXPIRED}</p>
-        <button type="button" data-testid="session-expired-ok" onClick={navigateToLogin}>
-          OK
+      <div className={styles.card}>
+        <h2 id="session-expired-title" className={styles.h2}>
+          {COPY.sessionExpired.h2}
+        </h2>
+        <p className={styles.sub}>{authMessages.SESSION_EXPIRED}</p>
+        <button
+          type="button"
+          data-testid="session-expired-ok"
+          onClick={navigateToLogin}
+          className={styles.button}
+        >
+          {COPY.sessionExpired.button}
         </button>
       </div>
     </div>

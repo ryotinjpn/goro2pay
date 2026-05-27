@@ -36,11 +36,10 @@ describe("MetricsPanel (LC-ME-09)", () => {
     expect(await screen.findByTestId("metrics-panel")).toBeInTheDocument();
     expect(screen.getByTestId("consumption-rate")).toHaveTextContent("50%");
     const bar = screen.getByTestId("consumption-bar");
-    expect(bar.className).toContain("bg-blue-500");
-    expect(bar.className).not.toContain("animate-pulse");
+    expect(bar.getAttribute("data-warn")).toBe("false");
   });
 
-  it("ThresholdExceeded=true → animate-pulse + bg-red-500 (P-ME-FE-DEG-01)", async () => {
+  it("ThresholdExceeded=true → data-warn=true で警告状態 (P-ME-FE-DEG-01)", async () => {
     vi.mocked(metricsApi.fetchMetrics).mockResolvedValue({
       damageCount: 12, consumptionRate: 0.82, monthlyBudget: 30000,
       remainingBalance: 5400, thresholdExceeded: true,
@@ -48,8 +47,7 @@ describe("MetricsPanel (LC-ME-09)", () => {
     });
     renderWithClient(<MetricsPanel />);
     const bar = await screen.findByTestId("consumption-bar");
-    expect(bar.className).toContain("bg-red-500");
-    expect(bar.className).toContain("animate-pulse");
-    expect(screen.getByTestId("consumption-rate").className).toContain("text-red-500");
+    expect(bar.getAttribute("data-warn")).toBe("true");
+    expect(screen.getByTestId("consumption-rate").getAttribute("data-warn")).toBe("true");
   });
 });

@@ -1,0 +1,56 @@
+.bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-warm);
+  color: var(--color-cream);
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  border: 1px solid var(--color-gold-500);
+  box-shadow: 0 0 14px rgba(201, 169, 107, 0.5);
+  white-space: nowrap;
+  opacity: 0;
+  animation: bubble-in 600ms ease forwards;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-gold-500);
+}
+
+.title {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--color-cream);
+}
+
+.plan {
+  margin-top: 2px;
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--color-gold-500);
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

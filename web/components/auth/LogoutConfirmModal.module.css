@@ -1,0 +1,88 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1100;
+  animation: overlay-in 200ms ease;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.02) 0 1px,
+      transparent 1px 4px
+    ),
+    radial-gradient(
+      ellipse at top,
+      var(--color-bg-warm) 0%,
+      var(--color-bg-mid) 100%
+    );
+  border: 1px solid var(--color-gold-500);
+  box-shadow: 0 0 30px rgba(201, 169, 107, 0.3);
+  padding: 22px 18px;
+  width: min(420px, 86%);
+  text-align: center;
+  border-radius: var(--radius-card);
+  animation: card-in 300ms var(--easing-spring);
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.h2 {
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--color-cream);
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--color-gold-500);
+  margin-top: 8px;
+  letter-spacing: 0.04em;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.actions button {
+  flex: 1;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.primary {
+  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
+  color: var(--color-bg-warm);
+  border: 1px solid var(--color-gold-500);
+}
+
+.secondary {
+  background: transparent;
+  color: var(--color-gold-500);
+  border: 1px solid var(--color-gold-900);
+}

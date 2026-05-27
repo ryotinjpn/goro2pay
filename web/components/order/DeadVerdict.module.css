@@ -1,0 +1,29 @@
+.verdict {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display-serif), serif;
+  font-style: italic;
+  font-size: 26px;
+  color: var(--color-cream);
+  text-align: center;
+  line-height: 1.25;
+  width: 90%;
+  letter-spacing: -0.02em;
+  filter: none;
+  isolation: isolate;
+  opacity: 0;
+  animation: verdict-in 500ms var(--easing-spring) 800ms forwards;
+}
+
+@keyframes verdict-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/hooks/useAuth";
 import { authMessages, AuthErrorWithCode } from "@/lib/authMessages";
+import { COPY } from "@/lib/copy";
+
+import { ScreenFrame } from "@/components/order/ScreenFrame";
+import { BrandHeader } from "@/components/order/BrandHeader";
+
+import styles from "./SignupScreen.module.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -59,11 +65,15 @@ export function SignupScreen() {
   }
 
   return (
-    <main data-testid="signup-screen" style={{ padding: 24 }}>
-      <h1>はじめる</h1>
-      <p>30 秒でダメ化体験スタート</p>
-      <form onSubmit={handleSubmit}>
-        <div>
+    <ScreenFrame testid="signup-screen">
+      <BrandHeader />
+      <h1 className={styles.h1}>
+        <div>{COPY.signup.h1Line1}</div>
+        <div>{COPY.signup.h1Line2}</div>
+      </h1>
+      <div className={styles.sub}>{COPY.signup.sub}</div>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
           <label htmlFor="signup-email">メールアドレス</label>
           <input
             id="signup-email"
@@ -75,7 +85,7 @@ export function SignupScreen() {
             required
           />
         </div>
-        <div>
+        <div className={styles.field}>
           <label htmlFor="signup-password">パスワード</label>
           <input
             id="signup-password"
@@ -86,26 +96,40 @@ export function SignupScreen() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <ul data-testid="signup-password-hints" aria-live="polite">
-            <li>{hints.lengthOk ? "✓" : "・"} 8 文字以上</li>
-            <li>{hints.upperOk ? "✓" : "・"} 英大文字を含む</li>
-            <li>{hints.lowerOk ? "✓" : "・"} 英小文字を含む</li>
-            <li>{hints.digitOk ? "✓" : "・"} 数字を含む</li>
+          <ul className={styles.hints} data-testid="signup-password-hints" aria-live="polite">
+            <li className={hints.lengthOk ? styles.ok : ""}>
+              {hints.lengthOk ? "✓" : "・"} 8 文字以上
+            </li>
+            <li className={hints.upperOk ? styles.ok : ""}>
+              {hints.upperOk ? "✓" : "・"} 英大文字を含む
+            </li>
+            <li className={hints.lowerOk ? styles.ok : ""}>
+              {hints.lowerOk ? "✓" : "・"} 英小文字を含む
+            </li>
+            <li className={hints.digitOk ? styles.ok : ""}>
+              {hints.digitOk ? "✓" : "・"} 数字を含む
+            </li>
           </ul>
         </div>
         {errorMessage && (
-          <p data-testid="signup-error-message" role="alert" aria-live="polite">
+          <p
+            className={styles.error}
+            data-testid="signup-error-message"
+            role="alert"
+            aria-live="polite"
+          >
             {errorMessage}
           </p>
         )}
         <button
           type="submit"
+          className={styles.submit}
           data-testid="signup-submit-button"
           disabled={!canSubmit}
         >
-          {isSubmitting ? "登録中…" : "登録"}
+          {isSubmitting ? COPY.signup.submitting : COPY.signup.submit}
         </button>
       </form>
-    </main>
+    </ScreenFrame>
   );
 }
