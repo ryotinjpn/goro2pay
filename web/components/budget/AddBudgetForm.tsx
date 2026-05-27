@@ -16,7 +16,11 @@ import { useState } from "react";
 
 import { useSetBudget } from "@/hooks/useSetBudget";
 
+// 共通スタイル (form / chip / input / submit / error 等) は BudgetForm.module.css と
+// 同じ design language を使うため共有 import。AddBudgetForm 専用の .preview のみ
+// AddBudgetForm.module.css に分離 (review 指摘 Important 2)。
 import styles from "./BudgetForm.module.css";
+import addStyles from "./AddBudgetForm.module.css";
 
 const QUICK_ADDITIONS: ReadonlyArray<number> = [10_000, 20_000, 30_000, 50_000];
 const MAX_TOTAL = 100_000;
@@ -41,8 +45,19 @@ function validateAddition(
   return null;
 }
 
+// 初期選択は「合計が上限を超えない最初のチップ」を選ぶ。currentBudget が上限近傍
+// (例: 95,000) のときに上限超過する +10,000 を初期選択して即時 validation error を
+// 出すのを避ける (review 指摘 Important 3)。全チップが上限超過の場合は null にして
+// submit を disable にする (例: currentBudget=100,000 で実質的に追加不可)。
+function pickInitialAddition(currentBudget: number): number | null {
+  const fits = QUICK_ADDITIONS.find((v) => currentBudget + v <= MAX_TOTAL);
+  return fits ?? null;
+}
+
 export function AddBudgetForm({ currentBudget }: AddBudgetFormProps) {
-  const [addition, setAddition] = useState<number | null>(QUICK_ADDITIONS[0]);
+  const [addition, setAddition] = useState<number | null>(() =>
+    pickInitialAddition(currentBudget),
+  );
   const validationError = validateAddition(addition, currentBudget);
 
   const { mutate, isPending, error } = useSetBudget();
@@ -110,7 +125,7 @@ export function AddBudgetForm({ currentBudget }: AddBudgetFormProps) {
         />
       </div>
 
-      <div data-testid="add-budget-preview" className={styles.preview}>
+      <div data-testid="add-budget-preview" className={addStyles.preview}>
         合計: ¥{totalAfter.toLocaleString()} (現在 ¥
         {currentBudget.toLocaleString()})
       </div>

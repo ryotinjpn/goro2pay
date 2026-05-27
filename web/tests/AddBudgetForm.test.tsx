@@ -85,4 +85,27 @@ describe("AddBudgetForm", () => {
     expect(submit.disabled).toBe(true);
     expect(submit.textContent).toContain("追加中");
   });
+
+  it("currentBudget が上限近傍でも初期選択時の validationError を出さない (合計上限を超えないチップを優先)", () => {
+    vi.mocked(setBudgetHook.useSetBudget).mockReturnValue(makeMutation({}));
+    // 95,000 + 10,000 は上限超過、+5,000 はチップに無いが、+10,000 を選んで
+    // 初期 error を出してはいけない。pickInitialAddition で全チップ disabled なら
+    // null 選択になり submit disable に倒れる。
+    renderWithClient(<AddBudgetForm currentBudget={95_000} />);
+    expect(
+      screen.queryByTestId("add-budget-validation-error"),
+    ).not.toBeInTheDocument();
+    const submit = screen.getByTestId("add-budget-submit") as HTMLButtonElement;
+    expect(submit.disabled).toBe(true);
+  });
+
+  it("server エラー時に server-error 表示が出る", () => {
+    vi.mocked(setBudgetHook.useSetBudget).mockReturnValue(
+      makeMutation({ error: new Error("net") }),
+    );
+    renderWithClient(<AddBudgetForm currentBudget={30_000} />);
+    expect(screen.getByTestId("add-budget-server-error")).toHaveTextContent(
+      "設定に失敗しました",
+    );
+  });
 });

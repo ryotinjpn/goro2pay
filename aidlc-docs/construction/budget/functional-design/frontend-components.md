@@ -50,7 +50,7 @@ app/page.tsx (MainScreen) ── Unit C 主、Unit B は BalanceDisplay を提�
 
 **ユースケース**: UC-B-01（初回設定）、UC-B-02（変更）
 
-**フォーム出し分け** (ADR-2026-05-27-budget-add-mode 参照):
+**フォーム出し分け** (背景: `aidlc-docs/audit.md` 2026-05-27T11:50:00Z エントリ):
 - 初回 (Wallet 未作成): `BudgetForm` (総額入力モデル)
 - 既存ユーザ: `AddBudgetForm` (追加金額モデル、`mutate(currentBudget + addition)` で総額送信)
 
