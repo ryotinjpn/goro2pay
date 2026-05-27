@@ -1,34 +1,67 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+
+import { ScreenFrame } from "@/components/order/ScreenFrame";
+import { BrandHeader } from "@/components/order/BrandHeader";
+import { COPY } from "@/lib/copy";
+
+import styles from "./LandingScreen.module.css";
+
+const DEMO_INITIAL_BALANCE = 1000;
 
 export function LandingScreen() {
-  // Link の中に button をネストすると HTML5 spec 違反 (interactive content の
-  // ネスト) になり、a11y も壊れるため Link 単独で使う。「はじめる」も同様に
-  // Link を button 風に CSS で扱う。
+  const [demoUsed, setDemoUsed] = useState(false);
+  const [demoBalance, setDemoBalance] = useState(DEMO_INITIAL_BALANCE);
+
+  const handleDemo = () => {
+    if (demoUsed) return;
+    setDemoUsed(true);
+    setDemoBalance(0);
+  };
+
   return (
-    <main data-testid="landing-screen" style={{ padding: 24, textAlign: "center" }}>
-      <h1>ゴロゴロPay</h1>
-      <p>めんどくさいを丸投げ</p>
-      <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+    <ScreenFrame testid="landing-screen">
+      <BrandHeader />
+      <div className={styles.hero}>
+        <div className={styles.h1}>
+          <div>{COPY.landing.heroLine1}</div>
+          <div>{COPY.landing.heroLine2}</div>
+        </div>
+        <div className={styles.sub}>{COPY.landing.sub}</div>
+        <div className={styles.demoLabel}>
+          {COPY.landing.demoBalanceLabel}{" "}
+          <b>¥{demoBalance.toLocaleString("ja-JP")}</b>
+        </div>
+        <button
+          type="button"
+          className={styles.demoButton}
+          onClick={handleDemo}
+          disabled={demoUsed}
+          data-testid="landing-demo-button"
+          aria-label={demoUsed ? "体験用デモ完了" : "体験デモを試す"}
+        >
+          {demoUsed ? COPY.landing.demoButtonAfter : COPY.landing.demoButtonMain}
+        </button>
+      </div>
+      <div className={styles.cta} data-visible={demoUsed}>
         <Link
           href="/signup"
           role="button"
           data-testid="landing-start-button"
-          style={{
-            display: "inline-block",
-            padding: "8px 16px",
-            border: "1px solid currentColor",
-            borderRadius: 4,
-            textDecoration: "none",
-          }}
+          className={styles.ctaPrimary}
         >
-          はじめる
+          {COPY.landing.ctaPrimary}
         </Link>
-        <Link href="/login" data-testid="landing-login-link">
-          ログイン
+        <Link
+          href="/login"
+          data-testid="landing-login-link"
+          className={styles.ctaSecondary}
+        >
+          {COPY.landing.ctaSecondary}
         </Link>
       </div>
-    </main>
+    </ScreenFrame>
   );
 }
