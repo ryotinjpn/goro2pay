@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useOrder } from "@/hooks/useOrder";
 import { useSuggestion } from "@/hooks/useSuggestion";
 import { generateUlid } from "@/lib/ulid";
@@ -38,6 +39,7 @@ export function GoroButton() {
   const setSuggestion = useSetAtom(suggestionAtom);
   const { mutate, disabled, isPending } = useOrder();
   void isPending;
+  const { user } = useAuth();
 
   const { suggestion: suggestionResponse } = useSuggestion();
   const plan = suggestionResponse?.hasSuggestion ? suggestionResponse.plan : undefined;
@@ -67,6 +69,9 @@ export function GoroButton() {
   const handleClick = () => {
     if (screenState !== "idle" && screenState !== "suggested") return;
     if (disabled) return;
+    // VR-B-04/05: idempotencyKey は `${userId}:${ulid}` 形式が必須 (cross-user
+    // idempotency replay 防止)。useAuth が確定していない瞬間のクリックは no-op。
+    if (!user?.userId) return;
 
     setScreenState("slot");
     setSlotStartedAt(Date.now());
@@ -75,7 +80,7 @@ export function GoroButton() {
     mutate(
       {
         category: "food",
-        idempotencyKey: generateUlid(),
+        idempotencyKey: `${user.userId}:${generateUlid()}`,
         // BR-D13/BR-C10: suggested 表示中なら suggestionId を送る (Unit C が解決)
         suggestionId: suggestion?.suggestionId || undefined,
       },
