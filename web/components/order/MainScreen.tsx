@@ -46,8 +46,9 @@ export function MainScreen() {
   };
 
   // mock 流のグローバル演出層: 注文成功時に GoroButton.onSuccess が
-  // winFlashCounterAtom を increment → ここで `key={counter}` で remount し
-  // win-flash-screen / win-verdict-pop を再走させる。
+  // winFlashCounterAtom に Date.now() を書き込み、ここで `key={counter}` で
+  // remount し win-flash-screen / win-verdict-pop を再走させる。
+  // (handleClick 冒頭で 0 にリセットされるため、slot 突入の瞬間は false)
   // ガード 2 段:
   //   - counter > 0     : 初回 mount 時のスタブ表示防止 (PR ① の atom 契約)
   //   - screenState=slot: navigate 後の Complete 画面に演出が漏れないようにする

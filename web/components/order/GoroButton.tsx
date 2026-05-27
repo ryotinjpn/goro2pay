@@ -80,6 +80,15 @@ export function GoroButton() {
     setScreenState("slot");
     setSlotStartedAt(Date.now());
     setWinningText(null);
+    // 演出 atom を 0 にリセットしてから onSuccess で Date.now() (常にユニーク値)
+    // を立てる。これがないと:
+    //   (a) リセットしない場合 → 2 回目クリック時、slot 突入の瞬間に MainScreen の
+    //       showWinEffects ガードが前回 counter で true になり、API 応答前に
+    //       "前回の判決" が出てしまう (winVerdict double-fire bug)
+    //   (b) c=>c+1 increment 方式 → 1 回目で counter=1, リセット後 0, 次の onSuccess
+    //       で再び counter=1 と同じキーになり、React が remount せず演出が再走しない
+    // → リセット + Date.now() 値で「常にユニークなキー → クリーン remount」を保証。
+    setWinFlash(0);
 
     mutate(
       {
@@ -97,10 +106,11 @@ export function GoroButton() {
             setBalance(res.remainingBalance);
             setMonthlyCount((c) => c + 1);
             // PR ⑤: 注文成功と同時にグローバル演出を発火。
-            //   - winFlashCounterAtom を increment → MainScreen の win-flash-screen
-            //     / win-verdict-pop が `key={counter}` で remount されて再走
+            //   - winFlashCounterAtom に Date.now() を書き込み MainScreen の
+            //     win-flash-screen / win-verdict-pop が `key={counter}` で
+            //     remount されて再走 (Date.now でクリックごとにユニークなキー)
             //   - lastOrderAtom に確定情報を書き込んで Complete 画面 (PR ⑧) で参照
-            setWinFlash((c) => c + 1);
+            setWinFlash(Date.now());
             setLastOrder({
               orderId: res.orderId,
               storeName: res.storeName,
