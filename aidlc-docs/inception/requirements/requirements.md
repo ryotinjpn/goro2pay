@@ -153,7 +153,7 @@ flowchart LR
     Adapter -- "代行実行" --> User
     App -- "決済" --> CreditCard
     CreditCard -- "枠超過時<br/>切替提案" --> Cashing
-    User -.- "利用データ蓄積" .-> Data
+    User -. "利用データ蓄積" .-> Data
     Data -- "嗜好分析" --> CrossSell
     CrossSell -- "おすすめ商品<br/>レコメンド" --> User
 
