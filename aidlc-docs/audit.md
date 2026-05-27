@@ -1458,3 +1458,26 @@ aidlc-state.md の Unit D Code Generation を [x]、**Unit D per-unit ループ�
 **Context**: PR #110（ペルソナ橋渡し方針）後、ユーザがフルリネーム方針に切り替え。ドキュメント全体で「佐藤陽介」に統一され、不自然な「両方とも佐藤陽介」注記も解消。audit.md だけは過去のセッション記録として「ゴロゴロ太郎」を残す。
 
 ---
+
+## /budget UI を「追加金額」モデルに改修 (AddBudgetForm 追加)
+**Timestamp**: 2026-05-27T11:50:00Z
+**User Inputs**:
+- バグ報告「予算を設定しても画面に反映されない」(残高 ¥1,180 / 予算 30,000 のときに /budget で 30,000 を再選択 → no-op)
+- Q: メンタルモデルどう揃えるか → 「追加金額」モデルに揃える (推奨案)
+- Q: FD と乖離していないか → FD を追記して AddBudgetForm を正式仕様とする
+
+**AI Response**:
+1. 根因確認: backend `WalletService.SetBudget` (`apps/api/internal/wallet/service.go:141-197`) は「予算総額」を受け取り `delta = newBudget - oldBudget` を残高に反映する仕様。30,000 → 30,000 は delta=0 で no-op (仕様通り)。ユーザのメンタルモデル「追加金額を残高に足す」と UI の「総額入力」がズレていた。
+2. 既存ユーザ向けに `web/components/budget/AddBudgetForm.tsx` を新規追加。チップ `+10,000 / +20,000 / +30,000 / +50,000` + カスタム入力で「追加金額」を入力させ、`mutate(currentBudget + addition)` で総額を送る。backend API 不変。
+3. `/budget` page (`web/app/(authenticated)/budget/page.tsx`) で `useWallet().monthlyBudget > 0` なら AddBudgetForm、未作成なら BudgetForm を表示。
+4. AddBudgetForm 単体テスト 6 件を追加。
+5. `frontend-components.md` §2.1 を圧縮形で更新 (フォーム出し分けの 1 行表 + 簡潔なレイアウト記述)。
+
+**Decision Records**:
+- backend API 契約 (`POST /api/wallet/budget`: `{ monthlyBudget }`) は不変。FR-BUDGET-02 (増額・減額) も満たす
+- VR-B-01 (1,000-100,000 円) は「合計」に対して適用。AddBudgetForm 側で `currentBudget + addition > 100,000` のチップを disabled にして体験的に拒否
+- 初回ユーザは引き続き BudgetForm (総額入力) を使う。AddBudgetForm は currentBudget が必須なので未作成状態では出さない
+
+**Context**: PR ⑧ で MainScreen に useWallet sync を入れて残高表示は直したが、「予算を設定しても画面に反映されない」の本質は backend のメンタルモデル (差額調整) と UI (総額入力) のズレだった。AddBudgetForm 追加で「追加した金額そのまま残高に足したい」というユーザの直感に揃えた。
+
+---

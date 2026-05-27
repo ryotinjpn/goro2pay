@@ -22,9 +22,10 @@ Unit B `budget` のフロントエンド側コンポーネント階層・props/s
 ```
 app/budget/page.tsx (BudgetSetupScreen) ── Unit B 主担当
 └── components/
-    ├── BudgetForm.tsx          ── Unit B
+    ├── BudgetForm.tsx          ── Unit B (初回設定 / 総額入力モデル)
     │   ├── QuickBudgetButtons.tsx  ── Unit B
     │   └── BudgetNumberInput.tsx   ── Unit B
+    ├── AddBudgetForm.tsx       ── Unit B (既存ユーザ向け / 追加金額入力モデル、2026-05-27 追加)
     └── BudgetSubmitButton.tsx  ── Unit B
 
 app/page.tsx (MainScreen) ── Unit C 主、Unit B は BalanceDisplay を提供
@@ -49,30 +50,43 @@ app/page.tsx (MainScreen) ── Unit C 主、Unit B は BalanceDisplay を提�
 
 **ユースケース**: UC-B-01（初回設定）、UC-B-02（変更）
 
-**レイアウト** (ASCII モック):
+**フォーム出し分け** (ADR-2026-05-27-budget-add-mode 参照):
+- 初回 (Wallet 未作成): `BudgetForm` (総額入力モデル)
+- 既存ユーザ: `AddBudgetForm` (追加金額モデル、`mutate(currentBudget + addition)` で総額送信)
+
+両者とも backend には予算総額が渡るため API 契約は不変。
+
+**レイアウト (初回 / BudgetForm 経路)**:
 
 ```
 ┌──────────────────────────────────────┐
 │      ゴロゴロPay                      │
 │                                       │
-│   月間ダメ予算を設定してください       │
+│   ダメ予算を設定する                   │
 │                                       │
-│   ┌─────────────────────────────┐    │
-│   │ ¥ [   30,000   ]            │    │ ← BudgetNumberInput
-│   └─────────────────────────────┘    │
+│   月間ダメ予算を 1,000〜100,000 円    │
+│   (1,000 円刻み) で設定してください    │
 │                                       │
 │   よく使われる金額:                    │ ← QuickBudgetButtons
 │   [10,000][30,000★][50,000]          │
 │   [80,000][100,000]                   │
 │                                       │
-│   ※ 1,000 円単位で設定できます         │
-│   ※ 1,000〜100,000 円の範囲           │
+│   ┌─────────────────────────────┐    │
+│   │ ¥ [   30,000   ]            │    │ ← BudgetNumberInput
+│   └─────────────────────────────┘    │
 │                                       │
 │   ┌─────────────────────────────┐    │
-│   │ ダメ予算を設定する             │    │ ← BudgetSubmitButton
+│   │ ダメ予算を設定する             │    │
 │   └─────────────────────────────┘    │
 └──────────────────────────────────────┘
 ```
+
+**AddBudgetForm 経路 (既存ユーザ)**:
+- クイック追加チップ `[+10,000][+20,000][+30,000][+50,000]`
+- カスタム追加金額入力 (1,000 円刻み)
+- 合計プレビュー `合計: ¥{total} (現在 ¥{current})`
+- `currentBudget + addition > 100,000` のチップは disabled
+- 送信ボタン「ダメ予算を追加する」 → `mutate(currentBudget + addition)`
 
 **Props**: なし（ページコンポーネント）
 
@@ -86,13 +100,10 @@ interface BudgetSetupState {
 ```
 
 **初期値**:
-- 既存ユーザ（変更）: 現在の `monthlyBudget` を初期値に（`useWallet().monthlyBudget`）
-- 新規ユーザ（初回）: `30000` をデフォルト
+- BudgetForm: `monthlyBudget` 初期 `30_000`
+- AddBudgetForm: `addition` 初期 `10_000` (最初のクイックチップ)
 
-**インタラクション**:
-- 数値入力: `BudgetNumberInput` の `onChange` で `monthlyBudget` を更新、リアルタイム VR-B-01/VR-B-02 検証
-- クイックボタン: `QuickBudgetButtons` の `onSelect` で `monthlyBudget` を更新
-- 送信ボタン: `BudgetSubmitButton` クリック時に `useSetBudget().mutate(monthlyBudget)`
+**バリデーション**: VR-B-01 (1,000-100,000 円) / VR-B-02 (1,000 円刻み) は両 form 共通。AddBudgetForm では「合計が 100,000 円を超えない」も検証。送信時に `useSetBudget().mutate(...)` で `POST /api/wallet/budget`。
 
 **API 連携**:
 - `POST /api/wallet/budget` を `useSetBudget` フック経由で呼び出し（凍結 IF §3.3）
