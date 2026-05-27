@@ -5,8 +5,12 @@
 }
 
 /* グローバル演出層 (mock/src/screens/MainMock.module.css 由来、PR ⑤)。
-   注文成功時 (winFlashCounterAtom > 0) に screenState が slot のまま 1500ms ほど
-   重ねて出す。`key={counter}` で remount → animation 再走。 */
+   注文成功時 (winFlashCounterAtom > 0 && screenState === 'slot') に
+   `key={counter}` で remount → animation 再走。
+   実際の表示時間: GoroButton.onSuccess が +800ms 後に screenState='idle'/'dead' に
+   flip → router.push でアンマウントするので、verdict-pop の 1500ms に対して
+   約 800ms ぶんしか見えない (mock では navigate 遷移自体が 1800ms 先なので最後まで見える)。
+   web 側はトランジション設計の都合で短めだが、十分な視覚インパクトは残る。 */
 
 @keyframes win-flash-screen {
   0% {
