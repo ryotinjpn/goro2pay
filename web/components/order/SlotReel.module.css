@@ -1,0 +1,41 @@
+.reelWrap {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.window {
+  width: 100%;
+  background: #0a0405;
+  border: 2px solid var(--color-gold-500);
+  padding: 10px 4px;
+  overflow: hidden;
+  position: relative;
+  height: 56px;
+  border-radius: 4px;
+}
+
+.strip {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 14px;
+  color: var(--color-gold-100);
+  text-shadow: 0 0 8px rgba(244, 217, 144, 0.6);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  animation: slot-spin 0.4s linear infinite;
+  text-align: center;
+}
+
+.strip[data-stopped="true"] {
+  animation: none;
+  transition: transform 600ms var(--easing-spring);
+}
+
+.caption {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 9px;
+  color: var(--color-paper);
+  letter-spacing: 0.25em;
+}
