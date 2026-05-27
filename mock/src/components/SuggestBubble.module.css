@@ -1,0 +1,42 @@
+@keyframes fade-up-sb {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.bubble {
+  position: absolute;
+  top: -54px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(26, 18, 8, 0.94);
+  border: 1px solid var(--color-gold-500);
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-family: var(--font-body-mincho);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-cream);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  box-shadow: 0 0 18px rgba(201, 169, 107, 0.25);
+  animation: fade-up-sb 600ms ease-out both;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: rgba(26, 18, 8, 0.94);
+  border-right: 1px solid var(--color-gold-500);
+  border-bottom: 1px solid var(--color-gold-500);
+}
