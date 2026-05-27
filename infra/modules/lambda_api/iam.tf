@@ -40,9 +40,16 @@ resource "aws_iam_role_policy" "api_lambda_logs" {
 
 # Unit C / D / E が必要に応じて IAM Policy ARN を渡す (Q-I12 改定版)。
 # Policy リソース定義は呼出元 module (modules/order_history, modules/bedrock 等) に
-# 置き、本 module は attach のみを担う。for_each で渡された ARN 全てを attach。
+# 置き、本 module は attach のみを担う。
+#
+# for_each のキーは ARN 文字列ではなくインデックス (list の位置) を使う。
+# ARN は呼び出し側で `module.X.policy_arn` 形式で渡されるため apply 時依存となり、
+# toset(var.additional_policy_arns) では plan 段階でキーが確定せず以下のエラーになる:
+#   The "for_each" set includes values derived from resource attributes that
+#   cannot be determined until apply
+# インデックスキーであれば list の長さ (= 静的) でキー集合が確定する。
 resource "aws_iam_role_policy_attachment" "additional" {
-  for_each   = toset(var.additional_policy_arns)
+  for_each   = { for i, arn in var.additional_policy_arns : tostring(i) => arn }
   role       = aws_iam_role.api_lambda.name
   policy_arn = each.value
 }
