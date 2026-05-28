@@ -1,8 +1,9 @@
 # ゴロゴロPay アプリ全画面 — デザイン仕様
 
-**Document Version**: 2.0
+**Document Version**: 2.1
 **Created**: 2026-05-24 (v1.0: メイン画面のみ)
 **Updated**: 2026-05-25 (v2.0: 全画面に拡張)
+**Updated**: 2026-05-28 (v2.1: ライト/オーロラ基調 "Light Aurora" へトークン刷新。mock 全画面および web 全画面に適用、§1.1–1.4 を更新)
 **Scope**: Web (PWA) の主要画面 (ランディング / サインアップ / ログイン / メイン / 注文完了 / モーダル各種 / Toast)
 **Concept**: Slot Machine + リヴァイ調コピー
 **Source**: `aidlc-docs/idea.md`, `aidlc-docs/inception/requirements/requirements.md`, `aidlc-docs/inception/user-stories/personas.md`
@@ -114,50 +115,58 @@ requirements.md `§2.3` で定義されたハッカソン審査軸への対応:
 
 ### 1.1 コンセプトステートメント
 
-> **「Slot Machine」** — 金融グループ発の、手のひらサイズのスロット筐体。残高は気品ある運命の数字としてセリフ書体で鎮座し、金色のレバー型ボタンが光ってこちらを誘惑する。リールが回り、面倒が消え、また数字が削れていく。
+> **「Light Aurora」** — 白基調の明るい画面に、暖色オーロラ (ピンク → コーラル → オレンジ → バイオレット) のグラデーションが差す。極太サンセリフ (Zen Kaku Gothic New 900) で力強く言い切り、残高やサブコピーは Cormorant Garamond / 明朝のイタリックで品を添える。スロット演出 (押す → リール回転 → 停止) の構造は維持したまま、舞台をダーク筐体から明るいオーロラへ移した。
 
 差別化ポイント：
-- スロット演出 (押す → リール回転 → 停止) は佐藤ペルソナのフェーズ 2 独白「アプリを開く前から何が出るだろうと期待する (パチンコ化)」を直接視覚化する。
-- 主役カラーを真鍮ゴールドに置き、赤は「警告・退化の可視化」だけに温存することで、ハッカソン審査軸の「金融グループ発」の品格を担保する。
-- 「Slot Machine」はゲーム筐体・ラスベガス由来の一般語彙として日本でも全年齢に通る無毒な比喩。
+- ライト基調＋暖色オーロラで、重厚さより「軽快さ・前向きさ」を打ち出す (旧: ダークなスロット筐体の重厚感)。
+- アクセントを単色の真鍮ゴールドから**オーロラ多色** (pink / coral / orange / violet / gold) へ拡張。警告・危険色はライト背景でも視認できる `state-warn` / `state-danger` に分離。
+- **極太サンセリフ × セリフ/明朝イタリック**のコントラストで、断定的なコピーの強さと金融的な品を両立。
+- スロット押下インタラクション (§3.4) は維持。
+
+**注**: §0.5 のペルソナ/コンセプト根拠および §3 / §5 の各画面詳細はまだ旧コンセプト (ダーク・スロット筐体) 前提の記述であり、後続更新で整合させる。
 
 ### 1.2 カラートークン
 
 | トークン | 値 | 用途 |
 |---|---|---|
-| `bg-deep` | `#050402` | 画面最暗部 |
-| `bg-mid` | `#0e0a06` | ベース背景 |
-| `bg-warm` | `#1a1208` | 上部グラデのハイライト |
-| `gold-100` | `#f4d990` | ボタン上部ハイライト |
-| `gold-500` | `#c9a96b` | **主役カラー (ボタン本体・¥ 記号・ライン)** |
-| `gold-700` | `#8a6f3a` | ボタン陰影 |
-| `gold-900` | `#3a2a14` | ボタン最暗部 |
-| `cream` | `#f4ecd8` | 残高数字・主要白文字 |
-| `paper` | `#ffe7c2` | 副次テキスト |
-| `mute` | `#8a7a5a` | キャプション・小さいラベル |
-| `accent-warn` | `#ffb14a` | 消化 60–80% |
-| `accent-danger` | `#ff4f4f` | 80% 超・残高低下警告・DEAD 時の増額ボタン |
-| `dead-gray` | `#6a6a6a` | DEAD 状態の非アクティブ要素 |
+| `bg-base` | `#ffffff` | 画面ベース (白) |
+| `bg-soft` | `#faf7f2` | やや沈めた面 |
+| `bg-tint` | `#f3ede4` | カード/区切り面 |
+| `ink` | `#0a0a0a` | 主要テキスト |
+| `ink-mid` | `#3a3a40` | 中間テキスト |
+| `ink-soft` | `#74747c` | 副次テキスト・キャプション |
+| `line` | `rgba(10,10,10,.12)` | 罫線 (淡) |
+| `line-strong` | `#131316` | 罫線 (濃)・枠・ピル primary |
+| `accent-pink` | `#ff5e8f` | オーロラ：ピンク |
+| `accent-coral` | `#ff7a4d` | オーロラ：コーラル |
+| `accent-orange` | `#ff9d2f` | オーロラ：オレンジ |
+| `accent-violet` | `#9b5cff` | オーロラ：バイオレット |
+| `accent-gold` | `#f0b429` | オーロラ：ゴールド |
+| `state-warn` | `#e8870f` | 消化 60–80% (警告) |
+| `state-danger` | `#e8344e` | 80% 超・残高低下 (危険) |
+| `grad-aurora` | `linear-gradient(100deg, #ff8fb1, #ffb38a, #ffd27a, #c79bff)` | 主役オーロラ帯 |
+| `grad-aurora-soft` | `radial-gradient(120% 78% at 50% -8%, #ffe2d0, #ffd4e4, #efe6ff, #fff)` | 背景の柔らかいオーロラ |
+| `grad-cta` | `linear-gradient(125deg, #ff5e8f, #ff7a4d, #ff9d2f)` | CTA ボタン |
 
-実装は CSS variables (`--color-bg-deep` 形式) で `web/app/globals.css` に定義する。
+実装は CSS variables (`--color-bg-base` 形式) で `mock/src/styles/tokens.css` および `web/app/globals.css` に定義する。**ダーク基調の旧トークン (`bg-deep` / `gold-500` / `cream` 等) は移行期に両 globals に "Legacy dark tokens" として暫定保持していたが、mock・web ともに新トークンへ全画面移行済みのため、後続コミットで整理する。**
 
 ### 1.3 タイポトークン
 
 | 役割 | フォント | 使用箇所 |
 |---|---|---|
-| `display-serif` | Cormorant Garamond / Italic 700 | 残高数字・サブコピー (`— 押せ。考えるな。`) |
-| `body-mincho` | Zen Old Mincho / 700–900 | ブランドマーク `ゴロゴロ`・主要見出し |
-| `mono-pixel` | DotGothic16 / 400 | キャプション・LCD ラベル・ティッカー |
-| `body-sans` | Inter / 600–800 | 補助的な英数字 (時刻・% 表記) |
+| `font-display` | Zen Kaku Gothic New / 400–900 (極太サンセリフ) | 見出し・ボタン主ラベル・力強い言い切り |
+| `font-serif-ital` | Cormorant Garamond Italic (補助で Zen Old Mincho) | 残高数字・サブコピー (品を添える斜体) |
+| `font-body` | Inter (補助で Zen Kaku Gothic New) | 本文・補助テキスト・英数字 |
 
-**カタカナ字形のチューニング**: ブランドマークは `letter-spacing: 0.04em–0.06em` を適用し、濁点が潰れないよう字間をやや開ける。ロゴ向け大判ウェイト (Zen Old Mincho 900) と UI チップ向け小判ウェイトを字形上で分け、UI 上部の小チップは過度な装飾 (`▼ ▼` 等) を**付けない**。
+※ 旧 `body-mincho` / `mono-pixel` (DotGothic16) / `display-serif` は Legacy として保持しつつ実使用は廃止。Google Fonts (mock) / next/font (web) で `Zen Kaku Gothic New:wght@400;500;700;900` を読み込む。
+
+**カタカナ字形のチューニング**: ブランドマークは `letter-spacing: -0.01em` 前後で字間を締め、極太サンセリフのカナの力強さを保つ。UI 上部の小チップは過度な装飾 (`▼ ▼` 等) を**付けない**。
 
 ### 1.4 スペーシング & 形状
 
-- **コーナー半径**: ボタンは円 (`borderRadius: 50%`)、カード/モーダルは `borderRadius: 18px`
-- **画面パディング**: `28px 22px 24px` (モバイル基準)
-- **ボタンサイズ**: 画面幅の 78%、`aspect-ratio: 1`
-- **CRT スキャンライン**: `repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px)` を全画面に薄く適用
+- **コーナー半径**: メイン画面の中央 CTA は円 (`borderRadius: 50%`)、その他のボタン/CTA はピル形 (`--radius-pill: 999px`)、カード/モーダルは `--radius-card: 22px`
+- **画面パディング**: `--pad-screen: 22px 22px 40px` (モバイル基準)
+- **CRT スキャンライン**: ダーク基調の旧演出。Light Aurora では使用しない (ScreenFrame に `light` variant が指定された場合は無効化)
 
 ### 1.5 モーション原則
 
