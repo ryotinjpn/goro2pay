@@ -126,13 +126,13 @@
   .slide.stat .unit { font-size: clamp(1em, 2vw, 1.4em); color: var(--ink-mid); margin-top: 0.5em; letter-spacing: 0.06em; }
   .slide.stat .divider { margin: 1em auto; }
 
-  /* ── PHASE (dark) ── */
-  .slide.phase { background: var(--dark); color: #f4ecd8; padding: 64px 80px; }
+  /* ── PHASE (light) ── */
+  .slide.phase { background: var(--white); color: var(--ink); padding: 64px 80px; }
   .slide.phase .phase-num { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
-  .slide.phase h1 { font-size: 44px; color: #f4ecd8; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 16px; }
-  .slide.phase blockquote { border-left: 3px solid var(--gold); background: #1a1a1a; color: #a89070; font-size: 20px; }
-  .slide.phase p { color: #ccb890; font-size: 20px; }
-  .slide.phase strong { color: #f4d990; }
+  .slide.phase h1 { font-size: 44px; color: var(--ink); margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 16px; }
+  .slide.phase blockquote { border-left: 3px solid var(--gold); background: #f4f0e8; color: var(--ink-mid); font-size: 20px; }
+  .slide.phase p { color: var(--ink); font-size: 20px; }
+  .slide.phase strong { color: var(--ink); }
 
   /* ── FINAL ── */
   .slide.final { background: var(--dark); align-items: center; justify-content: center; text-align: center; }
@@ -241,12 +241,13 @@
   <div class="slide">
     <h2>どう動くか</h2>
     <div class="divider"></div>
-    <ol>
+    <ol style="max-width:680px">
       <li>毎月「予算」を設定</li>
       <li>ボタンを<strong>1回</strong>押す</li>
       <li>AIがデリバリー先・メニューを決定。<strong>3秒後、完了通知</strong></li>
     </ol>
-    <p style="margin-top:1.2em;color:var(--ink-mid)">使い続けると、サジェスト機能が先回りする。</p>
+    <p style="margin-top:1.2em;color:var(--ink-mid);max-width:680px">使い続けると、サジェスト機能が先回りする。</p>
+    <img src="./assets/iphone-main.webp" alt="ゴロゴロPay メイン画面" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
   </div>
 
   <div class="slide">
@@ -287,34 +288,27 @@
 
   <div class="slide phase">
     <div class="phase-num">Phase 1</div>
-    <h1>何を食べるか、をAIに委ねる</h1>
-    <blockquote>「考えなくていい。選ばなくていい。<br>ボタンを押すだけで全部終わる。<br>1,000円くらいでこれが買えるなら——安い。」</blockquote>
-    <p style="margin-top:0.8em"><strong>→ 意思決定疲れからの解放</strong></p>
+    <h1 style="max-width:680px">何を食べるか、をAIに委ねる</h1>
+    <blockquote style="max-width:680px">「考えなくていい。選ばなくていい。<br>ボタンを押すだけで全部終わる。<br>1,000円くらいでこれが買えるなら——安い。」</blockquote>
+    <p style="margin-top:0.8em;max-width:680px"><strong>→ 意思決定疲れからの解放</strong></p>
+    <video src="./assets/iphone-phase1.webm" controls loop muted playsinline preload="metadata" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both"></video>
   </div>
 
   <div class="slide phase">
     <div class="phase-num">Phase 2</div>
-    <h1>いつ食べるのか、もAIに委ねる</h1>
-    <blockquote>「毎日夕飯の時間になるとご飯が出てくる。<br>まるで実家で生活しているようだ。」</blockquote>
-    <p style="margin-top:0.8em">サジェストが出ない日に、<strong>不安を感じる。</strong></p>
-    <p><strong>→ 自己決定権の放棄</strong></p>
+    <h1 style="max-width:680px">いつ食べるのか、もAIに委ねる</h1>
+    <blockquote style="max-width:680px">「毎日夕飯の時間になるとご飯が出てくる。<br>まるで実家で生活しているようだ。」</blockquote>
+    <p style="margin-top:0.8em;max-width:680px">サジェストが出ない日に、<strong>不安を感じる。</strong></p>
+    <p style="max-width:680px"><strong>→ 自己決定権の放棄</strong></p>
+    <img src="./assets/iphone-phase2.webp" alt="ゴロゴロPay サジェスト画面" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
   </div>
 
   <div class="slide phase">
     <div class="phase-num">Phase 3</div>
-    <h1>何も考えられなくなる</h1>
-    <blockquote>「あれ……夕飯ってどうやって<br>準備したらいいんだっけ……？」</blockquote>
-    <p style="margin-top:0.8em">何も思い浮かばない。<br><strong>迷わず、増額ボタンを押す。</strong></p>
-  </div>
-
-  <div class="slide impact">
-    <h2>Demo</h2>
-    <div class="divider"></div>
-    <h1>実際に動くものを<br>ご覧ください。</h1>
-  </div>
-
-  <div class="slide video-slide">
-    <video src="./assets/demo.mov" controls class="demo"></video>
+    <h1 style="max-width:680px">何も考えられなくなる</h1>
+    <blockquote style="max-width:680px">「あれ……夕飯ってどうやって<br>準備したらいいんだっけ……？」</blockquote>
+    <p style="margin-top:0.8em;max-width:680px">何も思い浮かばない。<br><strong>迷わず、増額ボタンを押す。</strong></p>
+    <video src="./assets/iphone-phase3.webm" controls loop muted playsinline preload="metadata" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both"></video>
   </div>
 
   <div class="slide">

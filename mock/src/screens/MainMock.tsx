@@ -35,6 +35,7 @@ export default function MainMock() {
   const [sound, setSound] = useState(false);
   const [winFlash, setWinFlash] = useState(0);
   const [modalView, setModalView] = useState<ModalView>('none');
+  const [controlsOpen, setControlsOpen] = useState(true);
 
   const suggestion = suggestNext();
 
@@ -149,26 +150,40 @@ export default function MainMock() {
 
   return (
     <>
-      <div className={styles.debug} aria-hidden>
-        {DEBUG_MODES.map((m) => (
-          <button
-            key={m}
-            data-active={debug === m}
-            onClick={() => (m === 'auto' ? setDebug('auto') : setDebugMode(m))}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
       <button
         type="button"
-        className={styles.soundToggle}
-        data-on={sound}
-        onClick={onToggleSound}
-        aria-label={sound ? '音オフ' : '音オン'}
+        className={styles.controlsToggle}
+        data-open={controlsOpen}
+        onClick={() => setControlsOpen((v) => !v)}
+        aria-label={controlsOpen ? 'コントロール非表示' : 'コントロール表示'}
+        aria-expanded={controlsOpen}
       >
-        {sound ? '♪ on' : '♪ off'}
+        {controlsOpen ? '×' : '⋯'}
       </button>
+      {controlsOpen && (
+        <>
+          <div className={styles.debug} aria-hidden>
+            {DEBUG_MODES.map((m) => (
+              <button
+                key={m}
+                data-active={debug === m}
+                onClick={() => (m === 'auto' ? setDebug('auto') : setDebugMode(m))}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={styles.soundToggle}
+            data-on={sound}
+            onClick={onToggleSound}
+            aria-label={sound ? '音オフ' : '音オン'}
+          >
+            {sound ? '♪ on' : '♪ off'}
+          </button>
+        </>
+      )}
 
       {winFlash > 0 && (
         <div
