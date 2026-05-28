@@ -304,7 +304,7 @@ function BalanceHero({
           textTransform: "uppercase",
         }}
       >
-        <span>今月 {count} 度</span>
+        <span>今月 {count} 回</span>
         <span>消化 {rate}%</span>
       </div>
     </div>
@@ -801,7 +801,7 @@ function CompleteMock() {
             marginBottom: 8,
           }}
         >
-          今月 6 度、いい判断だった。
+          今月 6 回、いい判断だった。
         </div>
         <div
           style={{

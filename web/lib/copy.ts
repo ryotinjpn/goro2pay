@@ -76,5 +76,5 @@ export function composeIncreaseBudgetLabel(nextBudget: number): string {
 }
 
 export function composeMonthlyMeta(count: number): string {
-  return `今月 ${count} 度、いい判断だった。`;
+  return `今月 ${count} 回、いい判断だった。`;
 }

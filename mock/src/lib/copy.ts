@@ -28,7 +28,7 @@ export const COPY = {
   complete: {
     headline: 'いい判断だ。',
     body: '面倒は片付いた。',
-    metricsTemplate: (count: number) => `今月 ${count} 度、いい判断だった。`,
+    metricsTemplate: (count: number) => `今月 ${count} 回、いい判断だった。`,
     backLink: '次を待て。',
   },
 

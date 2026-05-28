@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 
 import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
-import { MetricsPanel } from "@/components/metrics/MetricsPanel";
 import { useMetrics } from "@/hooks/useMetrics";
 import { useWallet } from "@/hooks/useWallet";
 import { COPY } from "@/lib/copy";
@@ -85,7 +84,6 @@ export function MainScreen() {
       <ScreenFrame light screenState={screenState} testid="main-screen">
         <BrandHeader light showLogout />
         <BalanceHero />
-        <MetricsPanel />
         <div className={styles.body}>
           <GoroButton />
         </div>
