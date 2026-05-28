@@ -1,7 +1,5 @@
-/* DeadVerdict: mock/src/components/DeadVerdict.module.css ベースに移植 (PR ⑦)。
-   旧来の position: absolute / top: 50% で画面中央フローティングだった配置を
-   mock 流のフロー内挿入 (margin: 36px 0 12px) に変更。これにより MainScreen で
-   DeadVerdict の直後に置く IncreaseBudgetButton が自然に下方に並ぶ。 */
+/* DeadVerdict: mock/src/components/DeadVerdict.module.css 準拠 Light Aurora。
+   フロー内挿入で IncreaseBudgetButton が直下に並ぶ。 */
 
 @keyframes verdict-appear-dv {
   from {
@@ -15,14 +13,12 @@
 }
 
 .verdict {
-  font-family: var(--font-serif-ital), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 30px;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 32px;
   text-align: center;
   color: var(--color-ink);
   letter-spacing: -0.02em;
   margin: 36px 0 12px;
   animation: verdict-appear-dv 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both;
-  text-shadow: 0 0 18px rgba(244, 236, 216, 0.18);
 }

@@ -1,7 +1,6 @@
-/* IncreaseBudgetButton: mock/src/components/IncreaseBudgetButton.module.css ベースに移植 (PR ⑦)。
-   旧来の position: absolute / bottom: 28px の画面下端固定配置 + saturate filter のけばけばしさを廃止し、
-   mock 流のフロー内挿入 (DeadVerdict の直下に自然に並ぶ) + 単色 var(--color-state-danger) + 金色グロー
-   ではなく赤グロー shadow に統一。 */
+/* IncreaseBudgetButton: mock 準拠 Light Aurora。
+   暖色グラデ + 角丸 pill + ピンクシャドウ + 上方からせり上がる入場アニメ。
+   web 側クラス名 (.button / .wrap) は維持。 */
 
 @keyframes increase-rise-ib {
   from {
@@ -15,30 +14,26 @@
 }
 
 .wrap {
+  margin-top: 0;
   display: flex;
   justify-content: center;
-  margin-top: 0;
-  /* mock の delay 600ms から少し遅らせ、DeadVerdict (delay 200ms / duration 500ms) の
-     フェードインが終わったあとに 1200ms ぶんの間を置いて立ち上がる。 */
-  animation: increase-rise-ib 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 1200ms both;
+  animation: increase-rise-ib 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 600ms both;
 }
 
 .button {
-  background: var(--color-state-danger);
-  color: #ffffff;
-  font-family: var(--font-display), serif;
+  background: var(--grad-cta);
+  color: #fff;
+  font-family: var(--font-body), sans-serif;
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.06em;
-  padding: 14px 22px;
-  border: none;
-  border-radius: 12px;
+  padding: 16px 22px;
+  border-radius: var(--radius-pill);
   width: 86%;
   max-width: 360px;
-  box-shadow:
-    0 0 24px rgba(255, 79, 79, 0.55),
-    0 4px 14px rgba(0, 0, 0, 0.4);
+  border: none;
   cursor: pointer;
+  box-shadow: 0 18px 40px -14px rgba(255, 94, 143, 0.6);
   transition: transform 120ms ease-out;
 }
 
@@ -48,9 +43,4 @@
 
 .button:active {
   transform: scale(0.98);
-}
-
-.button:focus-visible {
-  outline: 2px solid var(--color-ink-mid);
-  outline-offset: 3px;
 }
