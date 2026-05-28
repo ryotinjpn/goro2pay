@@ -25,6 +25,9 @@
   @keyframes fadeUp   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeIn   { from { opacity:0; }                             to { opacity:1; } }
   @keyframes slideL   { from { opacity:0; transform:translateX(-32px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes slideR   { from { opacity:0; transform:translateX(32px); }  to { opacity:1; transform:translateX(0); } }
+  @keyframes flipIn   { from { opacity:0; transform:perspective(900px) rotateY(80deg); } to { opacity:1; transform:perspective(900px) rotateY(0deg); } }
+  @keyframes flipX    { from { opacity:0; transform:perspective(600px) rotateX(90deg); } to { opacity:1; transform:perspective(600px) rotateX(0deg); } }
   @keyframes growW    { from { width:0; }                                 to { width:48px; } }
   @keyframes popIn    { from { opacity:0; transform:scale(0.85); }        to { opacity:1; transform:scale(1); } }
   @keyframes slideDn  { from { opacity:0; transform:translateY(-18px); }  to { opacity:1; transform:translateY(0); } }
@@ -77,6 +80,57 @@
   .slide.final.active > .divider { animation: growW 0.4s 0.3s     ease both; }
   .slide.final.active > p       { animation: fadeIn 0.4s 0.45s    ease both; }
 
+  /* それが、ゴロゴロPay */
+  .sorega-text { font-size:72px; font-weight:900; color:var(--ink); letter-spacing:-0.02em; line-height:1.2; }
+  .sorega-name { color:var(--gold); }
+  .slide.sorega-slide.active .sorega-text { animation: flipX 0.7s cubic-bezier(0.23,1,0.32,1) both; }
+
+  /* MVP expand */
+  .mvp-label  { font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:#555; margin-bottom:20px; }
+  .mvp-current { font-size:88px; font-weight:900; color:#f4d990; letter-spacing:-0.02em; line-height:1; margin-bottom:24px; }
+  .mvp-divider { width:48px; height:2px; background:var(--gold); margin:0 auto 28px; }
+  .mvp-future { font-size:22px; color:#a89070; line-height:1.85; }
+  .mvp-accent { color:#f4ecd8; font-weight:700; }
+  .slide.mvp-expand.active { animation: flipIn 0.6s cubic-bezier(0.23,1,0.32,1) both; transition: none; }
+  .slide.mvp-expand.active .mvp-label   { animation: fadeIn 0.3s 0.4s ease both; }
+  .slide.mvp-expand.active .mvp-current { animation: popIn  0.5s 0.5s ease both; }
+  .slide.mvp-expand.active .mvp-divider { animation: growW  0.4s 0.75s ease both; }
+  .slide.mvp-expand.active .mvp-future  { animation: fadeUp 0.5s 0.85s ease both; }
+
+  /* product reveal (slide 9) */
+  .pr-label   { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:#555; margin-bottom:16px; }
+  .pr-title   { font-size:36px; font-weight:700; color:#6a5a3a; letter-spacing:0.02em; line-height:1; margin-bottom:32px; }
+  .pr-divider { width:64px; height:2px; background:var(--gold); margin:0 auto 32px; }
+  .pr-tagline { font-size:44px; font-weight:900; color:#f4ecd8; line-height:1.55; letter-spacing:-0.01em; }
+  .pr-accent  { color:#f4d990; }
+  .slide.product-reveal.active .pr-label   { animation: fadeIn  0.4s           ease both; }
+  .slide.product-reveal.active .pr-title   { animation: popIn   0.6s 0.15s     ease both; }
+  .slide.product-reveal.active .pr-divider { animation: growW   0.5s 0.5s      ease both; }
+  .slide.product-reveal.active .pr-tagline { animation: fadeUp  0.5s 0.7s      ease both; }
+
+  /* manifesto (slide 7) */
+  .mf-card  { border: 2px solid var(--gold); border-radius: 8px; padding: 52px 72px; position: relative; width: 100%; }
+  .mf-label {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    background: var(--white); padding: 0 20px;
+    font-size: 20px; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    white-space: nowrap;
+  }
+  .mf-sub   { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+  .mf-bad   { font-size: 22px; font-weight: 700; color: var(--ink-mid); }
+  .mf-arrow { font-size: 28px; color: var(--gold); line-height: 1; }
+  .mf-good  { font-size: 38px; font-weight: 900; color: var(--ink); line-height: 1.35; letter-spacing: -0.01em; }
+  .slide.manifesto-slide.active .mf-card    { animation: popIn   0.5s           ease both; }
+  .slide.manifesto-slide.active .mf-label   { animation: fadeIn  0.4s 0.3s      ease both; }
+  .slide.manifesto-slide.active .mf-bad     { animation: fadeIn  0.4s 0.5s      ease both; }
+  .slide.manifesto-slide.active .mf-arrow   { animation: fadeIn  0.3s 0.7s      ease both; }
+  .slide.manifesto-slide.active .mf-good    { animation: fadeUp  0.5s 0.8s      ease both; }
+
+  /* contrast (slide 6) */
+  .slide.contrast-slide.active .contrast-label { animation: slideDn 0.4s        ease both; }
+  .slide.contrast-slide.active .panel-left     { animation: slideL  0.5s 0.2s   ease both; }
+  .slide.contrast-slide.active .panel-right    { animation: slideR  0.5s 0.2s   ease both; }
+
   /* ── base type（px固定） ── */
   h1 { font-size: 52px; font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; }
   h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
@@ -105,6 +159,10 @@
   .slide.lead h1 { font-size: 76px; color: #f4d990; margin-bottom: 8px; }
   .slide.lead p  { font-size: 18px; color: #6a5a3a; }
   .slide.lead h2 { color: var(--gold); }
+  .slide.title-slide { justify-content: center; align-items: center; text-align: center; padding-bottom: 64px; }
+  .slide.title-slide h2 { margin-bottom: 16px; }
+  .slide.title-slide h1 { font-size: 88px; margin-bottom: 12px; }
+  .slide.title-slide p  { font-size: 20px; color: #6a5a3a; }
 
   /* ── SECTION BREAK ── */
   .slide.section-break { background: var(--dark-mid); padding: 0; flex-direction: row; justify-content: flex-start; align-items: stretch; }
@@ -156,36 +214,15 @@
 <div class="deck" id="deck">
 
   <!-- ① タイトル -->
-  <div class="slide lead active">
+  <div class="slide lead title-slide active">
     <h2>AWS Summit Japan 2026 &nbsp;AI-DLC ハッカソン 予選会</h2>
     <h1>ゴロゴロPay</h1>
-  </div>
-
-  <!-- ━━ SECTION 01: Opening ━━ -->
-  <div class="slide section-break">
-    <div class="sb-num">01</div>
-    <div class="sb-body">
-      <div class="sb-label">Section</div>
-      <div class="sb-title">Opening</div>
-      <div class="sb-sub">意思決定とは何か</div>
-    </div>
+    <p>Team ゴロゴロ駆動開発</p>
   </div>
 
   <div class="slide impact">
     <div class="divider"></div>
     <h1>今日、ここに来るまでに<br>いくつ意思決定を<br>してきましたか。</h1>
-  </div>
-
-  <div class="slide">
-    <h2>今日だけでも</h2>
-    <div class="divider"></div>
-    <ul>
-      <li>朝食は何にするか</li>
-      <li>何を着るか</li>
-      <li>何時に家を出るか</li>
-      <li>どのルートで来るか</li>
-    </ul>
-    <p style="margin-top:1.2em;color:var(--ink-mute)">これらが、毎日積み重なる。</p>
   </div>
 
   <div class="slide stat">
@@ -205,26 +242,43 @@
     <h2>デリバリーアプリは便利。でも——</h2>
     <div class="divider"></div>
     <p>何を頼むか。どこに頼むか。いくらまで出すか。</p>
-    <p>それを決めているのは、<strong>まだあなた自身です。</strong></p>
+    <p>それを決めているのは、<strong>まだユーザー自身です。</strong></p>
     <p style="margin-top:0.8em;color:var(--ink-mid)">既存サービスは「実行」を効率化する。<br>しかし「意思決定そのもの」は、まだユーザーの役割。</p>
   </div>
 
-  <div class="slide impact">
-    <h2>意思決定は</h2>
-    <div class="divider"></div>
-    <h1>人を育てる。<br>そして、削る。</h1>
+  <div class="slide impact contrast-slide" style="justify-content:center;align-items:center;text-align:center;padding:64px 80px;">
+    <h2 class="contrast-label" style="color:#f4d990;font-size:18px;letter-spacing:0.2em;margin-bottom:32px;">意思決定は</h2>
+    <div style="display:flex;width:100%;gap:0;align-items:stretch;border:1px solid #333;border-radius:4px;overflow:hidden;">
+      <div class="panel-left" style="flex:1;padding:48px 40px;background:#1e1e1e;text-align:center;border-right:1px solid #333;">
+        <div style="font-size:13px;letter-spacing:0.16em;color:#c9a030;margin-bottom:16px;text-transform:uppercase;">Grow</div>
+        <div style="font-size:44px;font-weight:900;color:#f4ecd8;line-height:1.2;">人を育てる。</div>
+      </div>
+      <div class="panel-right" style="flex:1;padding:48px 40px;background:#1a0a0a;text-align:center;">
+        <div style="font-size:13px;letter-spacing:0.16em;color:#c0392b;margin-bottom:16px;text-transform:uppercase;">Drain</div>
+        <div style="font-size:44px;font-weight:900;color:#ff6b6b;line-height:1.2;">そして、削る。</div>
+      </div>
+    </div>
   </div>
 
-  <div class="slide">
-    <h2>私たちの思想</h2>
-    <div class="divider"></div>
-    <p><strong>生活雑事の意思決定は、AIに委ねる。</strong></p>
-    <p style="margin-top:0.6em">とことんダメになる。<br>その分、<strong>本当に大切なことへ。</strong></p>
+  <div class="slide manifesto-slide" style="background:var(--white);justify-content:center;align-items:center;text-align:center;padding:64px 120px;">
+    <div class="mf-card">
+      <div class="mf-label">私たちの思想</div>
+      <div class="mf-sub">
+        <div class="mf-bad">生活雑事ではとことんダメになる</div>
+        <div class="mf-arrow">↓</div>
+        <div class="mf-good">できた時間は<br>本当に大切なことへ。</div>
+      </div>
+    </div>
   </div>
 
-  <!-- ━━ SECTION 02: プロダクト概要 ━━ -->
+  <!-- それが、ゴロゴロPay -->
+  <div class="slide sorega-slide" style="background:var(--white);justify-content:center;align-items:center;text-align:center;">
+    <div class="sorega-text">「それが、<span class="sorega-name">ゴロゴロPay</span>」</div>
+  </div>
+
+  <!-- ━━ SECTION 01: プロダクト概要 ━━ -->
   <div class="slide section-break">
-    <div class="sb-num">02</div>
+    <div class="sb-num">01</div>
     <div class="sb-body">
       <div class="sb-label">Section</div>
       <div class="sb-title">プロダクト概要</div>
@@ -232,39 +286,44 @@
     </div>
   </div>
 
-  <div class="slide lead">
-    <h2>プロダクト</h2>
-    <h1>ゴロゴロPay</h1>
-    <p>生活雑事の「意思決定そのもの」をAIに委任する</p>
+  <div class="slide product-reveal" style="background:var(--dark);justify-content:center;align-items:center;text-align:center;padding:64px 80px;">
+    <div class="pr-label">Product</div>
+    <div class="pr-title">ゴロゴロPay</div>
+    <div class="pr-divider"></div>
+    <div class="pr-tagline">生活雑事の<span class="pr-accent">「意思決定そのもの」</span>を<br>AIに委任する<span class="pr-accent">アプリ</span></div>
   </div>
 
-  <div class="slide">
-    <h2>どう動くか</h2>
+  <div class="slide" style="padding:48px 64px;">
+    <h2 style="text-transform:none">ゴロゴロPay — 4つのポイント</h2>
+    <img src="./assets/iphone-main.webp" alt="ゴロゴロPay メイン画面" style="position:absolute;right:56px;top:50%;transform:translateY(-50%);height:500px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
     <div class="divider"></div>
-    <ol style="max-width:680px">
-      <li>毎月「予算」を設定</li>
-      <li>ボタンを<strong>1回</strong>押す</li>
-      <li>AIがデリバリー先・メニューを決定。<strong>3秒後、完了通知</strong></li>
-    </ol>
-    <p style="margin-top:1.2em;color:var(--ink-mid);max-width:680px">使い続けると、サジェスト機能が先回りする。</p>
-    <img src="./assets/iphone-main.webp" alt="ゴロゴロPay メイン画面" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:62%;">
+      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--white);">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">01</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">初期設定が簡単</div>
+        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">アプリ特有の設定は<br><strong style="color:var(--ink)">「毎月の予算」を決めるだけ</strong></div>
+      </div>
+      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--off-white);">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">02</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">ボタンを1回押すだけ</div>
+        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">AIが自動でデリバリー先・メニューを決定し、注文を確定</div>
+      </div>
+      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--off-white);">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">03</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">サジェスト機能</div>
+        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">行動パターンを学習し<br><strong style="color:var(--ink)">「そろそろ夕飯だろ。」</strong>と先回り</div>
+      </div>
+      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--white);">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">04</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">増額機能</div>
+        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">予算が尽きると増額を提案。快適さを知ったユーザーは戻れない</div>
+      </div>
+    </div>
   </div>
 
-  <div class="slide">
-    <h2>使うほど、考えなくなる</h2>
-    <div class="divider"></div>
-    <table>
-      <tr><th>フェーズ</th><th>状態</th></tr>
-      <tr><td>使い始め</td><td>何を頼むかを、AIが決める</td></tr>
-      <tr><td>2ヶ月後</td><td>ボタンすら不要。AIが先回り</td></tr>
-      <tr><td>月末</td><td>何も思い浮かばない。増額する</td></tr>
-    </table>
-    <p style="margin-top:1em"><strong>ボタン1つで人生が回る。人がダメになる。</strong></p>
-  </div>
-
-  <!-- ━━ SECTION 03: ペルソナ & ダメ化の物語 ━━ -->
+  <!-- ━━ SECTION 02: ペルソナ & ダメ化の物語 ━━ -->
   <div class="slide section-break">
-    <div class="sb-num">03</div>
+    <div class="sb-num">02</div>
     <div class="sb-body">
       <div class="sb-label">Section</div>
       <div class="sb-title">ペルソナ &amp;<br>ダメ化の物語</div>
@@ -318,9 +377,9 @@
     <p style="margin-top:0.8em">各セリフは<strong>進撃の巨人のリヴァイ兵長</strong>をイメージ。<br>ユーザーから「決定権を奪う」ことを目的とし、<br>「失敗を回避したい」という心情にアプローチ。</p>
   </div>
 
-  <!-- ━━ SECTION 04: AI-DLC プロセス ━━ -->
+  <!-- ━━ SECTION 03: AI-DLC プロセス ━━ -->
   <div class="slide section-break">
-    <div class="sb-num">04</div>
+    <div class="sb-num">03</div>
     <div class="sb-body">
       <div class="sb-label">Section</div>
       <div class="sb-title">AI-DLC プロセス</div>
@@ -363,9 +422,9 @@
     <p style="margin-top:0.6em;color:var(--ink-mid)">「UI」「セリフ」「サジェスト機能」——これら全てが<br>「意思決定」をAIへ委譲するよう促す体験。<strong>それを要件レベルに。</strong></p>
   </div>
 
-  <!-- ━━ SECTION 05: 技術アーキテクチャ ━━ -->
+  <!-- ━━ SECTION 04: 技術アーキテクチャ ━━ -->
   <div class="slide section-break">
-    <div class="sb-num">05</div>
+    <div class="sb-num">04</div>
     <div class="sb-body">
       <div class="sb-label">Section</div>
       <div class="sb-title">技術アーキテクチャ</div>
@@ -412,7 +471,12 @@
   function resetAnim(el) {
     const targets = el.querySelectorAll(
       'h1, h2, p, ul, ol, blockquote, table, .divider, .num, .unit, ' +
-      '.sb-num, .sb-label, .sb-title, .sb-sub, .phase-num'
+      '.sb-num, .sb-label, .sb-title, .sb-sub, .phase-num, ' +
+      '.sorega-text, ' +
+      '.mvp-label, .mvp-current, .mvp-divider, .mvp-future, ' +
+      '.pr-label, .pr-title, .pr-divider, .pr-tagline, ' +
+      '.contrast-label, .panel-left, .panel-right, ' +
+      '.mf-card, .mf-label, .mf-main, .mf-divider, .mf-bad, .mf-arrow, .mf-good'
     );
     targets.forEach(t => { t.style.animation = 'none'; });
     void el.offsetWidth;
