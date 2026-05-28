@@ -16,8 +16,8 @@ export default function BudgetSetupScreen() {
   const isExisting = !isLoading && monthlyBudget > 0;
 
   return (
-    <ScreenFrame testid="budget-setup-screen">
-      <BrandHeader />
+    <ScreenFrame light testid="budget-setup-screen">
+      <BrandHeader light />
       <h1 className={styles.h1}>
         {isExisting ? "ダメ予算を変更する" : "ダメ予算を設定する"}
       </h1>

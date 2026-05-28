@@ -27,8 +27,8 @@ export function MainScreen() {
   };
 
   return (
-    <ScreenFrame screenState={screenState} testid="main-screen">
-      <BrandHeader />
+    <ScreenFrame light screenState={screenState} testid="main-screen">
+      <BrandHeader light />
       <BalanceHero />
       <MetricsPanel />
       <div className={styles.body}>

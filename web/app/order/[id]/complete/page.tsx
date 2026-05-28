@@ -31,8 +31,8 @@ export default function OrderCompletePage() {
   const amount = 1200;
 
   return (
-    <ScreenFrame testid="order-completion-screen">
-      <BrandHeader />
+    <ScreenFrame testid="order-completion-screen" light>
+      <BrandHeader light />
       <div className={styles.complete}>
         <div className={styles.verdict}>{COPY.complete.verdict}</div>
         <div className={styles.body}>{COPY.complete.body}</div>

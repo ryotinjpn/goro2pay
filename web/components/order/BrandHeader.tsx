@@ -12,7 +12,7 @@ function formatTime(d: Date): string {
   return `${hh}:${mm}`;
 }
 
-export function BrandHeader() {
+export function BrandHeader({ light }: { light?: boolean } = {}) {
   const [time, setTime] = useState<string>(() => formatTime(new Date()));
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function BrandHeader() {
   const right = splitAt >= 0 ? name.slice(splitAt) : "";
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-theme={light ? "light" : undefined}>
       <span className={styles.brand}>
         {left}
         {right && <span className={styles.pay}>{right}</span>}

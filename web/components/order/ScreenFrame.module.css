@@ -1,3 +1,8 @@
+/* 既定 (ダーク): 透過ラッパ。body のダーク背景をそのまま見せる。 */
+.outer {
+  position: relative;
+}
+
 .frame {
   position: relative;
   min-height: 100vh;
@@ -7,6 +12,41 @@
   display: flex;
   flex-direction: column;
   isolation: isolate;
+}
+
+/* ===== Light Aurora テーマ (mock 移植) ===== */
+.outer[data-theme="light"] {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-bg-base);
+  overflow: hidden;
+}
+
+/* 上部に暖色オーロラを敷く (mock ScreenFrame .outer::before) */
+.outer[data-theme="light"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 66vh;
+  background: var(--grad-aurora-soft);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.outer[data-theme="light"] .frame {
+  z-index: 2;
+}
+
+/* ライト時は CRT スキャンライン・ゴールドグローを消す */
+.outer[data-theme="light"] .frame::before,
+.outer[data-theme="light"] .frame::after {
+  display: none;
+}
+
+.outer[data-theme="light"] .frame[data-screen-state="dead"] {
+  filter: saturate(0.35) brightness(0.97);
 }
 
 .frame::before {

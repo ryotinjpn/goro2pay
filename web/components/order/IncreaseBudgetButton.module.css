@@ -1,34 +1,6 @@
-.button {
-  position: absolute;
-  bottom: 28px;
-  left: 22px;
-  right: 22px;
-  background: linear-gradient(180deg, var(--color-accent-danger), #c2272d);
-  color: #fff;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 13px;
-  padding: 14px;
-  letter-spacing: 0.15em;
-  border: 1px solid #ff8a8a;
-  box-shadow: 0 0 30px rgba(255, 79, 79, 0.7);
-  cursor: pointer;
-  filter: saturate(2) brightness(1.4);
-  isolation: isolate;
-  opacity: 0;
-  transform: translateY(60px);
-  animation: increase-rise 500ms var(--easing-spring) 1200ms forwards;
-}
+/* Light Aurora IncreaseBudgetButton (mock components/IncreaseBudgetButton.module.css 移植) */
 
-.button:hover {
-  filter: saturate(2) brightness(1.6);
-}
-
-.button:focus-visible {
-  outline: 3px solid #ff8a8a;
-  outline-offset: 3px;
-}
-
-@keyframes increase-rise {
+@keyframes increase-rise-ib {
   from {
     opacity: 0;
     transform: translateY(60px);
@@ -37,4 +9,39 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.button {
+  display: block;
+  margin: 0 auto;
+  width: 86%;
+  max-width: 360px;
+  background: var(--grad-cta);
+  color: #fff;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  padding: 16px 22px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 18px 40px -14px rgba(255, 94, 143, 0.6);
+  transition: transform 120ms ease-out;
+  opacity: 0;
+  transform: translateY(60px);
+  animation: increase-rise-ib 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 600ms forwards;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--color-accent-pink);
+  outline-offset: 3px;
 }

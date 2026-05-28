@@ -4,32 +4,34 @@ export const metadata = {
   title: "ゴロゴロPay - デザインギャラリー",
 };
 
-const SCAN_LINES =
-  "repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px)";
+// ─────── Light Aurora 共通スタイル ───────
 
 const FRAME_STYLE: CSSProperties = {
   position: "relative",
   width: "100%",
   aspectRatio: "9 / 17",
-  borderRadius: 18,
-  background:
-    "radial-gradient(ellipse at 50% 0%, var(--color-bg-warm) 0%, var(--color-bg-mid) 55%, var(--color-bg-deep) 100%)",
+  borderRadius: 22,
+  background: "var(--color-bg-base)",
   overflow: "hidden",
-  boxShadow: "0 6px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(201,169,107,.18)",
-  color: "var(--color-cream)",
+  boxShadow: "0 18px 48px -24px rgba(10,10,10,.32), 0 0 0 1px var(--color-line)",
+  color: "var(--color-ink)",
 };
 
-const SCANLINE_OVERLAY: CSSProperties = {
+// フレーム上部に敷く暖色オーロラ
+const AURORA_OVERLAY: CSSProperties = {
   position: "absolute",
-  inset: 0,
-  background: SCAN_LINES,
+  top: 0,
+  left: 0,
+  right: 0,
+  height: "46%",
+  background: "var(--grad-aurora-soft)",
   pointerEvents: "none",
 };
 
 const SCREEN_INNER: CSSProperties = {
   position: "absolute",
   inset: 0,
-  padding: "20px 18px 18px",
+  padding: "18px 18px 18px",
   display: "flex",
   flexDirection: "column",
 };
@@ -37,54 +39,96 @@ const SCREEN_INNER: CSSProperties = {
 const HEADER_STYLE: CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "baseline",
-  fontSize: 11,
-  letterSpacing: "0.06em",
-  color: "var(--color-mute)",
-  fontFamily: "var(--font-mono-pixel)",
+  alignItems: "center",
+  paddingBottom: 18,
 };
 
 function BrandHeader({ time }: { time: string }) {
   return (
     <div style={HEADER_STYLE}>
-      <span>
-        <span style={{ fontFamily: "var(--font-body-mincho)", fontWeight: 900, color: "var(--color-cream)", fontSize: 12, letterSpacing: "0.06em" }}>
+      <span style={{ display: "inline-flex", alignItems: "baseline" }}>
+        <span
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            color: "var(--color-ink)",
+            fontSize: 15,
+            letterSpacing: "-0.01em",
+          }}
+        >
           ゴロゴロ
         </span>
-        <span style={{ fontFamily: "var(--font-display-serif)", fontStyle: "italic", color: "var(--color-cream)", fontSize: 13 }}>
+        <span
+          style={{
+            fontFamily: "var(--font-serif-ital)",
+            fontStyle: "italic",
+            fontWeight: 600,
+            color: "var(--color-ink)",
+            fontSize: 17,
+            marginLeft: 3,
+          }}
+        >
           Pay
         </span>
       </span>
-      <span>{time}</span>
+      <span
+        style={{
+          fontFamily: "var(--font-body)",
+          fontWeight: 500,
+          fontSize: 11,
+          color: "var(--color-ink-soft)",
+          letterSpacing: "0.22em",
+        }}
+      >
+        {time}
+      </span>
     </div>
   );
 }
 
-function GoldButton({
+// ピル型ボタン (primary=黒ピル / cta=暖色グラデ / secondary=白+枠)
+function PillButton({
   children,
-  variant = "primary",
+  variant = "cta",
 }: {
   children: ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "cta" | "secondary";
 }) {
   const base: CSSProperties = {
-    display: "block",
+    display: "flex",
     width: "100%",
-    padding: "10px 0",
-    borderRadius: 4,
+    padding: "14px 0",
+    borderRadius: "var(--radius-pill)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     textAlign: "center",
-    fontFamily: "var(--font-mono-pixel)",
-    fontSize: 11,
-    letterSpacing: "0.18em",
+    fontFamily: "var(--font-body)",
+    fontSize: 13,
+    fontWeight: 600,
+    letterSpacing: "0.1em",
   };
+  if (variant === "secondary") {
+    return (
+      <div
+        style={{
+          ...base,
+          background: "var(--color-bg-base)",
+          border: "1px solid var(--color-line)",
+          color: "var(--color-ink)",
+        }}
+      >
+        {children}
+      </div>
+    );
+  }
   if (variant === "primary") {
     return (
       <div
         style={{
           ...base,
-          background: "linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700))",
-          color: "var(--color-bg-warm)",
-          fontWeight: 700,
+          background: "var(--color-line-strong)",
+          color: "#fff",
         }}
       >
         {children}
@@ -95,9 +139,9 @@ function GoldButton({
     <div
       style={{
         ...base,
-        background: "transparent",
-        border: "1px solid var(--color-gold-500)",
-        color: "var(--color-gold-100)",
+        background: "var(--grad-cta)",
+        color: "#fff",
+        boxShadow: "0 16px 36px -14px rgba(255,94,143,.55)",
       }}
     >
       {children}
@@ -111,15 +155,16 @@ function GoroButton({
   state: "demo" | "idle" | "suggest" | "dead";
 }) {
   const isDead = state === "dead";
-  const size = state === "demo" ? 130 : 200;
+  const size = state === "demo" ? 132 : 200;
   const bg = isDead
-    ? "radial-gradient(circle at 35% 30%, #888 0%, #555 50%, #2c2c2c 100%)"
-    : "radial-gradient(circle at 35% 28%, var(--color-gold-100) 0%, var(--color-gold-500) 45%, var(--color-gold-700) 80%, var(--color-gold-900) 100%)";
-  const borderGlow = isDead
-    ? "0 0 0 1px rgba(106,106,106,.5)"
-    : "0 0 0 1px rgba(244,217,144,.4), 0 6px 22px rgba(201,169,107,.3)";
+    ? "linear-gradient(180deg, #d2d2d8, #9a9aa2)"
+    : "var(--grad-cta)";
+  const shadow = isDead
+    ? "none"
+    : "0 26px 60px -18px rgba(255,94,143,.6), inset 0 2px 12px rgba(255,255,255,.45)";
   const mainLabel = state === "demo" ? "押す。" : state === "suggest" ? "押す。" : "めんどくさい";
-  const mainColor = isDead ? "#bcbcbc" : "var(--color-bg-warm)";
+  const mainColor = isDead ? "#5a5a62" : "#fff";
+  const subColor = isDead ? "#6a6a72" : "rgba(255,255,255,.9)";
   const subLabel =
     state === "idle"
       ? "— 押せ。考えるな。"
@@ -135,31 +180,36 @@ function GoroButton({
         height: size,
         borderRadius: "50%",
         background: bg,
-        boxShadow: borderGlow,
+        boxShadow: shadow,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         margin: "0 auto",
-        color: mainColor,
-        fontFamily: "var(--font-body-mincho)",
-        fontSize: state === "demo" ? 14 : 18,
-        fontWeight: 700,
-        letterSpacing: "0.04em",
+        gap: 3,
         textAlign: "center",
       }}
     >
-      <div>{mainLabel}</div>
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontWeight: 900,
+          fontSize: state === "demo" ? 21 : 26,
+          letterSpacing: "0.01em",
+          color: mainColor,
+        }}
+      >
+        {mainLabel}
+      </div>
       {subLabel ? (
         <div
           style={{
-            marginTop: 4,
-            fontFamily: "var(--font-display-serif)",
+            fontFamily: "var(--font-serif-ital)",
             fontStyle: "italic",
-            fontSize: 9,
-            color: isDead ? "#9a9a9a" : "rgba(26,18,8,.78)",
-            fontWeight: 400,
-            letterSpacing: 0,
+            fontWeight: 500,
+            fontSize: state === "demo" ? 11 : 13,
+            color: subColor,
+            letterSpacing: "0.01em",
           }}
         >
           {subLabel}
@@ -173,60 +223,85 @@ function BalanceHero({
   amount,
   count,
   rate,
-  dimmed = false,
+  dead = false,
 }: {
   amount: string;
   count: number;
   rate: number;
-  dimmed?: boolean;
+  dead?: boolean;
 }) {
-  const amountColor = dimmed ? "var(--color-dead-gray)" : "var(--color-cream)";
-  const meterColor =
-    rate >= 80 ? "var(--color-accent-danger)" : rate >= 60 ? "var(--color-accent-warn)" : "var(--color-gold-500)";
+  const isWarn = rate >= 60 && rate < 80;
+  const isDanger = rate >= 80;
+  const amountColor = dead
+    ? "#b4b4ba"
+    : isDanger
+      ? "var(--color-state-danger)"
+      : isWarn
+        ? "var(--color-state-warn)"
+        : "var(--color-ink)";
+  const meterFill = dead
+    ? "#b4b4ba"
+    : isDanger
+      ? "var(--color-state-danger)"
+      : isWarn
+        ? "var(--color-state-warn)"
+        : "linear-gradient(90deg, var(--color-accent-pink), var(--color-accent-orange))";
   return (
     <div style={{ textAlign: "center" }}>
       <div
         style={{
-          fontFamily: "var(--font-mono-pixel)",
-          fontSize: 9,
-          letterSpacing: "0.2em",
-          color: "var(--color-mute)",
+          fontFamily: "var(--font-body)",
+          fontWeight: 600,
+          fontSize: 10,
+          letterSpacing: "0.24em",
+          textTransform: "uppercase",
+          color: "var(--color-ink-soft)",
         }}
       >
         残りダメ予算
       </div>
       <div
         style={{
-          fontFamily: "var(--font-display-serif)",
-          fontStyle: "italic",
-          fontWeight: 700,
-          fontSize: 38,
+          fontFamily: "var(--font-display)",
+          fontWeight: 900,
+          fontSize: 48,
+          letterSpacing: "-0.03em",
           color: amountColor,
-          marginTop: 4,
-          textShadow: dimmed ? "none" : "0 0 18px rgba(244,236,216,.18)",
+          lineHeight: 1,
+          margin: "6px 0 14px",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
         {amount}
       </div>
       <div
         style={{
-          height: 1,
-          width: "70%",
-          margin: "10px auto 6px",
-          background: dimmed ? "var(--color-dead-gray)" : meterColor,
-          opacity: dimmed ? 0.5 : 1,
+          height: 3,
+          background: "var(--color-line)",
+          borderRadius: 3,
+          margin: "0 12% 14px",
+          overflow: "hidden",
         }}
-      />
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${rate}%`,
+            background: meterFill,
+          }}
+        />
+      </div>
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          width: "70%",
-          margin: "0 auto",
-          fontFamily: "var(--font-mono-pixel)",
-          fontSize: 9,
-          color: dimmed ? "var(--color-dead-gray)" : "var(--color-mute)",
-          letterSpacing: "0.16em",
+          justifyContent: "center",
+          gap: 18,
+          fontFamily: "var(--font-body)",
+          fontWeight: 500,
+          fontSize: 10,
+          color: "var(--color-ink-soft)",
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
         }}
       >
         <span>今月 {count} 度</span>
@@ -238,27 +313,29 @@ function BalanceHero({
 
 function FormField({ label, value, type = "text" }: { label: string; value: string; type?: "text" | "password" }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginTop: 16 }}>
       <div
         style={{
-          fontFamily: "var(--font-mono-pixel)",
-          fontSize: 9,
-          color: "var(--color-mute)",
+          fontFamily: "var(--font-body)",
+          fontWeight: 600,
+          fontSize: 10,
+          color: "var(--color-ink-soft)",
           letterSpacing: "0.2em",
-          marginBottom: 4,
+          textTransform: "uppercase",
+          marginBottom: 6,
         }}
       >
         {label}
       </div>
       <div
         style={{
-          background: "rgba(255,255,255,.04)",
-          border: "1px solid #4a3a18",
-          borderRadius: 4,
-          padding: "8px 10px",
-          color: "var(--color-cream)",
-          fontFamily: type === "password" ? "monospace" : "var(--font-body-sans)",
-          fontSize: 12,
+          background: "var(--color-bg-soft)",
+          border: "1px solid var(--color-line)",
+          borderRadius: 12,
+          padding: "13px 14px",
+          color: type === "password" && !value ? "var(--color-ink-soft)" : "var(--color-ink)",
+          fontFamily: "var(--font-body)",
+          fontSize: 15,
           letterSpacing: type === "password" ? "0.2em" : 0,
         }}
       >
@@ -275,55 +352,69 @@ function LandingMock() {
     <div style={SCREEN_INNER}>
       <BrandHeader time="21:07" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <div
-          style={{
-            textAlign: "center",
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontWeight: 700,
-            fontSize: 36,
-            lineHeight: 1.1,
-            color: "var(--color-cream)",
-          }}
-        >
-          考えるな。
-          <br />
-          押せ。
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontFamily: "var(--font-serif-ital)",
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: 18,
+              lineHeight: 1.3,
+              color: "var(--color-ink-mid)",
+              marginBottom: 16,
+            }}
+          >
+            面倒は、こちらで引き受ける。
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 900,
+              fontSize: 44,
+              lineHeight: 0.96,
+              letterSpacing: "-0.02em",
+              color: "var(--color-ink)",
+            }}
+          >
+            考えるな。
+            <br />
+            押せ。
+          </div>
         </div>
         <div
           style={{
-            textAlign: "center",
-            fontFamily: "var(--font-body-mincho)",
-            fontSize: 11,
-            color: "var(--color-gold-500)",
-            margin: "16px 0 18px",
-            letterSpacing: "0.04em",
-          }}
-        >
-          面倒は、こちらで引き受ける。
-        </div>
-        <div
-          style={{
-            textAlign: "center",
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 9,
-            color: "var(--color-mute)",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            fontSize: 10,
             letterSpacing: "0.2em",
-            marginBottom: 12,
+            textTransform: "uppercase",
+            color: "var(--color-ink-soft)",
+            textAlign: "center",
+            margin: "32px 0 6px",
           }}
         >
-          体験用ダメ予算{" "}
-          <span style={{ fontFamily: "var(--font-display-serif)", fontStyle: "italic", color: "var(--color-cream)", fontSize: 12 }}>
-            ¥1,000
-          </span>
+          体験用ダメ予算
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 36,
+            letterSpacing: "-0.03em",
+            color: "var(--color-ink)",
+            textAlign: "center",
+            marginBottom: 20,
+          }}
+        >
+          ¥1,000
         </div>
         <div style={{ marginBottom: 18 }}>
           <GoroButton state="demo" />
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <GoldButton variant="primary">始めろ</GoldButton>
-        <GoldButton variant="secondary">ログイン</GoldButton>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <PillButton variant="primary">始めろ</PillButton>
+        <PillButton variant="secondary">ログイン</PillButton>
       </div>
     </div>
   );
@@ -333,15 +424,15 @@ function SignupMock() {
   return (
     <div style={SCREEN_INNER}>
       <BrandHeader time="21:07" />
-      <div style={{ marginTop: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
         <div
           style={{
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontWeight: 700,
-            fontSize: 22,
-            lineHeight: 1.2,
-            color: "var(--color-cream)",
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 30,
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em",
+            color: "var(--color-ink)",
           }}
         >
           面倒は、
@@ -350,26 +441,28 @@ function SignupMock() {
         </div>
         <div
           style={{
-            fontFamily: "var(--font-body-mincho)",
-            fontSize: 10,
-            color: "var(--color-gold-500)",
-            marginTop: 10,
-            marginBottom: 18,
-            letterSpacing: "0.04em",
+            fontFamily: "var(--font-serif-ital)",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "var(--color-ink-mid)",
+            marginTop: 8,
           }}
         >
           30 秒で済む。
         </div>
-        <FormField label="メールアドレス" value="taro@example.com" />
-        <FormField label="パスワード" value="" type="password" />
+        <div style={{ marginTop: 22 }}>
+          <FormField label="メールアドレス" value="taro@example.com" />
+          <FormField label="パスワード" value="" type="password" />
+        </div>
         <ul
           style={{
             listStyle: "none",
             padding: 0,
-            margin: "0 0 16px 0",
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 9,
-            letterSpacing: "0.1em",
+            margin: "8px 0 0 0",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
           }}
         >
           {[
@@ -380,15 +473,20 @@ function SignupMock() {
           ].map((h) => (
             <li
               key={h.label}
-              style={{ color: h.ok ? "var(--color-gold-500)" : "var(--color-mute)", marginBottom: 2 }}
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 11,
+                letterSpacing: "0.02em",
+                color: h.ok ? "var(--color-accent-coral)" : "var(--color-ink-soft)",
+              }}
             >
               {h.ok ? "✓" : "・"} {h.label}
             </li>
           ))}
         </ul>
-      </div>
-      <div style={{ marginTop: "auto" }}>
-        <GoldButton>登録する</GoldButton>
+        <div style={{ marginTop: "auto" }}>
+          <PillButton variant="cta">登録する</PillButton>
+        </div>
       </div>
     </div>
   );
@@ -398,35 +496,38 @@ function LoginMock() {
   return (
     <div style={SCREEN_INNER}>
       <BrandHeader time="21:07" />
-      <div style={{ marginTop: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
         <div
           style={{
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontWeight: 700,
-            fontSize: 26,
-            color: "var(--color-cream)",
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 32,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.1,
+            color: "var(--color-ink)",
           }}
         >
           戻ってきたか。
         </div>
         <div
           style={{
-            fontFamily: "var(--font-body-mincho)",
-            fontSize: 10,
-            color: "var(--color-gold-500)",
+            fontFamily: "var(--font-serif-ital)",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: 16,
+            color: "var(--color-ink-mid)",
             marginTop: 8,
-            marginBottom: 22,
-            letterSpacing: "0.04em",
           }}
         >
           また面倒になったか。
         </div>
-        <FormField label="メールアドレス" value="taro@example.com" />
-        <FormField label="パスワード" value="" type="password" />
-      </div>
-      <div style={{ marginTop: "auto" }}>
-        <GoldButton>ログイン</GoldButton>
+        <div style={{ marginTop: 22 }}>
+          <FormField label="メールアドレス" value="taro@example.com" />
+          <FormField label="パスワード" value="" type="password" />
+        </div>
+        <div style={{ marginTop: "auto" }}>
+          <PillButton variant="cta">ログイン</PillButton>
+        </div>
       </div>
     </div>
   );
@@ -438,106 +539,110 @@ function BudgetSetupMock() {
   return (
     <div style={SCREEN_INNER}>
       <BrandHeader time="21:09" />
-      <div style={{ marginTop: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
         <div
           style={{
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontWeight: 700,
-            fontSize: 24,
-            lineHeight: 1.2,
-            color: "var(--color-cream)",
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 28,
+            lineHeight: 1.15,
+            letterSpacing: "-0.02em",
+            color: "var(--color-ink)",
           }}
         >
           まず、線を引け。
         </div>
         <div
           style={{
-            fontFamily: "var(--font-body-mincho)",
-            fontSize: 10,
-            color: "var(--color-gold-500)",
-            marginTop: 8,
-            marginBottom: 18,
-            letterSpacing: "0.04em",
+            fontFamily: "var(--font-body)",
+            fontWeight: 400,
+            fontSize: 13,
+            color: "var(--color-ink-soft)",
+            marginTop: 10,
+            lineHeight: 1.7,
           }}
         >
           引かなきゃ、始まらん。
         </div>
-        <div
-          style={{
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 9,
-            color: "var(--color-mute)",
-            letterSpacing: "0.2em",
-            marginBottom: 8,
-          }}
-        >
-          月間ダメ予算
+        <div style={{ marginTop: 22 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-body)",
+              fontWeight: 600,
+              fontSize: 10,
+              color: "var(--color-ink-soft)",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            月間ダメ予算
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              marginBottom: 14,
+            }}
+          >
+            {QUICK.map((v) => {
+              const isSel = v === selected;
+              return (
+                <div
+                  key={v}
+                  style={{
+                    padding: "10px 16px",
+                    borderRadius: "var(--radius-pill)",
+                    border: isSel ? "1px solid var(--color-line-strong)" : "1px solid var(--color-line)",
+                    background: isSel ? "var(--color-line-strong)" : "var(--color-bg-base)",
+                    color: isSel ? "#fff" : "var(--color-ink)",
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    letterSpacing: "0.02em",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {v === 30_000 ? (
+                    <span style={{ color: isSel ? "#fff" : "var(--color-accent-orange)", marginRight: 2 }}>★</span>
+                  ) : null}
+                  ¥{v.toLocaleString()}
+                </div>
+              );
+            })}
+          </div>
+          <div
+            style={{
+              width: "100%",
+              background: "var(--color-bg-soft)",
+              border: "1px solid var(--color-line)",
+              borderRadius: 12,
+              padding: "13px 14px",
+              color: "var(--color-ink)",
+              fontFamily: "var(--font-body)",
+              fontSize: 15,
+              fontVariantNumeric: "tabular-nums",
+              textAlign: "right",
+            }}
+          >
+            ¥30,000
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 11,
+              color: "var(--color-ink-soft)",
+              letterSpacing: "0.02em",
+              marginTop: 6,
+            }}
+          >
+            1,000 〜 100,000 円 / 1,000 円刻み
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-            marginBottom: 14,
-          }}
-        >
-          {QUICK.map((v) => {
-            const isSel = v === selected;
-            return (
-              <div
-                key={v}
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 4,
-                  border: isSel
-                    ? "1px solid var(--color-gold-100)"
-                    : "1px solid #4a3a18",
-                  background: isSel
-                    ? "linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700))"
-                    : "transparent",
-                  color: isSel ? "var(--color-bg-warm)" : "var(--color-cream)",
-                  fontFamily: "var(--font-mono-pixel)",
-                  fontSize: 10,
-                  letterSpacing: "0.06em",
-                  fontWeight: isSel ? 700 : 400,
-                }}
-              >
-                {v === 30_000 ? "★ " : ""}¥{v.toLocaleString()}
-              </div>
-            );
-          })}
+        <div style={{ marginTop: "auto" }}>
+          <PillButton variant="cta">線を引け</PillButton>
         </div>
-        <div
-          style={{
-            background: "rgba(255,255,255,.04)",
-            border: "1px solid #4a3a18",
-            borderRadius: 4,
-            padding: "10px 12px",
-            color: "var(--color-cream)",
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontSize: 22,
-            letterSpacing: "0.02em",
-            textAlign: "right",
-          }}
-        >
-          ¥30,000
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 8,
-            color: "var(--color-mute)",
-            letterSpacing: "0.16em",
-            marginTop: 6,
-          }}
-        >
-          1,000 〜 100,000 円 / 1,000 円刻み
-        </div>
-      </div>
-      <div style={{ marginTop: "auto" }}>
-        <GoldButton>線を引け</GoldButton>
       </div>
     </div>
   );
@@ -548,8 +653,10 @@ function InsufficientModalMock() {
     <ModalMock
       title="足りないか。"
       sub="もっと欲しけりゃ、線を引き直せ。"
+      subStyle="body"
       secondary="閉じろ。"
       primary="引き直す。"
+      primaryVariant="cta"
       showBackground="suggest"
     />
   );
@@ -588,16 +695,16 @@ function MainSuggestMock() {
         <div
           style={{
             position: "absolute",
-            top: "8%",
-            background: "rgba(26,18,8,.92)",
-            border: "1px solid var(--color-gold-500)",
+            top: "12%",
+            background: "var(--color-line-strong)",
             borderRadius: 14,
-            padding: "8px 14px",
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontSize: 14,
-            color: "var(--color-cream)",
-            boxShadow: "0 0 14px rgba(201,169,107,.25)",
+            padding: "9px 15px",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            fontSize: 13,
+            color: "#fff",
+            letterSpacing: "0.04em",
+            boxShadow: "0 14px 30px -12px rgba(0,0,0,.35)",
           }}
         >
           そろそろだろ。
@@ -620,51 +727,57 @@ function CompleteMock() {
           alignItems: "center",
           justifyContent: "center",
           textAlign: "center",
+          position: "relative",
           background:
-            "radial-gradient(ellipse at center, rgba(201,169,107,.32), transparent 60%)",
+            "radial-gradient(ellipse at center, rgba(255,123,77,.18), transparent 60%)",
           margin: "0 -18px",
           padding: "0 18px",
         }}
       >
         <div
           style={{
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontWeight: 700,
-            fontSize: 38,
-            color: "var(--color-cream)",
-            marginBottom: 14,
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 44,
+            letterSpacing: "-0.03em",
+            color: "var(--color-ink)",
+            marginBottom: 16,
           }}
         >
           いい判断だ。
         </div>
         <div
           style={{
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 10,
-            color: "var(--color-mute)",
-            letterSpacing: "0.18em",
-            marginBottom: 16,
+            fontFamily: "var(--font-serif-ital)",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: 17,
+            color: "var(--color-ink-mid)",
+            marginBottom: 28,
           }}
         >
           面倒は片付いた。
         </div>
         <div
           style={{
-            fontFamily: "var(--font-body-mincho)",
-            fontSize: 14,
-            color: "var(--color-cream)",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            fontSize: 15,
+            color: "var(--color-ink)",
+            letterSpacing: "0.02em",
           }}
         >
           CoCo壱番屋 新宿店
         </div>
         <div
           style={{
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontSize: 22,
-            color: "var(--color-gold-500)",
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 30,
+            letterSpacing: "-0.02em",
+            color: "var(--color-ink)",
             marginTop: 4,
+            fontVariantNumeric: "tabular-nums",
           }}
         >
           ¥1,200
@@ -673,28 +786,31 @@ function CompleteMock() {
           style={{
             width: "60%",
             height: 1,
-            background: "var(--color-gold-500)",
-            opacity: 0.5,
-            margin: "16px 0",
+            background: "var(--color-line)",
+            margin: "20px 0",
           }}
         />
         <div
           style={{
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 9,
-            color: "var(--color-gold-500)",
-            letterSpacing: "0.16em",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            fontSize: 11,
+            color: "var(--color-ink-soft)",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            marginBottom: 8,
           }}
         >
           今月 6 度、いい判断だった。
         </div>
         <div
           style={{
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 9,
-            color: "var(--color-mute)",
-            letterSpacing: "0.16em",
-            marginTop: 4,
+            fontFamily: "var(--font-body)",
+            fontWeight: 500,
+            fontSize: 11,
+            color: "var(--color-ink-soft)",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
           }}
         >
           残りダメ予算 ¥27,600
@@ -703,14 +819,24 @@ function CompleteMock() {
       <div
         style={{
           textAlign: "center",
-          fontFamily: "var(--font-mono-pixel)",
-          fontSize: 10,
-          color: "var(--color-mute)",
-          letterSpacing: "0.18em",
           paddingTop: 8,
         }}
       >
-        次を待て。
+        <span
+          style={{
+            display: "inline-block",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            fontSize: 12,
+            color: "var(--color-ink)",
+            letterSpacing: "0.12em",
+            padding: "12px 24px",
+            border: "1px solid var(--color-line)",
+            borderRadius: "var(--radius-pill)",
+          }}
+        >
+          次を待て。
+        </span>
       </div>
     </div>
   );
@@ -718,20 +844,16 @@ function CompleteMock() {
 
 function MainDeadMock() {
   return (
-    <div
-      style={{
-        ...SCREEN_INNER,
-        filter: "saturate(.2) brightness(.7)",
-      }}
-    >
+    <div style={SCREEN_INNER}>
       <BrandHeader time="23:51" />
       <div style={{ marginTop: 14 }}>
-        <BalanceHero amount="¥0" count={47} rate={100} dimmed />
+        <BalanceHero amount="¥0" count={47} rate={100} dead />
       </div>
       <div
         style={{
           flex: 1,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
@@ -739,37 +861,34 @@ function MainDeadMock() {
       >
         <div
           style={{
-            position: "absolute",
-            top: "4%",
-            left: 0,
-            right: 0,
+            fontFamily: "var(--font-display)",
+            fontWeight: 900,
+            fontSize: 28,
+            letterSpacing: "-0.02em",
+            color: "var(--color-ink)",
             textAlign: "center",
-            fontFamily: "var(--font-display-serif)",
-            fontStyle: "italic",
-            fontSize: 26,
-            color: "var(--color-cream)",
+            marginBottom: 20,
           }}
         >
           今月は、終わりだ。
         </div>
         <GoroButton state="dead" />
       </div>
-      <div style={{ filter: "saturate(2) brightness(1.4)", isolation: "isolate" }}>
-        <div
-          style={{
-            background: "linear-gradient(180deg, #ff6464, var(--color-accent-danger))",
-            color: "#fff",
-            textAlign: "center",
-            padding: "11px 0",
-            borderRadius: 4,
-            fontFamily: "var(--font-mono-pixel)",
-            fontSize: 11,
-            letterSpacing: "0.1em",
-            boxShadow: "0 0 18px rgba(255,79,79,.55)",
-          }}
-        >
-          ¥50,000。来月もこの調子だ。
-        </div>
+      <div
+        style={{
+          background: "var(--grad-cta)",
+          color: "#fff",
+          textAlign: "center",
+          padding: "16px 0",
+          borderRadius: "var(--radius-pill)",
+          fontFamily: "var(--font-body)",
+          fontWeight: 700,
+          fontSize: 14,
+          letterSpacing: "0.06em",
+          boxShadow: "0 18px 40px -14px rgba(255,94,143,.6)",
+        }}
+      >
+        ¥50,000。来月もこの調子だ。
       </div>
     </div>
   );
@@ -778,90 +897,92 @@ function MainDeadMock() {
 function ModalMock({
   title,
   sub,
+  subStyle = "serif",
   primary,
+  primaryVariant = "primary",
   secondary,
   showBackground = "idle",
 }: {
   title: string;
   sub: string;
+  subStyle?: "serif" | "body";
   primary?: string;
+  primaryVariant?: "primary" | "cta";
   secondary?: string;
   showBackground?: "idle" | "suggest";
 }) {
   const Bg = showBackground === "suggest" ? MainSuggestMock : MainIdleMock;
+  const subStyleProps: CSSProperties =
+    subStyle === "serif"
+      ? {
+          fontFamily: "var(--font-serif-ital)",
+          fontStyle: "italic",
+          fontWeight: 500,
+          fontSize: 15,
+          color: "var(--color-ink-mid)",
+        }
+      : {
+          fontFamily: "var(--font-body)",
+          fontWeight: 400,
+          fontSize: 13,
+          color: "var(--color-ink-soft)",
+          lineHeight: 1.7,
+        };
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <div style={{ filter: "blur(4px) brightness(.55)", height: "100%" }}>
+      <div style={{ filter: "blur(4px)", height: "100%" }}>
         <Bg />
       </div>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0,0,0,.55)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          background: "rgba(20,15,10,.32)",
+          display: "grid",
+          placeItems: "center",
           padding: 20,
         }}
       >
         <div
           style={{
             width: "100%",
-            background:
-              "linear-gradient(180deg, var(--color-bg-warm), var(--color-bg-mid))",
-            border: "1px solid var(--color-gold-500)",
-            borderRadius: 14,
-            boxShadow: "0 0 30px rgba(201,169,107,.3)",
-            padding: "20px 16px",
-            position: "relative",
-            overflow: "hidden",
+            background: "var(--color-bg-base)",
+            border: "1px solid var(--color-line)",
+            borderRadius: "var(--radius-card)",
+            boxShadow: "0 40px 80px -24px rgba(0,0,0,.3)",
+            padding: "28px 22px",
+            textAlign: "center",
           }}
         >
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              background: SCAN_LINES,
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              fontFamily: "var(--font-display-serif)",
-              fontStyle: "italic",
-              fontWeight: 700,
+              fontFamily: "var(--font-display)",
+              fontWeight: 900,
               fontSize: 24,
-              color: "var(--color-cream)",
-              textAlign: "center",
-              position: "relative",
+              letterSpacing: "-0.02em",
+              color: "var(--color-ink)",
             }}
           >
             {title}
           </div>
           <div
             style={{
-              fontFamily: "var(--font-body-mincho)",
-              fontSize: 11,
-              color: "var(--color-gold-500)",
-              textAlign: "center",
-              marginTop: 6,
-              marginBottom: 18,
-              letterSpacing: "0.04em",
-              position: "relative",
+              ...subStyleProps,
+              marginTop: 12,
+              marginBottom: 22,
             }}
           >
             {sub}
           </div>
-          <div style={{ display: "flex", gap: 8, position: "relative" }}>
+          <div style={{ display: "flex", gap: 10 }}>
             {secondary ? (
               <div style={{ flex: 1 }}>
-                <GoldButton variant="secondary">{secondary}</GoldButton>
+                <PillButton variant="secondary">{secondary}</PillButton>
               </div>
             ) : null}
             {primary ? (
               <div style={{ flex: 1 }}>
-                <GoldButton>{primary}</GoldButton>
+                <PillButton variant={primaryVariant}>{primary}</PillButton>
               </div>
             ) : null}
           </div>
@@ -872,7 +993,7 @@ function ModalMock({
 }
 
 function LogoutModalMock() {
-  return <ModalMock title="やめるのか？" sub="戻ってこい。" secondary="戻る。" primary="やめる。" />;
+  return <ModalMock title="やめるのか？" sub="戻ってこい。" secondary="戻る。" primary="やめる。" primaryVariant="primary" />;
 }
 
 function SessionExpiredModalMock() {
@@ -880,7 +1001,9 @@ function SessionExpiredModalMock() {
     <ModalMock
       title="離れすぎたな。"
       sub="セッションが切れました。再ログインしてください。"
+      subStyle="body"
       primary="戻る。"
+      primaryVariant="primary"
       showBackground="idle"
     />
   );
@@ -911,33 +1034,47 @@ export default function DesignGalleryPage() {
   return (
     <main
       style={{
+        position: "relative",
         minHeight: "100vh",
-        background: "var(--color-bg-deep)",
+        background: "var(--color-bg-base)",
         padding: "48px 32px 80px",
+        overflow: "hidden",
       }}
     >
-      <header style={{ maxWidth: 1400, margin: "0 auto 36px" }}>
+      {/* Light Aurora: ページ上部に暖色オーロラを敷く */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "40vh",
+          background: "var(--grad-aurora-soft)",
+          pointerEvents: "none",
+        }}
+      />
+      <header style={{ position: "relative", maxWidth: 1400, margin: "0 auto 36px" }}>
         <h1
           style={{
             margin: 0,
-            fontFamily: "var(--font-body-mincho)",
+            fontFamily: "var(--font-display)",
             fontWeight: 900,
             fontSize: 22,
-            color: "var(--color-cream)",
-            letterSpacing: "0.04em",
+            color: "var(--color-ink)",
+            letterSpacing: "-0.01em",
           }}
         >
-          <span style={{ fontFamily: "var(--font-body-mincho)" }}>ゴロゴロ</span>
-          <span style={{ fontFamily: "var(--font-display-serif)", fontStyle: "italic" }}>Pay</span>{" "}
+          <span style={{ fontFamily: "var(--font-display)" }}>ゴロゴロ</span>
+          <span style={{ fontFamily: "var(--font-serif-ital)", fontStyle: "italic" }}>Pay</span>{" "}
           - 全画面モック (リヴァイ調コピー統一)
         </h1>
         <p
           style={{
             margin: "8px 0 0",
-            color: "var(--color-mute)",
-            fontFamily: "var(--font-mono-pixel)",
+            color: "var(--color-ink-soft)",
+            fontFamily: "var(--font-body)",
             fontSize: 12,
-            letterSpacing: "0.1em",
+            letterSpacing: "0.04em",
           }}
         >
           ランディング / サインアップ / ログイン / 予算セットアップ / メイン (idle, suggest, dead) / 完了 / 予算不足モーダル / ログアウトモーダル / セッション切れモーダル
@@ -946,6 +1083,7 @@ export default function DesignGalleryPage() {
 
       <div
         style={{
+          position: "relative",
           maxWidth: 1400,
           margin: "0 auto",
           display: "grid",
@@ -957,10 +1095,11 @@ export default function DesignGalleryPage() {
           <section key={no}>
             <div
               style={{
-                fontFamily: "var(--font-mono-pixel)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 700,
                 fontSize: 11,
                 letterSpacing: "0.18em",
-                color: "var(--color-gold-500)",
+                color: "var(--color-accent-orange)",
                 marginBottom: 4,
               }}
             >
@@ -969,16 +1108,16 @@ export default function DesignGalleryPage() {
             <div
               style={{
                 fontSize: 11,
-                color: "var(--color-mute)",
+                color: "var(--color-ink-soft)",
                 marginBottom: 14,
-                fontFamily: "var(--font-body-sans)",
+                fontFamily: "var(--font-body)",
               }}
             >
               {desc}
             </div>
             <div style={FRAME_STYLE}>
+              <div style={AURORA_OVERLAY} />
               <Mock />
-              <div style={SCANLINE_OVERLAY} />
             </div>
           </section>
         ))}

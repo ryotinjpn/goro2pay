@@ -1,0 +1,45 @@
+/* Light Aurora 残高 0 画面 (LC-ME-10 / US-3-03)。ロジックは page.tsx 維持。 */
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background:
+    var(--grad-aurora-soft),
+    var(--color-bg-base);
+}
+
+.inner {
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.emoji {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.h1 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.body {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  margin: 0;
+}

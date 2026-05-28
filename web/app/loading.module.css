@@ -1,25 +1,38 @@
+/* Light Aurora ローディング画面。mock に専用画面は無いため、
+   トンマナ (ライト基調 + 暖色オーロラ) に沿った中立な最小 placeholder。 */
 .main {
+  position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   text-align: center;
-  background:
-    radial-gradient(
-      ellipse at top,
-      var(--color-bg-warm) 0%,
-      var(--color-bg-mid) 60%,
-      var(--color-bg-deep) 100%
-    );
-  color: var(--color-paper);
+  background: var(--color-bg-base);
+  color: var(--color-ink-soft);
+  overflow: hidden;
+}
+
+.main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 66vh;
+  background: var(--grad-aurora-soft);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .text {
-  font-family: var(--font-mono-pixel), monospace;
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
   font-size: 11px;
-  color: var(--color-paper);
-  letter-spacing: 0.35em;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  opacity: 0.85;
 }

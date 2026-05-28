@@ -65,8 +65,8 @@ export function SignupScreen() {
   }
 
   return (
-    <ScreenFrame testid="signup-screen">
-      <BrandHeader />
+    <ScreenFrame testid="signup-screen" light>
+      <BrandHeader light />
       <h1 className={styles.h1}>
         <div>{COPY.signup.h1Line1}</div>
         <div>{COPY.signup.h1Line2}</div>

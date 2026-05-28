@@ -1,3 +1,5 @@
+/* Light Aurora 注文完了 (mock screens/CompleteMock.module.css 移植) */
+
 .complete {
   flex: 1;
   display: flex;
@@ -7,15 +9,17 @@
   text-align: center;
   gap: 8px;
   position: relative;
+  padding-top: 28px;
 }
 
+/* 暖色オーロラの淡いグロー */
 .complete::before {
   content: "";
   position: absolute;
   inset: -40px;
   background: radial-gradient(
     ellipse at center,
-    rgba(201, 169, 107, 0.32),
+    rgba(255, 123, 77, 0.18),
     transparent 60%
   );
   pointer-events: none;
@@ -27,13 +31,13 @@
   to { opacity: 1; }
 }
 
+/* 極太サンセリフの主見出し */
 .verdict {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 38px;
-  color: var(--color-cream);
-  letter-spacing: -0.02em;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 48px;
+  color: var(--color-ink);
+  letter-spacing: -0.03em;
   position: relative;
   opacity: 0;
   animation: verdict-in 700ms var(--easing-spring) forwards;
@@ -46,7 +50,7 @@
   }
   to {
     opacity: 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
   }
 }
 
@@ -73,66 +77,76 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* セリフ斜体のリード文 */
 .body {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  color: var(--color-mute);
-  letter-spacing: 0.15em;
+  font-family: var(--font-serif-ital), serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--color-ink-mid);
   margin-top: 6px;
 }
 
 .store {
-  font-family: var(--font-body-mincho), serif;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--color-cream);
-  margin-top: 6px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-ink);
+  letter-spacing: 0.02em;
+  margin-top: 10px;
 }
 
+/* 極太サンセリフの金額 */
 .price {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 32px;
-  color: var(--color-gold-500);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 30px;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  margin-top: 4px;
 }
 
 .line {
   width: 60%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--color-gold-500),
-    transparent
-  );
-  margin: 14px auto;
+  background: var(--color-line);
+  margin: 22px auto 16px;
 }
 
 .meta {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 10px;
-  color: var(--color-gold-500);
-  letter-spacing: 0.15em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .metaMute {
-  color: var(--color-mute);
+  font-weight: 500;
+  color: var(--color-ink-soft);
 }
 
+/* ピル型の戻りリンク */
 .next {
-  margin-top: auto;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  color: var(--color-mute);
-  letter-spacing: 0.2em;
-  padding: 12px;
+  margin-top: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-ink);
+  letter-spacing: 0.12em;
+  padding: 12px 24px;
   background: transparent;
-  border: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
   cursor: pointer;
+  transition: background var(--duration-fast) ease;
 }
 
 .next:hover {
-  color: var(--color-paper);
+  background: var(--color-bg-soft);
 }
