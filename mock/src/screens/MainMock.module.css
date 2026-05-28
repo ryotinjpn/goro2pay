@@ -1,6 +1,6 @@
 .debug {
   position: fixed;
-  top: 8px;
+  top: 42px;
   right: 8px;
   display: flex;
   gap: 4px;
@@ -31,7 +31,7 @@
 
 .soundToggle {
   position: fixed;
-  top: 42px;
+  top: 76px;
   right: 8px;
   z-index: 50;
   background: rgba(255, 255, 255, 0.72);
@@ -46,6 +46,34 @@
 }
 
 .soundToggle[data-on='true'] {
+  color: #fff;
+  background: var(--color-line-strong);
+  border-color: var(--color-line-strong);
+}
+
+.controlsToggle {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 51;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+
+.controlsToggle[data-open='true'] {
   color: #fff;
   background: var(--color-line-strong);
   border-color: var(--color-line-strong);
