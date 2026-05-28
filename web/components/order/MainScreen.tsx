@@ -5,11 +5,13 @@ import { useAtomValue, useSetAtom } from "jotai";
 
 import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
 import { MetricsPanel } from "@/components/metrics/MetricsPanel";
+import { useMetrics } from "@/hooks/useMetrics";
 import { useWallet } from "@/hooks/useWallet";
 import { COPY } from "@/lib/copy";
 import {
   balanceAtom,
   monthlyBudgetAtom,
+  monthlyCountAtom,
   screenStateAtom,
   winFlashCounterAtom,
 } from "@/state/main";
@@ -27,19 +29,30 @@ export function MainScreen() {
   const screenState = useAtomValue(screenStateAtom);
   const setMonthlyBudget = useSetAtom(monthlyBudgetAtom);
   const setBalance = useSetAtom(balanceAtom);
+  const setMonthlyCount = useSetAtom(monthlyCountAtom);
   const winFlashCounter = useAtomValue(winFlashCounterAtom);
 
   // BalanceHero / GoroButton 側は jotai atom を一次ソースとして読むが、
-  // 実残高は wallet API から取得する必要がある。MainScreen mount 時に
-  // useWallet() で fetch し、結果を atom に同期する (PR ⑧ bug fix)。
+  // 実残高 / 実回数は API から取得する必要がある。MainScreen mount 時に
+  // useWallet() / useMetrics() で fetch し、結果を atom に同期する。
   // GoroButton.onSuccess も同じ atom を更新するため、最終値は楽観的更新と
-  // 整合する (注文成功 → setBalance(remainingBalance) → 次回 invalidate で
+  // 整合する (注文成功 → setBalance/setMonthlyCount → 次回 invalidate で
   // refetch されたら同じ値で上書き)。
   const { balance: walletBalance, monthlyBudget: walletMonthlyBudget } = useWallet();
+  const metricsQuery = useMetrics();
+  const damageCount = metricsQuery.data?.damageCount;
   useEffect(() => {
     if (walletBalance !== undefined) setBalance(walletBalance);
     if (walletMonthlyBudget !== undefined) setMonthlyBudget(walletMonthlyBudget);
-  }, [walletBalance, walletMonthlyBudget, setBalance, setMonthlyBudget]);
+    if (damageCount !== undefined) setMonthlyCount(damageCount);
+  }, [
+    walletBalance,
+    walletMonthlyBudget,
+    damageCount,
+    setBalance,
+    setMonthlyBudget,
+    setMonthlyCount,
+  ]);
 
   const handleIncrease = (nextBudget: number) => {
     setMonthlyBudget(nextBudget);
