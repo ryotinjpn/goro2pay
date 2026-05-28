@@ -1,37 +1,79 @@
+/* BrandHeader: mock/src/components/BrandHeader.module.css ベースに移植 (PR ⑤)。
+   mock の左右 baseline 揃え + font 18px に揃え、web 独自に右側へ LogoutButton 枠を追加。
+   `data-theme="light"` で Light Aurora 表現に切り替わる (現状 web は全箇所で light)。 */
+
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--color-mute);
-  margin-top: 4px;
+  align-items: baseline;
+  padding-bottom: 32px;
 }
 
 .brand {
-  font-family: var(--font-body-mincho), serif;
-  font-weight: 900;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--color-gold-500);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
-.brand .pay {
+.brandKana {
+  font-family: var(--font-body-mincho), serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  color: var(--color-cream);
+}
+
+.brandLatin {
   font-family: var(--font-display-serif), serif;
   font-style: italic;
   font-weight: 700;
+  font-size: 18px;
+  color: var(--color-gold-500);
   margin-left: 2px;
 }
 
+.right {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
 .time {
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 11px;
+  color: var(--color-mute);
+  letter-spacing: 0.15em;
   font-feature-settings: "tnum";
 }
 
-/* ===== Light Aurora テーマ (mock 移植) ===== */
+/* LogoutButton 自身は素の <button> なので、className 経由で世界観装飾を直接当てる
+   (子孫セレクタにすると LogoutConfirmModal の primary/secondary も巻き込むため)。 */
+.logoutBtn {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 169, 107, 0.4);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-mono-pixel), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--color-mute);
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.logoutBtn:hover {
+  color: var(--color-gold-100);
+  border-color: var(--color-gold-500);
+}
+
+.logoutBtn:focus-visible {
+  outline: 2px solid var(--color-gold-100);
+  outline-offset: 2px;
+}
+
+/* ===== Light Aurora テーマ ===== */
 .header[data-theme="light"] {
   padding: 6px 0 36px;
-  margin-top: 0;
   font-family: var(--font-body), sans-serif;
   font-weight: 500;
   font-size: 11px;
@@ -39,7 +81,7 @@
   color: var(--color-ink-soft);
 }
 
-.header[data-theme="light"] .brand {
+.header[data-theme="light"] .brandKana {
   font-family: var(--font-display), sans-serif;
   font-weight: 900;
   font-size: 17px;
@@ -47,11 +89,37 @@
   color: var(--color-ink);
 }
 
-.header[data-theme="light"] .brand .pay {
+.header[data-theme="light"] .brandLatin {
   font-family: var(--font-serif-ital), serif;
   font-style: italic;
   font-weight: 600;
   font-size: 19px;
   color: var(--color-ink);
   margin-left: 3px;
+}
+
+.header[data-theme="light"] .time {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.22em;
+}
+
+.header[data-theme="light"] .logoutBtn {
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-soft);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+}
+
+.header[data-theme="light"] .logoutBtn:hover {
+  color: var(--color-ink);
+  border-color: var(--color-line-strong);
+}
+
+.header[data-theme="light"] .logoutBtn:focus-visible {
+  outline: 2px solid var(--color-ink-mid);
+  outline-offset: 2px;
 }

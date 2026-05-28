@@ -39,11 +39,19 @@ export const COPY = {
     slotCaption: "▼ 選定中 ▼",
     deadVerdict: "今月は、終わりだ。",
     deadButtonSub: "— 上出来だ。使い切ったな。",
+    /* 注文成功時に画面中央に弾けるリヴァイ調の判決語 (PR ⑤ winVerdict 演出)。 */
+    winVerdict: "決まりだ。",
   },
   complete: {
     verdict: "いい判断だ。",
     body: "面倒は片付いた。",
     next: "次を待て。",
+  },
+  budgetEmpty: {
+    /* 残高 0 で残りダメ予算が尽きた状態のメインフレーズ。 */
+    verdict: "もう、ダメになれない。",
+    /* 翌月リセットの説明。 */
+    sub: "翌月 1 日に予算がリセットされる。",
   },
   logout: {
     h2: "やめるのか？",

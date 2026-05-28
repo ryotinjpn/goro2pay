@@ -26,6 +26,10 @@ describe("COPY constants", () => {
     expect(COPY.complete.body).toBe("面倒は片付いた。");
     expect(COPY.complete.next).toBe("次を待て。");
   });
+  it("contains budget-empty screen copy", () => {
+    expect(COPY.budgetEmpty.verdict).toBe("もう、ダメになれない。");
+    expect(COPY.budgetEmpty.sub).toBe("翌月 1 日に予算がリセットされる。");
+  });
 });
 
 describe("composeSuggestSubLabel", () => {

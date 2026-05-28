@@ -16,9 +16,11 @@ import { generateUlid } from "@/lib/ulid";
 import { COPY, composeSuggestSubLabel } from "@/lib/copy";
 import {
   balanceAtom,
+  lastOrderAtom,
   monthlyCountAtom,
   screenStateAtom,
   suggestionAtom,
+  winFlashCounterAtom,
   type ScreenState,
 } from "@/state/main";
 
@@ -35,6 +37,8 @@ export function GoroButton() {
   const setScreenState = useSetAtom(screenStateAtom);
   const setBalance = useSetAtom(balanceAtom);
   const setMonthlyCount = useSetAtom(monthlyCountAtom);
+  const setLastOrder = useSetAtom(lastOrderAtom);
+  const setWinFlash = useSetAtom(winFlashCounterAtom);
   const suggestion = useAtomValue(suggestionAtom);
   const setSuggestion = useSetAtom(suggestionAtom);
   const { mutate, disabled, isPending } = useOrder();
@@ -76,6 +80,15 @@ export function GoroButton() {
     setScreenState("slot");
     setSlotStartedAt(Date.now());
     setWinningText(null);
+    // 演出 atom を 0 にリセットしてから onSuccess で Date.now() (常にユニーク値)
+    // を立てる。これがないと:
+    //   (a) リセットしない場合 → 2 回目クリック時、slot 突入の瞬間に MainScreen の
+    //       showWinEffects ガードが前回 counter で true になり、API 応答前に
+    //       "前回の判決" が出てしまう (winVerdict double-fire bug)
+    //   (b) c=>c+1 increment 方式 → 1 回目で counter=1, リセット後 0, 次の onSuccess
+    //       で再び counter=1 と同じキーになり、React が remount せず演出が再走しない
+    // → リセット + Date.now() 値で「常にユニークなキー → クリーン remount」を保証。
+    setWinFlash(0);
 
     mutate(
       {
@@ -92,6 +105,18 @@ export function GoroButton() {
             setWinningText(`${res.storeName} ¥${res.amount.toLocaleString("ja-JP")}`);
             setBalance(res.remainingBalance);
             setMonthlyCount((c) => c + 1);
+            // PR ⑤: 注文成功と同時にグローバル演出を発火。
+            //   - winFlashCounterAtom に Date.now() を書き込み MainScreen の
+            //     win-flash-screen / win-verdict-pop が `key={counter}` で
+            //     remount されて再走 (Date.now でクリックごとにユニークなキー)
+            //   - lastOrderAtom に確定情報を書き込んで Complete 画面 (PR ⑧) で参照
+            setWinFlash(Date.now());
+            setLastOrder({
+              orderId: res.orderId,
+              storeName: res.storeName,
+              menuName: res.menuName,
+              amount: res.amount,
+            });
             setTimeout(() => {
               setScreenState(res.remainingBalance === 0 ? "dead" : "idle");
               router.push(`/order/${res.orderId}/complete`);
@@ -108,15 +133,20 @@ export function GoroButton() {
   const labelMain = labelMainFor(screenState);
   const labelSub = labelSubFor(screenState, suggestion);
   const ariaLabel = ariaLabelFor(screenState, suggestion);
+  // winning 時に button-jolt + win-flare-burst を 1 度だけ走らせる。
+  // key 切り替えで <button> を remount して animation を再発火させる方式 (mock 流)。
+  const winning = winningText !== null;
 
   return (
     <div className={styles.wrap}>
       <button
+        key={winning ? `win-${winningText}` : "btn"}
         type="button"
         onClick={handleClick}
         disabled={disabled || screenState === "slot" || screenState === "dead"}
         data-testid="goro-button"
         data-state={screenState}
+        data-winning={winning}
         aria-label={ariaLabel}
         className={styles.button}
       >
@@ -124,12 +154,13 @@ export function GoroButton() {
         {screenState === "slot" ? (
           <SlotReel winningText={winningText} />
         ) : (
-          <div>
-            <div className={styles.labelMain}>{labelMain}</div>
-            {labelSub && <div className={styles.labelSub}>{labelSub}</div>}
-          </div>
+          <>
+            <span className={styles.labelMain}>{labelMain}</span>
+            {labelSub && <span className={styles.labelSub}>{labelSub}</span>}
+          </>
         )}
       </button>
+      {winning && <span className={styles.flare} aria-hidden="true" />}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 
+import { ModalPortal } from "@/components/common/ModalPortal";
 import { sessionExpiredAtom } from "@/state/auth";
 import { authMessages } from "@/lib/authMessages";
 import { COPY } from "@/lib/copy";
@@ -43,27 +44,29 @@ export function SessionExpiredModalHost() {
   if (state === null) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="session-expired-title"
-      data-testid="session-expired-modal"
-      className={styles.overlay}
-    >
-      <div className={styles.card}>
-        <h2 id="session-expired-title" className={styles.h2}>
-          {COPY.sessionExpired.h2}
-        </h2>
-        <p className={styles.sub}>{authMessages.SESSION_EXPIRED}</p>
-        <button
-          type="button"
-          data-testid="session-expired-ok"
-          onClick={navigateToLogin}
-          className={styles.button}
-        >
-          {COPY.sessionExpired.button}
-        </button>
+    <ModalPortal>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="session-expired-title"
+        data-testid="session-expired-modal"
+        className={styles.overlay}
+      >
+        <div className={styles.card}>
+          <h2 id="session-expired-title" className={styles.h2}>
+            {COPY.sessionExpired.h2}
+          </h2>
+          <p className={styles.sub}>{authMessages.SESSION_EXPIRED}</p>
+          <button
+            type="button"
+            data-testid="session-expired-ok"
+            onClick={navigateToLogin}
+            className={styles.button}
+          >
+            {COPY.sessionExpired.button}
+          </button>
+        </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 }

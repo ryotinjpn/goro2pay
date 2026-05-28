@@ -1,0 +1,19 @@
+/* AddBudgetForm 専用スタイル。共通スタイル (.form, .chip, .field, .input,
+   .quickRow, .error, .submit, .chipSelected) は BudgetForm.module.css を import して
+   composes で借りる方針が綺麗だが、現状は両 form が同じ class 名で別 CSS Module を
+   import すると class 名が衝突するので AddBudgetForm 側はラッパスタイルを最小化し、
+   親 BudgetSetupScreen のレイアウトに乗せる構造にしている (後続改修候補)。
+
+   現時点で AddBudgetForm 専用なのは .preview のみ。 */
+
+/* 追加後の予算合計プレビュー (合計 ¥X (現在 ¥Y)) を出す。
+   入力中の追加額に応じて即時更新される。 */
+.preview {
+  font-family: var(--font-body), monospace;
+  font-size: 11px;
+  color: var(--color-accent-orange);
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-top: -8px;
+}

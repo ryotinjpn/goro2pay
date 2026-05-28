@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 
 import { InsufficientBalanceModal } from "@/components/budget/InsufficientBalanceModal";
 import { MetricsPanel } from "@/components/metrics/MetricsPanel";
+import { useMetrics } from "@/hooks/useMetrics";
+import { useWallet } from "@/hooks/useWallet";
+import { COPY } from "@/lib/copy";
 import {
+  balanceAtom,
   monthlyBudgetAtom,
+  monthlyCountAtom,
   screenStateAtom,
+  winFlashCounterAtom,
 } from "@/state/main";
 
 import { ScreenFrame } from "./ScreenFrame";
@@ -21,26 +28,75 @@ import styles from "./MainScreen.module.css";
 export function MainScreen() {
   const screenState = useAtomValue(screenStateAtom);
   const setMonthlyBudget = useSetAtom(monthlyBudgetAtom);
+  const setBalance = useSetAtom(balanceAtom);
+  const setMonthlyCount = useSetAtom(monthlyCountAtom);
+  const winFlashCounter = useAtomValue(winFlashCounterAtom);
+
+  // BalanceHero / GoroButton 側は jotai atom を一次ソースとして読むが、
+  // 実残高 / 実回数は API から取得する必要がある。MainScreen mount 時に
+  // useWallet() / useMetrics() で fetch し、結果を atom に同期する。
+  // GoroButton.onSuccess も同じ atom を更新するため、最終値は楽観的更新と
+  // 整合する (注文成功 → setBalance/setMonthlyCount → 次回 invalidate で
+  // refetch されたら同じ値で上書き)。
+  const { balance: walletBalance, monthlyBudget: walletMonthlyBudget } = useWallet();
+  const metricsQuery = useMetrics();
+  const damageCount = metricsQuery.data?.damageCount;
+  useEffect(() => {
+    if (walletBalance !== undefined) setBalance(walletBalance);
+    if (walletMonthlyBudget !== undefined) setMonthlyBudget(walletMonthlyBudget);
+    if (damageCount !== undefined) setMonthlyCount(damageCount);
+  }, [
+    walletBalance,
+    walletMonthlyBudget,
+    damageCount,
+    setBalance,
+    setMonthlyBudget,
+    setMonthlyCount,
+  ]);
 
   const handleIncrease = (nextBudget: number) => {
     setMonthlyBudget(nextBudget);
   };
 
+  // mock 流のグローバル演出層: 注文成功時に GoroButton.onSuccess が
+  // winFlashCounterAtom に Date.now() を書き込み、ここで `key={counter}` で
+  // remount し win-flash-screen / win-verdict-pop を再走させる。
+  const showWinEffects = winFlashCounter > 0 && screenState === "slot";
+
   return (
-    <ScreenFrame light screenState={screenState} testid="main-screen">
-      <BrandHeader light />
-      <BalanceHero />
-      <MetricsPanel />
-      <div className={styles.body}>
-        <GoroButton />
-      </div>
-      {screenState === "dead" && (
-        <>
-          <DeadVerdict />
-          <IncreaseBudgetButton onClick={handleIncrease} />
-        </>
+    <>
+      {showWinEffects && (
+        <div
+          key={`flash-${winFlashCounter}`}
+          className={styles.winFlash}
+          aria-hidden="true"
+        />
       )}
-      <InsufficientBalanceModal />
-    </ScreenFrame>
+      {showWinEffects && (
+        <div
+          key={`verdict-${winFlashCounter}`}
+          className={styles.winVerdict}
+          role="status"
+          aria-live="polite"
+        >
+          {COPY.main.winVerdict}
+        </div>
+      )}
+      <ScreenFrame light screenState={screenState} testid="main-screen">
+        <BrandHeader light showLogout />
+        <BalanceHero />
+        <MetricsPanel />
+        <div className={styles.body}>
+          <GoroButton />
+        </div>
+        {screenState === "dead" && (
+          <>
+            <DeadVerdict />
+            <IncreaseBudgetButton onClick={handleIncrease} />
+          </>
+        )}
+        <InsufficientBalanceModal />
+      </ScreenFrame>
+    </>
   );
 }
