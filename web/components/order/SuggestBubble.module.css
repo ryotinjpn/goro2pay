@@ -1,7 +1,6 @@
-/* SuggestBubble: mock/src/components/SuggestBubble.module.css ベースに移植 (PR ⑦)。
-   web は plan 行 (店名 + 金額) を併せて 2 行構成で出すため、白文字 1 行の mock より
-   情報密度が高い。配置 (上方) / 三角の作り方 (45deg 回転 + border-right + border-bottom)
-   / radius 14px / 半透明背景は mock 準拠。 */
+/* SuggestBubble: mock/src/components/SuggestBubble.module.css 準拠 Light Aurora。
+   mock は単一行だが web は plan (店名 + ¥金額) を併せ 2 行構成で出すため、
+   .bubble を mock 同等とし、.title / .plan を内部レイアウト用に追加。 */
 
 @keyframes fade-up-sb {
   from {
@@ -16,50 +15,48 @@
 
 .bubble {
   position: absolute;
-  bottom: calc(100% + 12px);
+  top: -64px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(26, 18, 8, 0.94);
-  border: 1px solid var(--color-accent-orange);
+  background: var(--color-line-strong);
   border-radius: 14px;
-  padding: 8px 14px;
-  color: var(--color-ink);
-  letter-spacing: 0.06em;
+  padding: 9px 15px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  box-shadow: 0 0 18px rgba(201, 169, 107, 0.25);
-  animation: fade-up-sb 600ms ease-out both;
   text-align: center;
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.35);
+  animation: fade-up-sb 600ms ease-out both;
 }
 
-/* mock 流の凝った三角: 12px 四方の正方形を 45deg 回転して bottom 端を覗かせ、
-   右辺と下辺だけ gold border を引くことで立体的な紙飛行機状の吹き出し尻になる。
-   bottom: -7px は border 1px ぶんずらして枠と整合させる微調整。 */
 .bubble::after {
   content: "";
   position: absolute;
-  bottom: -7px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
   width: 12px;
   height: 12px;
-  background: rgba(26, 18, 8, 0.94);
-  border-right: 1px solid var(--color-accent-orange);
-  border-bottom: 1px solid var(--color-accent-orange);
+  background: var(--color-line-strong);
 }
 
 .title {
-  font-family: var(--font-display), serif;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  color: var(--color-ink);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: 0.04em;
 }
 
 .plan {
-  margin-top: 2px;
   font-family: var(--font-serif-ital), serif;
   font-style: italic;
-  font-size: 11px;
+  font-weight: 500;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2px;
   letter-spacing: 0.02em;
-  color: var(--color-accent-orange);
 }
