@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ゴロゴロPay — AWS Summit Japan 2026</title>
+<style>
+  :root {
+    --white:    #fafaf8;
+    --ink:      #111111;
+    --ink-mid:  #555555;
+    --ink-mute: #999999;
+    --gold:     #c9a030;
+    --dark:     #111111;
+    --dark-mid: #1a1a1a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100vw; height: 100vh; background: #0a0a0a; overflow: hidden;
+    font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic UI',sans-serif;
+  }
+
+  /* ── keyframes ── */
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn   { from { opacity:0; }                             to { opacity:1; } }
+  @keyframes slideL   { from { opacity:0; transform:translateX(-32px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes growW    { from { width:0; }                                 to { width:48px; } }
+  @keyframes popIn    { from { opacity:0; transform:scale(0.85); }        to { opacity:1; transform:scale(1); } }
+  @keyframes slideDn  { from { opacity:0; transform:translateY(-18px); }  to { opacity:1; transform:translateY(0); } }
+
+  /* ── 固定 1280×720 スケーリング ── */
+  .deck {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 1280px; height: 720px;
+    transform-origin: center center;
+    /* transform は JS で: translate(-50%,-50%) scale(n) */
+  }
+  .slide {
+    display: flex; position: absolute; inset: 0;
+    flex-direction: column; justify-content: center;
+    background: var(--white); color: var(--ink);
+    padding: 64px 80px;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    font-size: 16px;
+  }
+  .slide.active { opacity: 1; visibility: visible; pointer-events: auto; }
+
+  /* ── content entrance ── */
+  .slide.active > h2                     { animation: slideL 0.35s          ease both; }
+  .slide.active > .divider               { animation: growW  0.4s  0.12s    ease both; }
+  .slide.active > h1                     { animation: fadeUp 0.45s 0.2s     ease both; }
+  .slide.active > p                      { animation: fadeUp 0.4s  0.32s    ease both; }
+  .slide.active > ul, .slide.active > ol { animation: fadeUp 0.4s  0.32s    ease both; }
+  .slide.active > blockquote             { animation: fadeUp 0.4s  0.38s    ease both; }
+  .slide.active > table                  { animation: fadeUp 0.4s  0.28s    ease both; }
+  .slide.lead.active > h2   { animation: slideDn 0.4s          ease both; }
+  .slide.lead.active > h1   { animation: fadeUp  0.5s 0.15s    ease both; }
+  .slide.lead.active > p    { animation: fadeIn  0.4s 0.35s    ease both; }
+  .slide.impact.active > h2      { animation: fadeIn  0.3s          ease both; }
+  .slide.impact.active > .divider { animation: growW 0.4s 0.1s     ease both; }
+  .slide.impact.active > h1      { animation: fadeUp  0.55s 0.2s   ease both; }
+  .slide.stat.active > .num      { animation: popIn   0.5s          ease both; }
+  .slide.stat.active > .divider  { animation: growW   0.4s 0.35s    ease both; }
+  .slide.stat.active > .unit     { animation: fadeIn  0.4s 0.45s    ease both; }
+  .slide.section-break.active .sb-num   { animation: slideL 0.45s          ease both; }
+  .slide.section-break.active .sb-label { animation: fadeIn 0.3s  0.25s    ease both; }
+  .slide.section-break.active .sb-title { animation: fadeUp 0.5s  0.3s     ease both; }
+  .slide.section-break.active .sb-sub   { animation: fadeIn 0.4s  0.5s     ease both; }
+  .slide.phase.active .phase-num    { animation: slideL 0.35s          ease both; }
+  .slide.phase.active > h1          { animation: fadeUp 0.45s 0.15s    ease both; }
+  .slide.phase.active > blockquote  { animation: fadeUp 0.4s  0.3s     ease both; }
+  .slide.phase.active > p           { animation: fadeUp 0.4s  0.42s    ease both; }
+  .slide.final.active > h1      { animation: popIn  0.5s          ease both; }
+  .slide.final.active > .divider { animation: growW 0.4s 0.3s     ease both; }
+  .slide.final.active > p       { animation: fadeIn 0.4s 0.45s    ease both; }
+
+  /* ── base type（px固定） ── */
+  h1 { font-size: 52px; font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; }
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  p  { font-size: 22px; line-height: 1.85; color: var(--ink); margin-bottom: 10px; }
+  ul, ol { padding-left: 28px; font-size: 22px; line-height: 2.1; }
+  li { color: var(--ink); }
+  li::marker { color: var(--gold); }
+  strong { color: var(--ink); font-weight: 900; }
+  .divider { width: 48px; height: 3px; background: var(--gold); margin-bottom: 22px; }
+
+  blockquote {
+    border-left: 4px solid var(--gold); padding: 12px 22px;
+    background: #f4f0e8; color: var(--ink-mid); font-size: 20px;
+    line-height: 1.9; margin: 14px 0; border-radius: 0 4px 4px 0;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 19px; margin-top: 10px; }
+  th { background: var(--ink); color: #f4d990; padding: 12px 20px; border: 1px solid var(--ink); font-weight: 700; text-align: left; letter-spacing: 0.04em; }
+  td { padding: 12px 20px; border: 1px solid #ddd; color: var(--ink); background: var(--white); }
+  tr:nth-child(even) td { background: #f4f0e8; }
+
+  code { background: #eeece8; color: var(--ink); padding: 3px 10px; border-radius: 4px; font-size: 17px; font-family: 'Menlo','Courier New',monospace; }
+
+  /* ── TITLE (lead) ── */
+  .slide.lead { background: var(--dark); border-left: 8px solid var(--gold); justify-content: flex-end; padding-bottom: 72px; }
+  .slide.lead h1 { font-size: 76px; color: #f4d990; margin-bottom: 8px; }
+  .slide.lead p  { font-size: 18px; color: #6a5a3a; }
+  .slide.lead h2 { color: var(--gold); }
+
+  /* ── SECTION BREAK ── */
+  .slide.section-break { background: var(--dark-mid); padding: 0; flex-direction: row; justify-content: flex-start; align-items: stretch; }
+  .sb-num { width: 240px; min-width: 240px; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 100px; font-weight: 900; color: #111; letter-spacing: -0.04em; line-height: 1; flex-shrink: 0; }
+  .sb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 64px 72px; }
+  .sb-label { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: #555; margin-bottom: 12px; }
+  .sb-title { font-size: 42px; font-weight: 900; color: #f4ecd8; line-height: 1.25; letter-spacing: -0.01em; }
+  .sb-sub   { margin-top: 14px; font-size: 18px; color: #555; line-height: 1.7; }
+
+  /* ── IMPACT (dark) ── */
+  .slide.impact { background: var(--dark-mid); justify-content: flex-end; padding-bottom: 72px; }
+  .slide.impact h2 { color: #555; }
+  .slide.impact h1 { font-size: 58px; color: var(--white); line-height: 1.3; }
+  .slide.impact .divider { background: var(--gold); }
+
+  /* ── STAT ── */
+  .slide.stat { align-items: center; text-align: center; }
+  .slide.stat .num { font-size: 160px; font-weight: 900; color: var(--ink); line-height: 0.9; letter-spacing: -0.04em; }
+  .slide.stat .unit { font-size: clamp(1em, 2vw, 1.4em); color: var(--ink-mid); margin-top: 0.5em; letter-spacing: 0.06em; }
+  .slide.stat .divider { margin: 1em auto; }
+
+  /* ── PHASE (dark) ── */
+  .slide.phase { background: var(--dark); color: #f4ecd8; padding: 64px 80px; }
+  .slide.phase .phase-num { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .slide.phase h1 { font-size: 44px; color: #f4ecd8; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 16px; }
+  .slide.phase blockquote { border-left: 3px solid var(--gold); background: #1a1a1a; color: #a89070; font-size: 20px; }
+  .slide.phase p { color: #ccb890; font-size: 20px; }
+  .slide.phase strong { color: #f4d990; }
+
+  /* ── FINAL ── */
+  .slide.final { background: var(--dark); align-items: center; justify-content: center; text-align: center; }
+  .slide.final h1 { font-size: 68px; color: #f4d990; margin-bottom: 8px; }
+  .slide.final .divider { margin: 12px auto 20px; }
+  .slide.final p { font-size: 18px; color: #555; }
+
+  /* ── VIDEO ── */
+  .slide.video-slide { background: #000; align-items: center; justify-content: center; }
+  video.demo { max-height: 640px; width: auto; border-radius: 4px; }
+
+  /* ── NAV ── */
+  #nav { position: fixed; bottom: 20px; right: 24px; display: flex; align-items: center; gap: 10px; z-index: 100; }
+  #counter { color: #555; font-size: 12px; font-family: 'Menlo',monospace; min-width: 44px; text-align: right; }
+  .nav-btn { background: #1a1a1a; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 3px; cursor: pointer; font-size: 13px; }
+  .nav-btn:hover { border-color: var(--gold); color: #f4d990; }
+  #hint { position: fixed; bottom: 20px; left: 24px; color: #333; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- ① タイトル -->
+  <div class="slide lead active">
+    <h2>AWS Summit Japan 2026 &nbsp;AI-DLC ハッカソン 予選会</h2>
+    <h1>ゴロゴロPay</h1>
+  </div>
+
+  <!-- ━━ SECTION 01: Opening ━━ -->
+  <div class="slide section-break">
+    <div class="sb-num">01</div>
+    <div class="sb-body">
+      <div class="sb-label">Section</div>
+      <div class="sb-title">Opening</div>
+      <div class="sb-sub">意思決定とは何か</div>
+    </div>
+  </div>
+
+  <div class="slide impact">
+    <div class="divider"></div>
+    <h1>今日、ここに来るまでに<br>いくつ意思決定を<br>してきましたか。</h1>
+  </div>
+
+  <div class="slide">
+    <h2>今日だけでも</h2>
+    <div class="divider"></div>
+    <ul>
+      <li>朝食は何にするか</li>
+      <li>何を着るか</li>
+      <li>何時に家を出るか</li>
+      <li>どのルートで来るか</li>
+    </ul>
+    <p style="margin-top:1.2em;color:var(--ink-mute)">これらが、毎日積み重なる。</p>
+  </div>
+
+  <div class="slide stat">
+    <div class="num">35,000</div>
+    <div class="divider"></div>
+    <div class="unit">現代人が1日に行う意思決定の数</div>
+  </div>
+
+  <div class="slide">
+    <h2>意思決定疲れ</h2>
+    <div class="divider"></div>
+    <p>会議で判断を下し続け、仕様を決め続け、優先順位をつけ続ける。</p>
+    <p style="margin-top:0.6em"><strong>帰宅後、夕食を「何にするか」——</strong><br>決める気力が、もう残っていない。</p>
+  </div>
+
+  <div class="slide">
+    <h2>デリバリーアプリは便利。でも——</h2>
+    <div class="divider"></div>
+    <p>何を頼むか。どこに頼むか。いくらまで出すか。</p>
+    <p>それを決めているのは、<strong>まだあなた自身です。</strong></p>
+    <p style="margin-top:0.8em;color:var(--ink-mid)">既存サービスは「実行」を効率化する。<br>しかし「意思決定そのもの」は、まだユーザーの役割。</p>
+  </div>
+
+  <div class="slide impact">
+    <h2>意思決定は</h2>
+    <div class="divider"></div>
+    <h1>人を育てる。<br>そして、削る。</h1>
+  </div>
+
+  <div class="slide">
+    <h2>私たちの思想</h2>
+    <div class="divider"></div>
+    <p><strong>生活雑事の意思決定は、AIに委ねる。</strong></p>
+    <p style="margin-top:0.6em">とことんダメになる。<br>その分、<strong>本当に大切なことへ。</strong></p>
+  </div>
+
+  <!-- ━━ SECTION 02: プロダクト概要 ━━ -->
+  <div class="slide section-break">
+    <div class="sb-num">02</div>
+    <div class="sb-body">
+      <div class="sb-label">Section</div>
+      <div class="sb-title">プロダクト概要</div>
+      <div class="sb-sub">ゴロゴロPayとは何か</div>
+    </div>
+  </div>
+
+  <div class="slide lead">
+    <h2>プロダクト</h2>
+    <h1>ゴロゴロPay</h1>
+    <p>生活雑事の「意思決定そのもの」をAIに委任する</p>
+  </div>
+
+  <div class="slide">
+    <h2>どう動くか</h2>
+    <div class="divider"></div>
+    <ol>
+      <li>毎月「予算」を設定</li>
+      <li>ボタンを<strong>1回</strong>押す</li>
+      <li>AIがデリバリー先・メニューを決定。<strong>3秒後、完了通知</strong></li>
+    </ol>
+    <p style="margin-top:1.2em;color:var(--ink-mid)">使い続けると、サジェスト機能が先回りする。</p>
+  </div>
+
+  <div class="slide">
+    <h2>使うほど、考えなくなる</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>フェーズ</th><th>状態</th></tr>
+      <tr><td>使い始め</td><td>何を頼むかを、AIが決める</td></tr>
+      <tr><td>2ヶ月後</td><td>ボタンすら不要。AIが先回り</td></tr>
+      <tr><td>月末</td><td>何も思い浮かばない。増額する</td></tr>
+    </table>
+    <p style="margin-top:1em"><strong>ボタン1つで人生が回る。人がダメになる。</strong></p>
+  </div>
+
+  <!-- ━━ SECTION 03: ペルソナ & ダメ化の物語 ━━ -->
+  <div class="slide section-break">
+    <div class="sb-num">03</div>
+    <div class="sb-body">
+      <div class="sb-label">Section</div>
+      <div class="sb-title">ペルソナ &amp;<br>ダメ化の物語</div>
+      <div class="sb-sub">陽介はどのようにダメになるか</div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>佐藤陽介（ペルソナ）</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><td style="width:28%;color:var(--ink-mid)">年齢</td><td>27歳・一人暮らし</td></tr>
+      <tr><td style="color:var(--ink-mid)">職業</td><td>都内IT企業 Webディレクター</td></tr>
+      <tr><td style="color:var(--ink-mid)">年収</td><td>550万円</td></tr>
+      <tr><td style="color:var(--ink-mid)">特徴</td><td>仕事で1日中、意思決定をし続けている</td></tr>
+    </table>
+    <blockquote style="margin-top:1.2em">
+      帰宅後、夕食を「何にするか」決める気力が残っていない。
+    </blockquote>
+  </div>
+
+  <div class="slide phase">
+    <div class="phase-num">Phase 1</div>
+    <h1>何を食べるか、をAIに委ねる</h1>
+    <blockquote>「考えなくていい。選ばなくていい。<br>ボタンを押すだけで全部終わる。<br>1,000円くらいでこれが買えるなら——安い。」</blockquote>
+    <p style="margin-top:0.8em"><strong>→ 意思決定疲れからの解放</strong></p>
+  </div>
+
+  <div class="slide phase">
+    <div class="phase-num">Phase 2</div>
+    <h1>いつ食べるのか、もAIに委ねる</h1>
+    <blockquote>「毎日夕飯の時間になるとご飯が出てくる。<br>まるで実家で生活しているようだ。」</blockquote>
+    <p style="margin-top:0.8em">サジェストが出ない日に、<strong>不安を感じる。</strong></p>
+    <p><strong>→ 自己決定権の放棄</strong></p>
+  </div>
+
+  <div class="slide phase">
+    <div class="phase-num">Phase 3</div>
+    <h1>何も考えられなくなる</h1>
+    <blockquote>「あれ……夕飯ってどうやって<br>準備したらいいんだっけ……？」</blockquote>
+    <p style="margin-top:0.8em">何も思い浮かばない。<br><strong>迷わず、増額ボタンを押す。</strong></p>
+  </div>
+
+  <div class="slide impact">
+    <h2>Demo</h2>
+    <div class="divider"></div>
+    <h1>実際に動くものを<br>ご覧ください。</h1>
+  </div>
+
+  <div class="slide video-slide">
+    <video src="./assets/demo.mov" controls class="demo"></video>
+  </div>
+
+  <div class="slide">
+    <h2>デザインコンセプト</h2>
+    <div class="divider"></div>
+    <p>「キャッシングの即時性」と「ガチャの興奮」を掛け合わせた<strong>スロット</strong>をモチーフ。</p>
+    <p style="margin-top:0.8em">各セリフは<strong>進撃の巨人のリヴァイ兵長</strong>をイメージ。<br>ユーザーから「決定権を奪う」ことを目的とし、<br>「失敗を回避したい」という心情にアプローチ。</p>
+  </div>
+
+  <!-- ━━ SECTION 04: AI-DLC プロセス ━━ -->
+  <div class="slide section-break">
+    <div class="sb-num">04</div>
+    <div class="sb-body">
+      <div class="sb-label">Section</div>
+      <div class="sb-title">AI-DLC プロセス</div>
+      <div class="sb-sub">どのように作ったか</div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>AI-DLC プロセス</h2>
+    <div class="divider"></div>
+    <p>5 Unit に分解し、全フェーズを実践</p>
+    <p style="margin:0.8em 0"><code>Auth</code> &nbsp;/&nbsp; <code>Budget</code> &nbsp;/&nbsp; <code>Order</code> &nbsp;/&nbsp; <code>Suggest</code> &nbsp;/&nbsp; <code>Metrics</code></p>
+    <p style="color:var(--ink-mid)">各 Unit を独立 PR で管理。<br>ドキュメント生成から実装まで<strong>一気通貫。</strong></p>
+  </div>
+
+  <div class="slide">
+    <h2>工夫①　ペルソナと設計の1対1対応</h2>
+    <div class="divider"></div>
+    <p>陽介の3フェーズを先に深く設計した上で、<br>各Unit・各画面・各セリフがどのフェーズに対応するかを明確に紐付け。</p>
+    <blockquote style="margin-top:0.8em">「なぜこのUI、なぜこのセリフか」が<br>全て陽介の感情変遷から導かれているため、設計の軸がぶれない。</blockquote>
+  </div>
+
+  <div class="slide">
+    <h2>工夫②　デザインシステムを横串成果物として独立</h2>
+    <div class="divider"></div>
+    <p>全画面共通の「デザイン哲学」を<strong>１つのファイルに一本化。</strong></p>
+    <ul style="margin-top:0.6em">
+      <li>フォント / カラートークン</li>
+      <li>セリフシステム</li>
+      <li>状態モデル</li>
+    </ul>
+    <p style="margin-top:1em">「<strong>いつでもやり直せる</strong>」という土台を構築。</p>
+  </div>
+
+  <div class="slide">
+    <h2>工夫③　NFRに「ダメ化UX」を独自定義</h2>
+    <div class="divider"></div>
+    <p style="color:var(--ink-mid)">一般的なNFRは「3秒以内に返す」「不正アクセスを防ぐ」<br>といった性能・セキュリティ要件。</p>
+    <p style="margin-top:0.8em">私たちは<strong>「ダメ化UX」を非機能要件として定義。</strong></p>
+    <p style="margin-top:0.6em;color:var(--ink-mid)">「UI」「セリフ」「サジェスト機能」——これら全てが<br>「意思決定」をAIへ委譲するよう促す体験。<strong>それを要件レベルに。</strong></p>
+  </div>
+
+  <!-- ━━ SECTION 05: 技術アーキテクチャ ━━ -->
+  <div class="slide section-break">
+    <div class="sb-num">05</div>
+    <div class="sb-body">
+      <div class="sb-label">Section</div>
+      <div class="sb-title">技術アーキテクチャ</div>
+      <div class="sb-sub">フルサーバーレス構成</div>
+    </div>
+  </div>
+
+  <div class="slide">
+    <h2>技術アーキテクチャ（フルサーバーレス）</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>レイヤー</th><th>技術</th></tr>
+      <tr><td>Frontend</td><td>Next.js — AWS Amplify Hosting</td></tr>
+      <tr><td>Backend</td><td>Go + Gin — Lambda Web Adapter</td></tr>
+      <tr><td>AI</td><td>Amazon Bedrock（Lambda から直接呼出）</td></tr>
+      <tr><td>DB / Auth</td><td>DynamoDB &nbsp;/&nbsp; Amazon Cognito</td></tr>
+      <tr><td>Scheduler / IaC</td><td>EventBridge Scheduler &nbsp;/&nbsp; Terraform</td></tr>
+    </table>
+    <p style="margin-top:0.8em;color:var(--ink-mid)">AIの使い所：<strong>注文時の Delivery Plan 生成</strong> と <strong>先回りサジェスト</strong></p>
+  </div>
+
+  <!-- クロージング -->
+  <div class="slide final">
+    <h1>ゴロゴロPay</h1>
+    <div class="divider"></div>
+    <p>あなたの代わりに、考えます。</p>
+    <p style="margin-top:1.4em">ご清聴ありがとうございました。</p>
+  </div>
+
+</div>
+
+<div id="nav">
+  <span id="counter">1 / 28</span>
+  <button class="nav-btn" id="prevBtn">◀</button>
+  <button class="nav-btn" id="nextBtn">▶</button>
+</div>
+<div id="hint">← → / Space で移動 &nbsp;&nbsp; F で全画面</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  let cur = 0;
+
+  function resetAnim(el) {
+    const targets = el.querySelectorAll(
+      'h1, h2, p, ul, ol, blockquote, table, .divider, .num, .unit, ' +
+      '.sb-num, .sb-label, .sb-title, .sb-sub, .phase-num'
+    );
+    targets.forEach(t => { t.style.animation = 'none'; });
+    void el.offsetWidth;
+    targets.forEach(t => { t.style.animation = ''; });
+  }
+
+  function go(n) {
+    slides[cur].classList.remove('active');
+    cur = (n + slides.length) % slides.length;
+    const el = slides[cur];
+    resetAnim(el);
+    el.classList.add('active');
+    counter.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+
+  resetAnim(slides[0]);
+
+  // スクリーンサイズに合わせてデッキをスケーリング
+  function scaleSlides() {
+    const deck = document.getElementById('deck');
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    deck.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  scaleSlides();
+  window.addEventListener('resize', scaleSlides);
+
+  document.getElementById('nextBtn').onclick = () => go(cur + 1);
+  document.getElementById('prevBtn').onclick = () => go(cur - 1);
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft','ArrowUp'].includes(e.key))   { e.preventDefault(); go(cur - 1); }
+    else if (e.key==='f'||e.key==='F') {
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    }
+  });
+</script>
+</body>
+</html>
