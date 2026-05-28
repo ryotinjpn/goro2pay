@@ -223,11 +223,14 @@ function BalanceHero({
   amount,
   count,
   rate,
+  used,
   dead = false,
 }: {
   amount: string;
   count: number;
   rate: number;
+  /** 消化額 (例: "¥1,200")。指定時のみメトリクス行に追加表示。 */
+  used?: string;
   dead?: boolean;
 }) {
   const isWarn = rate >= 60 && rate < 80;
@@ -306,6 +309,7 @@ function BalanceHero({
       >
         <span>今月 {count} 回</span>
         <span>消化 {rate}%</span>
+        {used !== undefined && <span>消化額 {used}</span>}
       </div>
     </div>
   );
@@ -652,10 +656,10 @@ function InsufficientModalMock() {
   return (
     <ModalMock
       title="足りないか。"
-      sub="もっと欲しけりゃ、線を引き直せ。"
+      sub="もっと欲しけりゃ、予算を増やせ。"
       subStyle="body"
       secondary="閉じろ。"
-      primary="引き直す。"
+      primary="増やす。"
       primaryVariant="cta"
       showBackground="suggest"
     />
@@ -667,7 +671,7 @@ function MainIdleMock() {
     <div style={SCREEN_INNER}>
       <BrandHeader time="19:43" />
       <div style={{ marginTop: 14 }}>
-        <BalanceHero amount="¥28,800" count={5} rate={4} />
+        <BalanceHero amount="¥28,800" count={5} rate={4} used="¥1,200" />
       </div>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <GoroButton state="idle" />
@@ -681,7 +685,7 @@ function MainSuggestMock() {
     <div style={SCREEN_INNER}>
       <BrandHeader time="19:43" />
       <div style={{ marginTop: 14 }}>
-        <BalanceHero amount="¥17,200" count={12} rate={43} />
+        <BalanceHero amount="¥17,200" count={12} rate={43} used="¥12,800" />
       </div>
       <div
         style={{
@@ -847,7 +851,7 @@ function MainDeadMock() {
     <div style={SCREEN_INNER}>
       <BrandHeader time="23:51" />
       <div style={{ marginTop: 14 }}>
-        <BalanceHero amount="¥0" count={47} rate={100} dead />
+        <BalanceHero amount="¥0" count={47} rate={100} used="¥30,000" dead />
       </div>
       <div
         style={{
