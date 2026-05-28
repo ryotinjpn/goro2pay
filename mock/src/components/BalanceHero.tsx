@@ -43,8 +43,9 @@ export default function BalanceHero({
         />
       </div>
       <div className={styles.metrics}>
-        <span>今月 {monthlyCount} 度</span>
+        <span>今月 {monthlyCount} 回</span>
         <span>消化 {ratePct}%</span>
+        <span>消化額 ¥{consumed.toLocaleString()}</span>
       </div>
     </div>
   );

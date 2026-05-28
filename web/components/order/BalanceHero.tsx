@@ -8,6 +8,7 @@ import { COPY } from "@/lib/copy";
 import {
   balanceAtom,
   consumeRateAtom,
+  monthlyBudgetAtom,
   monthlyCountAtom,
   screenStateAtom,
 } from "@/state/main";
@@ -19,8 +20,12 @@ const yenFormat = new Intl.NumberFormat("ja-JP");
 export function BalanceHero() {
   const balance = useAtomValue(balanceAtom);
   const consumeRate = useAtomValue(consumeRateAtom);
+  const monthlyBudget = useAtomValue(monthlyBudgetAtom);
   const monthlyCount = useAtomValue(monthlyCountAtom);
   const screenState = useAtomValue(screenStateAtom);
+
+  // 消化額 = 月間予算 - 現残高 (負値は 0 にクランプ)
+  const amountUsed = Math.max(0, monthlyBudget - balance);
 
   // 三段階表示 (mock 準拠):
   //   - dead   : screenState=dead もしくは balance=0
@@ -59,8 +64,9 @@ export function BalanceHero() {
         />
       </div>
       <div className={styles.metrics}>
-        <span>今月 {monthlyCount} 度</span>
+        <span>今月 {monthlyCount} 回</span>
         <span>消化 {fillPct}%</span>
+        <span>消化額 ¥{yenFormat.format(amountUsed)}</span>
       </div>
     </section>
   );
