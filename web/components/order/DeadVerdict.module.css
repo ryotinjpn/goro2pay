@@ -15,12 +15,12 @@
 }
 
 .verdict {
-  font-family: var(--font-display-serif), serif;
+  font-family: var(--font-serif-ital), serif;
   font-style: italic;
   font-weight: 700;
   font-size: 30px;
   text-align: center;
-  color: var(--color-cream);
+  color: var(--color-ink);
   letter-spacing: -0.02em;
   margin: 36px 0 12px;
   animation: verdict-appear-dv 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both;

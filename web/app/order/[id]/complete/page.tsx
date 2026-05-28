@@ -42,8 +42,8 @@ export default function OrderCompletePage() {
   const amount = lastOrder?.amount ?? 0;
 
   return (
-    <ScreenFrame testid="order-completion-screen">
-      <BrandHeader showLogout />
+    <ScreenFrame testid="order-completion-screen" light>
+      <BrandHeader light showLogout />
       <div className={styles.complete}>
         <div className={styles.glow} aria-hidden="true" />
         <div className={styles.verdict}>{COPY.complete.verdict}</div>

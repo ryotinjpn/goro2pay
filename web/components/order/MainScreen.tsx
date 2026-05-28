@@ -61,12 +61,6 @@ export function MainScreen() {
   // mock 流のグローバル演出層: 注文成功時に GoroButton.onSuccess が
   // winFlashCounterAtom に Date.now() を書き込み、ここで `key={counter}` で
   // remount し win-flash-screen / win-verdict-pop を再走させる。
-  // (handleClick 冒頭で 0 にリセットされるため、slot 突入の瞬間は false)
-  // ガード 2 段:
-  //   - counter > 0     : 初回 mount 時のスタブ表示防止 (PR ① の atom 契約)
-  //   - screenState=slot: navigate 後の Complete 画面に演出が漏れないようにする
-  //                       (mock とは別判断: mock は flash を slot ガードしないが、
-  //                        web は短い slot 滞在中に発火させた方が UX 純度が高い)
   const showWinEffects = winFlashCounter > 0 && screenState === "slot";
 
   return (
@@ -88,8 +82,8 @@ export function MainScreen() {
           {COPY.main.winVerdict}
         </div>
       )}
-      <ScreenFrame screenState={screenState} testid="main-screen">
-        <BrandHeader showLogout />
+      <ScreenFrame light screenState={screenState} testid="main-screen">
+        <BrandHeader light showLogout />
         <BalanceHero />
         <MetricsPanel />
         <div className={styles.body}>

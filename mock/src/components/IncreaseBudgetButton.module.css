@@ -17,17 +17,17 @@
 }
 
 .btn {
-  background: var(--color-danger);
-  color: #ffffff;
-  font-family: var(--font-body-mincho);
+  background: var(--grad-cta);
+  color: #fff;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.06em;
-  padding: 14px 22px;
-  border-radius: 12px;
+  padding: 16px 22px;
+  border-radius: var(--radius-pill);
   width: 86%;
   max-width: 360px;
-  box-shadow: 0 0 24px rgba(255, 79, 79, 0.55), 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 18px 40px -14px rgba(255, 94, 143, 0.6);
   transition: transform 120ms ease-out;
 }
 

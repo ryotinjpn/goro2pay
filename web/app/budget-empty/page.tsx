@@ -18,8 +18,8 @@ export default function BudgetEmptyPage() {
   const [isRaiseModalOpen, setIsRaiseModalOpen] = useState(true);
 
   return (
-    <ScreenFrame testid="budget-empty-screen">
-      <BrandHeader showLogout />
+    <ScreenFrame testid="budget-empty-screen" light>
+      <BrandHeader light showLogout />
       <div className={styles.body}>
         <div className={styles.glow} aria-hidden="true" />
         <div className={styles.verdict}>{COPY.budgetEmpty.verdict}</div>

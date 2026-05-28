@@ -1,35 +1,51 @@
+/* Light Aurora 404 画面 (mock screens/NotFoundMock.module.css 移植)。 */
 .main {
+  position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
   text-align: center;
-  background:
-    radial-gradient(
-      ellipse at top,
-      var(--color-bg-warm) 0%,
-      var(--color-bg-mid) 60%,
-      var(--color-bg-deep) 100%
-    );
-  color: var(--color-cream);
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  overflow: hidden;
+}
+
+.main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 66vh;
+  background: var(--grad-aurora-soft);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main > * {
+  position: relative;
+  z-index: 1;
 }
 
 .h1 {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
   font-size: 28px;
-  color: var(--color-cream);
+  color: var(--color-ink);
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .body {
-  font-family: var(--font-body-mincho), serif;
-  font-size: 11px;
-  color: var(--color-gold-500);
-  letter-spacing: 0.04em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0;
   margin-top: 14px;
   line-height: 1.7;
   max-width: 320px;
@@ -38,14 +54,16 @@
 .link {
   display: inline-block;
   margin-top: 24px;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  color: var(--color-gold-500);
-  letter-spacing: 0.18em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-ink);
+  letter-spacing: 0.06em;
   text-decoration: underline;
   text-underline-offset: 4px;
+  text-decoration-color: var(--color-accent-orange);
 }
 
 .link:hover {
-  color: var(--color-gold-100);
+  color: var(--color-accent-coral);
 }

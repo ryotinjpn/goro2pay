@@ -9,10 +9,10 @@ body,
 #root {
   margin: 0;
   padding: 0;
-  height: 100%;
-  background: var(--color-bg-deep);
-  color: var(--color-cream);
-  font-family: var(--font-body-sans);
+  min-height: 100%;
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

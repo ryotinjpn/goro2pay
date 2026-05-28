@@ -1,33 +1,75 @@
 :root {
+  /* =========================================================
+     Light theme (Enblox-inspired tone & type)
+     ライト基調 + 暖色オーロラ + 極太サンセリフ × セリフ/明朝イタリック
+     ========================================================= */
+
+  /* --- surfaces --- */
+  --color-bg-base: #ffffff;
+  --color-bg-soft: #faf7f2;
+  --color-bg-tint: #f3ede4;
+
+  /* --- ink (text) --- */
+  --color-ink: #0a0a0a;
+  --color-ink-mid: #3a3a40;
+  --color-ink-soft: #74747c;
+  --color-line: rgba(10, 10, 10, 0.12);
+  --color-line-strong: #131316;
+
+  /* --- warm aurora accents --- */
+  --color-accent-pink: #ff5e8f;
+  --color-accent-coral: #ff7a4d;
+  --color-accent-orange: #ff9d2f;
+  --color-accent-violet: #9b5cff;
+  --color-accent-gold: #f0b429;
+
+  /* state colors — light 背景でも視認できる警告/危険色 */
+  --color-state-warn: #e8870f;
+  --color-state-danger: #e8344e;
+
+  --grad-aurora: linear-gradient(100deg, #ff8fb1 0%, #ffb38a 32%, #ffd27a 56%, #c79bff 100%);
+  --grad-aurora-soft: radial-gradient(
+    120% 78% at 50% -8%,
+    #ffe2d0 0%,
+    #ffd4e4 26%,
+    #efe6ff 52%,
+    #ffffff 78%
+  );
+  --grad-cta: linear-gradient(125deg, #ff5e8f 0%, #ff7a4d 52%, #ff9d2f 100%);
+
+  /* --- typography --- */
+  --font-display: 'Zen Kaku Gothic New', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif-ital: 'Cormorant Garamond', 'Zen Old Mincho', Georgia, serif;
+  --font-body: 'Inter', 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* --- shape & motion --- */
+  --radius-pill: 999px;
+  --radius-card: 22px;
+  --pad-screen: 22px 22px 40px;
+  --easing-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 200ms;
+
+  /* =========================================================
+     Legacy dark tokens — 他画面 (main/login/各モーダル等) が
+     まだ参照中のため暫定保持。ランディング展開後に整理する。
+     ========================================================= */
   --color-bg-deep: #050402;
   --color-bg-mid: #0e0a06;
   --color-bg-warm: #1a1208;
-
   --color-gold-100: #f4d990;
   --color-gold-500: #c9a96b;
   --color-gold-700: #8a6f3a;
   --color-gold-900: #3a2a14;
-
   --color-cream: #f4ecd8;
   --color-paper: #ffe7c2;
   --color-mute: #8a7a5a;
-
   --color-warn: #ffb14a;
   --color-danger: #ff4f4f;
   --color-dead-gray: #6a6a6a;
-
-  /* aliases (web/app/globals.css 互換) */
   --color-accent-warn: #ffb14a;
   --color-accent-danger: #ff4f4f;
-
   --font-display-serif: 'Cormorant Garamond', 'Times New Roman', serif;
   --font-body-mincho: 'Zen Old Mincho', 'Yu Mincho', serif;
   --font-mono-pixel: 'DotGothic16', 'Courier New', monospace;
   --font-body-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-
-  --radius-card: 18px;
-  --pad-screen: 28px 22px 24px;
-
-  --easing-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --duration-fast: 200ms;
 }

@@ -22,30 +22,42 @@ export function LandingScreen() {
   };
 
   return (
-    <ScreenFrame testid="landing-screen">
-      <BrandHeader />
+    <ScreenFrame testid="landing-screen" light>
+      <BrandHeader light />
+
       <div className={styles.hero}>
-        <div className={styles.h1}>
-          <div>{COPY.landing.heroLine1}</div>
-          <div>{COPY.landing.heroLine2}</div>
-        </div>
-        <div className={styles.sub}>{COPY.landing.sub}</div>
-        <div className={styles.demoLabel}>
-          {COPY.landing.demoBalanceLabel}{" "}
-          <b>¥{demoBalance.toLocaleString("ja-JP")}</b>
-        </div>
+        <p className={styles.eyebrow}>{COPY.landing.sub}</p>
+        <h1 className={styles.h1}>{COPY.landing.heroLine1}</h1>
+        <h1 className={styles.h1}>{COPY.landing.heroLine2}</h1>
+      </div>
+
+      <div className={styles.demoLabel}>{COPY.landing.demoBalanceLabel}</div>
+      <div className={styles.demoAmount}>
+        ¥{demoBalance.toLocaleString("ja-JP")}
+      </div>
+
+      <div className={styles.demoBtnWrap}>
         <button
           type="button"
-          className={styles.demoButton}
+          className={styles.demoBtn}
+          data-done={demoUsed}
           onClick={handleDemo}
           disabled={demoUsed}
           data-testid="landing-demo-button"
           aria-label={demoUsed ? "体験用デモ完了" : "体験デモを試す"}
         >
-          {demoUsed ? COPY.landing.demoButtonAfter : COPY.landing.demoButtonMain}
+          <span>{demoUsed ? "済" : COPY.landing.demoButtonMain}</span>
+          {demoUsed && (
+            <span className={styles.demoBtnSub}>
+              {COPY.landing.demoButtonAfter}
+            </span>
+          )}
         </button>
       </div>
-      <div className={styles.cta} data-visible={demoUsed}>
+
+      <div className={styles.divider} />
+
+      <div className={styles.ctaWrap} data-hidden={!demoUsed}>
         <Link
           href="/signup"
           role="button"
@@ -53,6 +65,9 @@ export function LandingScreen() {
           className={styles.ctaPrimary}
         >
           {COPY.landing.ctaPrimary}
+          <span className={styles.arrow} aria-hidden>
+            →
+          </span>
         </Link>
         <Link
           href="/login"

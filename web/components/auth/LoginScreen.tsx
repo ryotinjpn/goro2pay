@@ -46,8 +46,8 @@ export function LoginScreen() {
   }
 
   return (
-    <ScreenFrame testid="login-screen">
-      <BrandHeader />
+    <ScreenFrame testid="login-screen" light>
+      <BrandHeader light />
       <h1 className={styles.h1}>{COPY.login.h1}</h1>
       <div className={styles.sub}>{COPY.login.sub}</div>
       {fromSessionExpired && (

@@ -1,21 +1,22 @@
+/* Light Aurora 予算設定画面 (mock screens/BudgetSetupMock.module.css 移植) */
+
 .h1 {
   margin-top: 14px;
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 22px;
-  color: var(--color-cream);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  color: var(--color-ink);
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .sub {
-  font-family: var(--font-body-mincho), serif;
-  font-weight: 700;
-  font-size: 11px;
-  color: var(--color-gold-500);
-  letter-spacing: 0.04em;
-  margin-top: 8px;
+  margin-top: 10px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0;
   line-height: 1.7;
 }
 
@@ -27,9 +28,10 @@
 }
 
 .loading {
-  font-family: var(--font-mono-pixel), monospace;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
   font-size: 11px;
-  color: var(--color-mute);
+  color: var(--color-ink-soft);
   letter-spacing: 0.18em;
   text-align: center;
   padding: 24px 0;

@@ -7,6 +7,11 @@
 //   - 呼び出し側で `showLogout` prop を明示し、さらに useAuth().status を
 //     見て二重ガードする (signedOut Hub の反映タイミング差で showLogout=true
 //     のまま未認証になる短い瞬間でも誤表示しない)
+//
+// テーマ:
+//   - `light` prop で Light Aurora 表現 (白基調 + ink テキスト) に切り替える。
+//     未指定はダーク (legacy)。段階移行中の混在を許容する想定だが、現状の web は
+//     全画面で light を渡している。
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,12 +29,16 @@ function formatTime(d: Date): string {
 }
 
 type Props = {
-  // 認証必須画面 (MainScreen / Complete / Budget) からのみ true で渡す。
-  // Landing / Login / Signup から渡されないと undefined → false で出ない。
+  /** Light Aurora テーマで描画 (移行済み画面のみ true)。未指定は legacy ダーク。 */
+  light?: boolean;
+  /**
+   * 認証必須画面 (MainScreen / Complete / Budget) からのみ true で渡す。
+   * Landing / Login / Signup から渡されないと undefined → false で出ない。
+   */
   showLogout?: boolean;
 };
 
-export function BrandHeader({ showLogout = false }: Props = {}) {
+export function BrandHeader({ light, showLogout = false }: Props = {}) {
   const [time, setTime] = useState<string>(() => formatTime(new Date()));
   const { status } = useAuth();
 
@@ -50,7 +59,7 @@ export function BrandHeader({ showLogout = false }: Props = {}) {
   const renderLogout = showLogout && status === "authenticated";
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-theme={light ? "light" : undefined}>
       <span className={styles.brand}>
         <span className={styles.brandKana}>{left}</span>
         {right && <span className={styles.brandLatin}>{right}</span>}

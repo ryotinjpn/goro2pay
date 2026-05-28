@@ -29,6 +29,35 @@
   --duration-fast: 200ms;
   --duration-mid: 450ms;
   --duration-dead: 600ms;
+
+  /* =========================================================
+     Light Aurora tokens (spec §1.x / mock 移植)
+     ライト基調 + 暖色オーロラ + 極太サンセリフ × セリフ/明朝イタリック。
+     画面単位で移行中のため、上記 legacy dark tokens と併存させる。
+     ========================================================= */
+  --color-bg-base: #ffffff;
+  --color-bg-soft: #faf7f2;
+  --color-bg-tint: #f3ede4;
+  --color-ink: #0a0a0a;
+  --color-ink-mid: #3a3a40;
+  --color-ink-soft: #74747c;
+  --color-line: rgba(10, 10, 10, 0.12);
+  --color-line-strong: #131316;
+  --color-accent-pink: #ff5e8f;
+  --color-accent-coral: #ff7a4d;
+  --color-accent-orange: #ff9d2f;
+  --color-accent-violet: #9b5cff;
+  --color-accent-gold: #f0b429;
+  --color-state-warn: #e8870f;
+  --color-state-danger: #e8344e;
+  --grad-aurora: linear-gradient(100deg, #ff8fb1 0%, #ffb38a 32%, #ffd27a 56%, #c79bff 100%);
+  --grad-aurora-soft: radial-gradient(120% 78% at 50% -8%, #ffe2d0 0%, #ffd4e4 26%, #efe6ff 52%, #ffffff 78%);
+  --grad-cta: linear-gradient(125deg, #ff5e8f 0%, #ff7a4d 52%, #ff9d2f 100%);
+  --radius-pill: 999px;
+  /* 新タイポ (next/font の CSS 変数を束ねる。fallback で legacy も拾う) */
+  --font-display: var(--font-zen-kaku), var(--font-body-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif-ital: var(--font-display-serif), "Zen Old Mincho", Georgia, serif;
+  --font-body: var(--font-body-sans), var(--font-zen-kaku), -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * {

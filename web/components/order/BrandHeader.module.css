@@ -1,5 +1,6 @@
 /* BrandHeader: mock/src/components/BrandHeader.module.css ベースに移植 (PR ⑤)。
-   mock の左右 baseline 揃え + font 18px に揃え、web 独自に右側へ LogoutButton 枠を追加。 */
+   mock の左右 baseline 揃え + font 18px に揃え、web 独自に右側へ LogoutButton 枠を追加。
+   `data-theme="light"` で Light Aurora 表現に切り替わる (現状 web は全箇所で light)。 */
 
 .header {
   display: flex;
@@ -46,8 +47,7 @@
 }
 
 /* LogoutButton 自身は素の <button> なので、className 経由で世界観装飾を直接当てる
-   (子孫セレクタにすると LogoutConfirmModal の primary/secondary も巻き込むため)。
-   gold の細枠 + mono pixel 10px、右上に小さく置くデザイン。 */
+   (子孫セレクタにすると LogoutConfirmModal の primary/secondary も巻き込むため)。 */
 .logoutBtn {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(201, 169, 107, 0.4);
@@ -68,5 +68,58 @@
 
 .logoutBtn:focus-visible {
   outline: 2px solid var(--color-gold-100);
+  outline-offset: 2px;
+}
+
+/* ===== Light Aurora テーマ ===== */
+.header[data-theme="light"] {
+  padding: 6px 0 36px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--color-ink-soft);
+}
+
+.header[data-theme="light"] .brandKana {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.header[data-theme="light"] .brandLatin {
+  font-family: var(--font-serif-ital), serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 19px;
+  color: var(--color-ink);
+  margin-left: 3px;
+}
+
+.header[data-theme="light"] .time {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.22em;
+}
+
+.header[data-theme="light"] .logoutBtn {
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-soft);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+}
+
+.header[data-theme="light"] .logoutBtn:hover {
+  color: var(--color-ink);
+  border-color: var(--color-line-strong);
+}
+
+.header[data-theme="light"] .logoutBtn:focus-visible {
+  outline: 2px solid var(--color-ink-mid);
   outline-offset: 2px;
 }

@@ -47,11 +47,11 @@
 }
 
 .verdict {
-  font-family: var(--font-display-serif), serif;
+  font-family: var(--font-serif-ital), serif;
   font-style: italic;
   font-weight: 700;
   font-size: 36px;
-  color: var(--color-cream);
+  color: var(--color-ink);
   letter-spacing: -0.02em;
   position: relative;
   text-shadow: 0 0 24px rgba(244, 236, 216, 0.2);
@@ -60,9 +60,9 @@
 
 .sub {
   position: relative;
-  font-family: var(--font-mono-pixel), monospace;
+  font-family: var(--font-body), monospace;
   font-size: 11px;
-  color: var(--color-mute);
+  color: var(--color-ink-soft);
   letter-spacing: 0.18em;
   animation: fade-in-be 500ms ease 300ms both;
 }

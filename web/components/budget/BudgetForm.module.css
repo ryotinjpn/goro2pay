@@ -1,7 +1,11 @@
+/* Light Aurora 予算フォーム (mock screens/BudgetSetupMock.module.css 移植) */
+
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  margin-top: 22px;
+  flex: 1;
 }
 
 .quickRow {
@@ -15,14 +19,15 @@
 
 .chip {
   flex: 0 0 auto;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid var(--color-gold-900);
-  color: var(--color-gold-100);
-  font-family: var(--font-body-sans), system-ui, sans-serif;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
   font-size: 13px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   white-space: nowrap;
   transition:
@@ -32,79 +37,93 @@
 }
 
 .chip:hover {
-  border-color: var(--color-gold-500);
+  border-color: var(--color-ink-soft);
 }
 
 .chip:focus-visible {
-  outline: 2px solid var(--color-gold-500);
+  outline: 2px solid var(--color-accent-orange);
   outline-offset: 2px;
 }
 
 .chipSelected {
-  border: 1px solid var(--color-gold-500);
-  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
-  color: var(--color-bg-warm);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-line-strong);
+  color: #fff;
 }
 
 .recommendStar {
-  color: var(--color-accent-warn);
+  color: var(--color-accent-orange);
   margin-right: 2px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .field label {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 9px;
-  color: var(--color-mute);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--color-ink-soft);
   letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--color-gold-900);
-  color: var(--color-cream);
-  padding: 8px 10px;
-  font-size: 14px;
-  border-radius: 4px;
-  font-family: var(--font-body-sans), system-ui, sans-serif;
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  padding: 13px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+  font-family: var(--font-body), sans-serif;
   font-variant-numeric: tabular-nums;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .input:focus {
-  outline: 2px solid var(--color-gold-500);
-  outline-offset: 0;
+  outline: none;
+  border-color: var(--color-accent-orange);
+  box-shadow: 0 0 0 3px rgba(255, 157, 47, 0.15);
 }
 
 .error {
-  color: var(--color-accent-danger);
+  color: var(--color-state-danger);
   font-size: 13px;
-  font-family: var(--font-body-mincho), serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-body), sans-serif;
+  letter-spacing: 0.02em;
 }
 
 .submit {
   display: block;
   width: 100%;
-  background: linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700));
-  color: var(--color-bg-warm);
-  border: 1px solid var(--color-gold-500);
-  border-radius: 4px;
-  padding: 10px 0;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  margin-top: auto;
+  background: var(--grad-cta);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 16px 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-align: center;
   cursor: pointer;
+  box-shadow: 0 16px 36px -14px rgba(255, 94, 143, 0.55);
+  transition: transform 160ms ease;
+}
+
+.submit:active {
+  transform: scale(0.99);
 }
 
 .submit:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }

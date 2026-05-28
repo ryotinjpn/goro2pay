@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   Cormorant_Garamond,
   Zen_Old_Mincho,
+  Zen_Kaku_Gothic_New,
   DotGothic16,
   Inter,
 } from "next/font/google";
@@ -14,7 +15,7 @@ import "./globals.css";
 
 const fontDisplaySerif = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["500", "700"],
+  weight: ["500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
   variable: "--font-display-serif",
@@ -27,6 +28,14 @@ const fontBodyMincho = Zen_Old_Mincho({
   variable: "--font-body-mincho",
 });
 
+// Light Aurora: 極太サンセリフ (見出し・ボタン主ラベル)
+const fontDisplay = Zen_Kaku_Gothic_New({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
+  display: "swap",
+  variable: "--font-zen-kaku",
+});
+
 const fontMonoPixel = DotGothic16({
   subsets: ["latin"],
   weight: ["400"],
@@ -36,7 +45,7 @@ const fontMonoPixel = DotGothic16({
 
 const fontBodySans = Inter({
   subsets: ["latin"],
-  weight: ["600", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-body-sans",
 });
@@ -57,6 +66,7 @@ export default function RootLayout({
       className={[
         fontDisplaySerif.variable,
         fontBodyMincho.variable,
+        fontDisplay.variable,
         fontMonoPixel.variable,
         fontBodySans.variable,
       ].join(" ")}

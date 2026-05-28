@@ -1,6 +1,6 @@
 /* IncreaseBudgetButton: mock/src/components/IncreaseBudgetButton.module.css ベースに移植 (PR ⑦)。
    旧来の position: absolute / bottom: 28px の画面下端固定配置 + saturate filter のけばけばしさを廃止し、
-   mock 流のフロー内挿入 (DeadVerdict の直下に自然に並ぶ) + 単色 var(--color-danger) + 金色グロー
+   mock 流のフロー内挿入 (DeadVerdict の直下に自然に並ぶ) + 単色 var(--color-state-danger) + 金色グロー
    ではなく赤グロー shadow に統一。 */
 
 @keyframes increase-rise-ib {
@@ -24,9 +24,9 @@
 }
 
 .button {
-  background: var(--color-danger);
+  background: var(--color-state-danger);
   color: #ffffff;
-  font-family: var(--font-body-mincho), serif;
+  font-family: var(--font-display), serif;
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.06em;
@@ -51,6 +51,6 @@
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--color-paper);
+  outline: 2px solid var(--color-ink-mid);
   outline-offset: 3px;
 }

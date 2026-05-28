@@ -1,8 +1,10 @@
+/* Light Aurora 残高表示 (LC-BUDGET-09)。mock のトンマナに合わせた light 化。 */
+
 .skeleton {
   padding: 20px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-gold-900);
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 18px;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg-soft);
   min-height: 120px;
   animation: balance-skeleton-pulse 1.4s ease-in-out infinite;
 }
@@ -10,18 +12,18 @@
 .skeletonBar {
   height: 14px;
   width: 96px;
-  background: var(--color-gold-900);
+  background: var(--color-bg-tint);
   border-radius: 4px;
   margin-bottom: 14px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .skeletonBarLg {
   height: 36px;
   width: 160px;
-  background: var(--color-gold-900);
+  background: var(--color-bg-tint);
   border-radius: 6px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 @keyframes balance-skeleton-pulse {
@@ -36,11 +38,11 @@
 
 .errorCard {
   padding: 16px;
-  border-radius: var(--radius-card);
-  background: rgba(255, 79, 79, 0.12);
-  border: 1px solid var(--color-accent-danger);
-  color: var(--color-cream);
-  font-family: var(--font-body-mincho), serif;
+  border-radius: 18px;
+  background: rgba(232, 52, 78, 0.08);
+  border: 1px solid var(--color-state-danger);
+  color: var(--color-ink);
+  font-family: var(--font-body), sans-serif;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -49,24 +51,24 @@
 }
 
 .retry {
-  background: linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700));
-  color: var(--color-bg-warm);
-  border: 1px solid var(--color-gold-500);
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
+  background: var(--color-line-strong);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
   cursor: pointer;
 }
 
 .card {
-  padding: 20px;
+  padding: 22px 20px;
   text-align: center;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-gold-900);
-  background: rgba(255, 255, 255, 0.02);
-  box-shadow: 0 0 18px rgba(201, 169, 107, 0.12);
+  border-radius: 18px;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg-soft);
   transition: opacity 0.2s ease;
 }
 
@@ -75,42 +77,43 @@
 }
 
 .label {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 9px;
-  color: var(--color-mute);
-  letter-spacing: 0.35em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.2em;
   margin-bottom: 8px;
   text-transform: uppercase;
 }
 
 .amount {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 40px;
-  color: var(--color-cream);
-  text-shadow: 0 0 22px rgba(244, 236, 216, 0.18);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
+  font-size: 42px;
+  color: var(--color-ink);
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
 
 .amountWarning {
-  color: var(--color-accent-danger);
-  text-shadow: 0 0 22px rgba(255, 79, 79, 0.4);
+  color: var(--color-state-danger);
 }
 
 .meta {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 9px;
-  color: var(--color-mute);
-  letter-spacing: 0.18em;
-  margin-top: 10px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.04em;
+  margin-top: 12px;
 }
 
 .metaCountdown {
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 9px;
-  color: var(--color-mute);
-  letter-spacing: 0.18em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.04em;
   margin-top: 4px;
 }

@@ -30,18 +30,18 @@
 }
 
 .label {
-  font-family: var(--font-mono-pixel), monospace;
+  font-family: var(--font-body), monospace;
   font-size: 10px;
   letter-spacing: 0.3em;
-  color: var(--color-mute);
+  color: var(--color-ink-soft);
 }
 
 .amount {
-  font-family: var(--font-display-serif), serif;
+  font-family: var(--font-serif-ital), serif;
   font-style: italic;
   font-weight: 700;
   font-size: 64px;
-  color: var(--color-cream);
+  color: var(--color-ink);
   line-height: 1;
   margin: 4px 0 12px;
   text-shadow: 0 0 24px rgba(244, 236, 216, 0.18);
@@ -50,16 +50,16 @@
 }
 
 .amount[data-warn="true"] {
-  color: var(--color-warn);
+  color: var(--color-state-warn);
 }
 
 .amount[data-danger="true"] {
-  color: var(--color-danger);
+  color: var(--color-state-danger);
   text-shadow: 0 0 24px rgba(255, 79, 79, 0.4);
 }
 
 .amount[data-dead="true"] {
-  color: var(--color-dead-gray);
+  color: var(--color-ink-soft);
   text-shadow: none;
 }
 
@@ -69,11 +69,11 @@
   font-style: normal;
   font-size: 0.6em;
   margin-right: 4px;
-  color: var(--color-gold-500);
+  color: var(--color-accent-orange);
 }
 
 .amount[data-dead="true"] .yen {
-  color: var(--color-dead-gray);
+  color: var(--color-ink-soft);
 }
 
 .meter {
@@ -86,16 +86,16 @@
 
 .meterFill {
   height: 100%;
-  background: var(--color-gold-500);
+  background: var(--color-accent-orange);
   transition: width 400ms ease, background 400ms ease;
 }
 
 .meterFill[data-warn="true"] {
-  background: var(--color-warn);
+  background: var(--color-state-warn);
 }
 
 .meterFill[data-danger="true"] {
-  background: var(--color-danger);
+  background: var(--color-state-danger);
   animation: glow-pulse-bh 1.6s ease-in-out infinite;
 }
 
@@ -103,8 +103,8 @@
   display: flex;
   justify-content: center;
   gap: 18px;
-  font-family: var(--font-mono-pixel), monospace;
+  font-family: var(--font-body), monospace;
   font-size: 10px;
-  color: var(--color-gold-500);
+  color: var(--color-accent-orange);
   letter-spacing: 0.18em;
 }

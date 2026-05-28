@@ -1,14 +1,19 @@
+/* Light Aurora トースト (エラー通知)。
+   世界観コピーは入れず中立保持・見た目だけライトに整える。
+   配置・最大件数は ToastHost 側で維持。 */
 .toast {
-  background: rgba(26, 18, 8, 0.92);
-  color: var(--color-cream);
-  padding: 10px 16px;
-  border-radius: 6px;
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
   margin-top: 8px;
-  border: 1px solid rgba(201, 169, 107, 0.3);
-  box-shadow: 0 4px 14px rgba(201, 169, 107, 0.15);
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-state-danger);
+  box-shadow: 0 8px 24px -10px rgba(10, 10, 10, 0.25);
   max-width: 360px;
-  font-family: var(--font-mono-pixel), monospace;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
   font-size: 13px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   line-height: 1.4;
 }

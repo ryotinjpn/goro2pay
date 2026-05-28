@@ -1,35 +1,52 @@
+/* Light Aurora エラー画面 (mock screens/ErrorMock.module.css 移植)。
+   web では error.tsx 単独 main で全画面を占めるため、上部に暖色オーロラを敷く。 */
 .main {
+  position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
   text-align: center;
-  background:
-    radial-gradient(
-      ellipse at top,
-      var(--color-bg-warm) 0%,
-      var(--color-bg-mid) 60%,
-      var(--color-bg-deep) 100%
-    );
-  color: var(--color-cream);
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  overflow: hidden;
+}
+
+.main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 66vh;
+  background: var(--grad-aurora-soft);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main > * {
+  position: relative;
+  z-index: 1;
 }
 
 .h1 {
-  font-family: var(--font-display-serif), serif;
-  font-style: italic;
-  font-weight: 700;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 900;
   font-size: 28px;
-  color: var(--color-cream);
+  color: var(--color-ink);
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .body {
-  font-family: var(--font-body-mincho), serif;
-  font-size: 11px;
-  color: var(--color-gold-500);
-  letter-spacing: 0.04em;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  letter-spacing: 0;
   margin-top: 14px;
   line-height: 1.7;
   max-width: 320px;
@@ -38,14 +55,19 @@
 .button {
   margin-top: 24px;
   display: inline-block;
-  background: linear-gradient(180deg, var(--color-gold-100), var(--color-gold-700));
-  color: var(--color-bg-warm);
-  border: 1px solid var(--color-gold-500);
-  border-radius: 4px;
-  padding: 10px 28px;
-  font-family: var(--font-mono-pixel), monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  background: var(--color-line-strong);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 14px 32px;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   cursor: pointer;
+  transition: transform 160ms var(--easing-spring);
+}
+
+.button:active {
+  transform: scale(0.98);
 }
