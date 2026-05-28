@@ -7,6 +7,7 @@ import GoroButton, { GoroButtonState } from '../components/GoroButton';
 import SlotReel from '../components/SlotReel';
 import DeadVerdict from '../components/DeadVerdict';
 import IncreaseBudgetButton from '../components/IncreaseBudgetButton';
+import MetricsPanel from '../components/MetricsPanel';
 import { COPY } from '../lib/copy';
 import { OrderResult, placeOrder, suggestNext } from '../lib/fakeApi';
 import { playWinChime, setSoundEnabled } from '../lib/sound';
@@ -173,6 +174,12 @@ export default function MainMock() {
           initialBudget={INITIAL_BUDGET}
           monthlyCount={monthlyCount}
           dead={dead}
+        />
+
+        <MetricsPanel
+          damageCount={monthlyCount}
+          consumptionRate={(INITIAL_BUDGET - balance) / INITIAL_BUDGET}
+          amountUsed={INITIAL_BUDGET - balance}
         />
 
         <GoroButton
