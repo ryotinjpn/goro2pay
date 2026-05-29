@@ -10,7 +10,7 @@
     --ink:      #111111;
     --ink-mid:  #555555;
     --ink-mute: #999999;
-    --gold:     #c9a030;
+    --gold:     #ff7a4d;
     --dark:     #111111;
     --dark-mid: #1a1a1a;
   }
@@ -81,16 +81,16 @@
   .slide.final.active > p       { animation: fadeIn 0.4s 0.45s    ease both; }
 
   /* それが、ゴロゴロPay */
-  .sorega-text { font-size:72px; font-weight:900; color:var(--ink); letter-spacing:-0.02em; line-height:1.2; }
-  .sorega-name { color:var(--gold); }
+  .sorega-text { font-size:77px; font-weight:900; color:var(--ink); letter-spacing:-0.02em; line-height:1.2; }
+  .sorega-name { background:linear-gradient(100deg,#ff8fb1,#ffb38a,#ffd27a,#c79bff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .slide.sorega-slide.active .sorega-text { animation: flipX 0.7s cubic-bezier(0.23,1,0.32,1) both; }
 
   /* MVP expand */
-  .mvp-label  { font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:#b29670; margin-bottom:20px; }
-  .mvp-current { font-size:88px; font-weight:900; color:#f4d990; letter-spacing:-0.02em; line-height:1; margin-bottom:24px; }
+  .mvp-label  { font-size:18px; letter-spacing:0.2em; text-transform:uppercase; color:#d08f6e; margin-bottom:20px; }
+  .mvp-current { font-size:93px; font-weight:900; color:#ff9d6b; letter-spacing:-0.02em; line-height:1; margin-bottom:24px; }
   .mvp-divider { width:48px; height:2px; background:var(--gold); margin:0 auto 28px; }
-  .mvp-future { font-size:22px; color:#a89070; line-height:1.85; }
-  .mvp-accent { color:#f4ecd8; font-weight:700; }
+  .mvp-future { font-size:27px; color:#d0a088; line-height:1.85; }
+  .mvp-accent { color:#fcefe5; font-weight:700; }
   .slide.mvp-expand.active { animation: flipIn 0.6s cubic-bezier(0.23,1,0.32,1) both; transition: none; }
   .slide.mvp-expand.active .mvp-label   { animation: fadeIn 0.3s 0.4s ease both; }
   .slide.mvp-expand.active .mvp-current { animation: popIn  0.5s 0.5s ease both; }
@@ -98,11 +98,11 @@
   .slide.mvp-expand.active .mvp-future  { animation: fadeUp 0.5s 0.85s ease both; }
 
   /* product reveal (slide 9) */
-  .pr-label   { font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:#b29670; margin-bottom:16px; }
-  .pr-title   { font-size:36px; font-weight:700; color:#c9b08a; letter-spacing:0.02em; line-height:1; margin-bottom:32px; }
+  .pr-label   { font-size:23px; letter-spacing:0.22em; text-transform:uppercase; color:#d08f6e; margin-bottom:16px; }
+  .pr-title   { font-size:46px; font-weight:700; color:#d9a78f; letter-spacing:0.02em; line-height:1; margin-bottom:32px; }
   .pr-divider { width:64px; height:2px; background:var(--gold); margin:0 auto 32px; }
-  .pr-tagline { font-size:44px; font-weight:900; color:#f4ecd8; line-height:1.55; letter-spacing:-0.01em; }
-  .pr-accent  { color:#f4d990; }
+  .pr-tagline { font-size:54px; font-weight:900; color:#fcefe5; line-height:1.55; letter-spacing:-0.01em; }
+  .pr-accent  { color:#ff9d6b; }
   .slide.product-reveal.active .pr-label   { animation: fadeIn  0.4s           ease both; }
   .slide.product-reveal.active .pr-title   { animation: popIn   0.6s 0.15s     ease both; }
   .slide.product-reveal.active .pr-divider { animation: growW   0.5s 0.5s      ease both; }
@@ -113,13 +113,13 @@
   .mf-label {
     position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
     background: var(--white); padding: 0 20px;
-    font-size: 20px; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
+    font-size: 30px; font-weight: 900; letter-spacing: 0.06em; color: var(--gold);
     white-space: nowrap;
   }
   .mf-sub   { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
-  .mf-bad   { font-size: 22px; font-weight: 700; color: var(--ink-mid); }
-  .mf-arrow { font-size: 28px; color: var(--gold); line-height: 1; }
-  .mf-good  { font-size: 38px; font-weight: 900; color: var(--ink); line-height: 1.35; letter-spacing: -0.01em; }
+  .mf-bad   { font-size: 32px; font-weight: 700; color: var(--ink-mid); }
+  .mf-arrow { font-size: 38px; color: var(--gold); line-height: 1; }
+  .mf-good  { font-size: 48px; font-weight: 900; color: var(--ink); line-height: 1.35; letter-spacing: -0.01em; }
   .slide.manifesto-slide.active .mf-card    { animation: popIn   0.5s           ease both; }
   .slide.manifesto-slide.active .mf-label   { animation: fadeIn  0.4s 0.3s      ease both; }
   .slide.manifesto-slide.active .mf-bad     { animation: fadeIn  0.4s 0.5s      ease both; }
@@ -132,71 +132,73 @@
   .slide.contrast-slide.active .panel-right    { animation: slideR  0.5s 0.2s   ease both; }
 
   /* ── base type（px固定） ── */
-  h1 { font-size: 52px; font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; }
-  h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
-  p  { font-size: 22px; line-height: 1.85; color: var(--ink); margin-bottom: 10px; }
-  ul, ol { padding-left: 28px; font-size: 22px; line-height: 2.1; }
+  h1 { font-size: 57px; font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; }
+  h2 { font-size: 30px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  p  { font-size: 40px; line-height: 1.85; color: var(--ink); margin-bottom: 10px; }
+  ul, ol { padding-left: 28px; font-size: 40px; line-height: 2.1; }
   li { color: var(--ink); }
   li::marker { color: var(--gold); }
   strong { color: var(--ink); font-weight: 900; }
   .divider { width: 48px; height: 3px; background: var(--gold); margin-bottom: 22px; }
+  .fragment { border: 1px solid #ddd; transition: border-color 0.4s ease; }
+  .fragment.revealed { border-color: #ff7a4d; }
 
   blockquote {
     border-left: 4px solid var(--gold); padding: 12px 22px;
-    background: #f4f0e8; color: var(--ink-mid); font-size: 20px;
+    background: #fdefe7; color: var(--ink-mid); font-size: 25px;
     line-height: 1.9; margin: 14px 0; border-radius: 0 4px 4px 0;
   }
 
-  table { border-collapse: collapse; width: 100%; font-size: 19px; margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 24px; margin-top: 10px; }
   th { background: var(--gold); color: var(--ink); padding: 12px 20px; border: 1px solid var(--gold); font-weight: 700; text-align: left; letter-spacing: 0.04em; }
   td { padding: 12px 20px; border: 1px solid #ddd; color: var(--ink); background: var(--white); }
-  tr:nth-child(even) td { background: #f4f0e8; }
+  tr:nth-child(even) td { background: #fdefe7; }
 
-  code { background: #eeece8; color: var(--ink); padding: 3px 10px; border-radius: 4px; font-size: 17px; font-family: 'Menlo','Courier New',monospace; }
+  code { background: #eeece8; color: var(--ink); padding: 3px 10px; border-radius: 4px; font-size: 22px; font-family: 'Menlo','Courier New',monospace; }
 
   /* ── TITLE (lead) ── */
   .slide.lead { background: var(--dark); border-left: 8px solid var(--gold); justify-content: flex-end; padding-bottom: 72px; }
-  .slide.lead h1 { font-size: 76px; color: #f4d990; margin-bottom: 8px; }
-  .slide.lead p  { font-size: 18px; color: #c9b08a; }
+  .slide.lead h1 { font-size: 81px; background:linear-gradient(100deg,#ff8fb1,#ffb38a,#ffd27a,#c79bff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom: 8px; }
+  .slide.lead p  { font-size: 23px; color: #d9a78f; }
   .slide.lead h2 { color: var(--gold); }
   .slide.title-slide { justify-content: center; align-items: center; text-align: center; padding-bottom: 64px; }
-  .slide.title-slide h2 { margin-bottom: 16px; }
-  .slide.title-slide h1 { font-size: 88px; margin-bottom: 12px; }
-  .slide.title-slide p  { font-size: 20px; color: #c9b08a; }
+  .slide.title-slide h2 { font-size: 23px; margin-bottom: 16px; }
+  .slide.title-slide h1 { font-size: 98px; margin-bottom: 12px; }
+  .slide.title-slide p  { font-size: 30px; color: #d9a78f; }
 
   /* ── SECTION BREAK ── */
   .slide.section-break { background: var(--dark-mid); padding: 0; flex-direction: row; justify-content: flex-start; align-items: stretch; }
-  .sb-num { width: 240px; min-width: 240px; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 100px; font-weight: 900; color: #111; letter-spacing: -0.04em; line-height: 1; flex-shrink: 0; }
+  .sb-num { width: 240px; min-width: 240px; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 105px; font-weight: 900; color: #111; letter-spacing: -0.04em; line-height: 1; flex-shrink: 0; }
   .sb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 64px 72px; }
-  .sb-label { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: #b29670; margin-bottom: 12px; }
-  .sb-title { font-size: 42px; font-weight: 900; color: #f4ecd8; line-height: 1.25; letter-spacing: -0.01em; }
-  .sb-sub   { margin-top: 14px; font-size: 18px; color: #c9b08a; line-height: 1.7; }
+  .sb-label { font-size: 23px; letter-spacing: 0.2em; text-transform: uppercase; color: #d08f6e; margin-bottom: 12px; }
+  .sb-title { font-size: 52px; font-weight: 900; color: #fcefe5; line-height: 1.25; letter-spacing: -0.01em; }
+  .sb-sub   { margin-top: 14px; font-size: 28px; color: #d9a78f; line-height: 1.7; }
 
   /* ── IMPACT (dark) ── */
   .slide.impact { background: var(--dark-mid); justify-content: flex-end; padding-bottom: 72px; }
-  .slide.impact h2 { color: #b29670; }
-  .slide.impact h1 { font-size: 58px; color: var(--white); line-height: 1.3; }
+  .slide.impact h2 { color: #d08f6e; }
+  .slide.impact h1 { font-size: 63px; color: var(--white); line-height: 1.3; }
   .slide.impact .divider { background: var(--gold); }
 
   /* ── STAT ── */
   .slide.stat { align-items: center; text-align: center; }
-  .slide.stat .num { font-size: 160px; font-weight: 900; color: var(--ink); line-height: 0.9; letter-spacing: -0.04em; }
-  .slide.stat .unit { font-size: clamp(1em, 2vw, 1.4em); color: var(--ink-mid); margin-top: 0.5em; letter-spacing: 0.06em; }
+  .slide.stat .num { font-size: 165px; font-weight: 900; color: var(--ink); line-height: 0.9; letter-spacing: -0.04em; }
+  .slide.stat .unit { font-size: 27px; color: var(--ink-mid); margin-top: 0.5em; letter-spacing: 0.06em; }
   .slide.stat .divider { margin: 1em auto; }
 
   /* ── PHASE (light) ── */
   .slide.phase { background: var(--white); color: var(--ink); padding: 64px 80px; }
-  .slide.phase .phase-num { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
-  .slide.phase h1 { font-size: 44px; color: var(--ink); margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 16px; }
-  .slide.phase blockquote { border-left: 3px solid var(--gold); background: #f4f0e8; color: var(--ink-mid); font-size: 20px; }
-  .slide.phase p { color: var(--ink); font-size: 20px; }
+  .slide.phase .phase-num { font-size: 23px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .slide.phase h1 { font-size: 49px; color: var(--ink); margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 16px; }
+  .slide.phase blockquote { border-left: 3px solid var(--gold); background: #fdefe7; color: var(--ink-mid); font-size: 30px; }
+  .slide.phase p { color: var(--ink); font-size: 30px; }
   .slide.phase strong { color: var(--ink); }
 
   /* ── FINAL ── */
   .slide.final { background: var(--dark); align-items: center; justify-content: center; text-align: center; }
-  .slide.final h1 { font-size: 68px; color: #f4d990; margin-bottom: 8px; }
+  .slide.final h1 { font-size: 78px; background:linear-gradient(100deg,#ff8fb1,#ffb38a,#ffd27a,#c79bff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom: 8px; }
   .slide.final .divider { margin: 12px auto 20px; }
-  .slide.final p { font-size: 18px; color: #c9b08a; }
+  .slide.final p { font-size: 28px; color: #d9a78f; }
 
   /* ── VIDEO ── */
   .slide.video-slide { background: #000; align-items: center; justify-content: center; }
@@ -206,7 +208,7 @@
   #nav { position: fixed; bottom: 20px; right: 24px; display: flex; align-items: center; gap: 10px; z-index: 100; }
   #counter { color: #555; font-size: 12px; font-family: 'Menlo',monospace; min-width: 44px; text-align: right; }
   .nav-btn { background: #1a1a1a; border: 1px solid #444; color: #aaa; padding: 6px 14px; border-radius: 3px; cursor: pointer; font-size: 13px; }
-  .nav-btn:hover { border-color: var(--gold); color: #f4d990; }
+  .nav-btn:hover { border-color: var(--gold); color: #ff9d6b; }
   #hint { position: fixed; bottom: 20px; left: 24px; color: #333; font-size: 11px; }
 </style>
 </head>
@@ -235,27 +237,27 @@
     <h2>意思決定疲れ</h2>
     <div class="divider"></div>
     <p>会議で判断を下し続け、仕様を決め続け、優先順位をつけ続ける。</p>
-    <p style="margin-top:0.6em"><strong>帰宅後、夕食を「何にするか」——</strong><br>決める気力が、もう残っていない。</p>
+    <p style="margin-top:0.6em"><strong>帰宅後、夕食を「何にするか」</strong><br>決める気力は、もう残っていない。</p>
   </div>
 
   <div class="slide">
     <h2>デリバリーアプリは便利。でも——</h2>
     <div class="divider"></div>
     <p>何を頼むか。どこに頼むか。いくらまで出すか。</p>
-    <p>それを決めているのは、<strong>まだユーザー自身です。</strong></p>
+    <p>それを決めているのは、<strong>まだユーザー自身。</strong></p>
     <p style="margin-top:0.8em;color:var(--ink-mid)">既存サービスは「実行」を効率化する。<br>しかし「意思決定そのもの」は、まだユーザーの役割。</p>
   </div>
 
   <div class="slide impact contrast-slide" style="justify-content:center;align-items:center;text-align:center;padding:64px 80px;">
-    <h2 class="contrast-label" style="color:#f4d990;font-size:18px;letter-spacing:0.2em;margin-bottom:32px;">意思決定は</h2>
+    <h2 class="contrast-label" style="color:#ff9d6b;font-size:28px;letter-spacing:0.2em;margin-bottom:32px;">意思決定は</h2>
     <div style="display:flex;width:100%;gap:0;align-items:stretch;border:1px solid #333;border-radius:4px;overflow:hidden;">
       <div class="panel-left" style="flex:1;padding:48px 40px;background:#1e1e1e;text-align:center;border-right:1px solid #333;">
-        <div style="font-size:13px;letter-spacing:0.16em;color:#c9a030;margin-bottom:16px;text-transform:uppercase;">Grow</div>
-        <div style="font-size:44px;font-weight:900;color:#f4ecd8;line-height:1.2;">人を育てる。</div>
+        <div style="font-size:23px;letter-spacing:0.16em;color:#ff7a4d;margin-bottom:16px;text-transform:uppercase;">Grow</div>
+        <div style="font-size:54px;font-weight:900;color:#fcefe5;line-height:1.2;">人を育てる。</div>
       </div>
       <div class="panel-right" style="flex:1;padding:48px 40px;background:#1a0a0a;text-align:center;">
-        <div style="font-size:13px;letter-spacing:0.16em;color:#c0392b;margin-bottom:16px;text-transform:uppercase;">Drain</div>
-        <div style="font-size:44px;font-weight:900;color:#ff6b6b;line-height:1.2;">そして、削る。</div>
+        <div style="font-size:23px;letter-spacing:0.16em;color:#c0392b;margin-bottom:16px;text-transform:uppercase;">Drain</div>
+        <div style="font-size:54px;font-weight:900;color:#ff6b6b;line-height:1.2;">そして、削る。</div>
       </div>
     </div>
   </div>
@@ -297,26 +299,26 @@
     <h2 style="text-transform:none">ゴロゴロPay — 4つのポイント</h2>
     <img src="./assets/iphone-main.webp" alt="ゴロゴロPay メイン画面" style="position:absolute;right:56px;top:50%;transform:translateY(-50%);height:500px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
     <div class="divider"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:62%;">
-      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--white);">
-        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">01</div>
-        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">初期設定が簡単</div>
-        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">アプリ特有の設定は<br><strong style="color:var(--ink)">「毎月の予算」を決めるだけ</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:72%;">
+      <div class="fragment" style="border-radius:6px;padding:20px 22px;background:var(--white);">
+        <div style="font-size:22px;color:var(--gold);font-weight:700;margin-bottom:8px;">01</div>
+        <div style="font-size:28px;font-weight:900;margin-bottom:6px;">初期設定が簡単</div>
+        <div style="font-size:25px;color:var(--ink-mid);line-height:1.6;">アプリ特有の設定は<br><strong style="color:var(--ink)">「毎月の予算」を決めるだけ</strong></div>
       </div>
-      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--off-white);">
-        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">02</div>
-        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">ボタンを1回押すだけ</div>
-        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">AIが自動でデリバリー先・メニューを決定し、注文を確定</div>
+      <div class="fragment" style="border-radius:6px;padding:20px 22px;background:var(--off-white);">
+        <div style="font-size:22px;color:var(--gold);font-weight:700;margin-bottom:8px;">02</div>
+        <div style="font-size:28px;font-weight:900;margin-bottom:6px;">ボタンを1回押すだけ</div>
+        <div style="font-size:25px;color:var(--ink-mid);line-height:1.6;">AIが自動でデリバリー先・メニューを決定し、注文を確定</div>
       </div>
-      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--off-white);">
-        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">03</div>
-        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">サジェスト機能</div>
-        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">行動パターンを学習し<br><strong style="color:var(--ink)">「そろそろ夕飯だろ。」</strong>と先回り</div>
+      <div class="fragment" style="border-radius:6px;padding:20px 22px;background:var(--off-white);">
+        <div style="font-size:22px;color:var(--gold);font-weight:700;margin-bottom:8px;">03</div>
+        <div style="font-size:28px;font-weight:900;margin-bottom:6px;">AIが次の行動を提案</div>
+        <div style="font-size:25px;color:var(--ink-mid);line-height:1.6;">行動パターンを学習し<br><strong style="color:var(--ink)">「そろそろ夕飯だろ。」</strong><br>と先回り</div>
       </div>
-      <div style="border:1px solid #ddd;border-radius:6px;padding:20px 22px;background:var(--white);">
-        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">04</div>
-        <div style="font-size:18px;font-weight:900;margin-bottom:6px;">増額機能</div>
-        <div style="font-size:15px;color:var(--ink-mid);line-height:1.6;">予算が尽きると増額を提案。快適さを知ったユーザーは戻れない</div>
+      <div class="fragment" style="border-radius:6px;padding:20px 22px;background:var(--white);">
+        <div style="font-size:22px;color:var(--gold);font-weight:700;margin-bottom:8px;">04</div>
+        <div style="font-size:28px;font-weight:900;margin-bottom:6px;">予算の増額ができる</div>
+        <div style="font-size:25px;color:var(--ink-mid);line-height:1.6;">予算が尽きると増額を提案</div>
       </div>
     </div>
   </div>
@@ -347,34 +349,34 @@
 
   <div class="slide phase">
     <div class="phase-num">Phase 1</div>
-    <h1 style="max-width:680px">何を食べるか、をAIに委ねる</h1>
-    <blockquote style="max-width:680px">「考えなくていい。選ばなくていい。<br>ボタンを押すだけで全部終わる。<br>1,000円くらいでこれが買えるなら——安い。」</blockquote>
-    <p style="margin-top:0.8em;max-width:680px"><strong>→ 意思決定疲れからの解放</strong></p>
+    <h1 style="max-width:680px">意思決定疲れからの解放</h1>
+    <blockquote style="max-width:680px">「考えなくていい。選ばなくていい。<br>ボタンを押すだけで全部終わる。<br>1,000円くらいでこれが買えるなら安い。」</blockquote>
+    <p style="margin-top:0.8em;max-width:680px"><strong>何を食べるか、をAIに委ねる</strong></p>
     <video src="./assets/iphone-phase1.webm" controls loop muted playsinline preload="metadata" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both"></video>
   </div>
 
   <div class="slide phase">
     <div class="phase-num">Phase 2</div>
-    <h1 style="max-width:680px">いつ食べるのか、もAIに委ねる</h1>
+    <h1 style="max-width:680px">自己決定権の放棄</h1>
     <blockquote style="max-width:680px">「毎日夕飯の時間になるとご飯が出てくる。<br>まるで実家で生活しているようだ。」</blockquote>
     <p style="margin-top:0.8em;max-width:680px">サジェストが出ない日に、<strong>不安を感じる。</strong></p>
-    <p style="max-width:680px"><strong>→ 自己決定権の放棄</strong></p>
+    <p style="max-width:680px"><strong>いつ食べるのか、もAIに委ねる</strong></p>
     <img src="./assets/iphone-phase2.webp" alt="ゴロゴロPay サジェスト画面" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both">
   </div>
 
   <div class="slide phase">
     <div class="phase-num">Phase 3</div>
-    <h1 style="max-width:680px">何も考えられなくなる</h1>
+    <h1 style="max-width:680px">ダメ人間の完成</h1>
     <blockquote style="max-width:680px">「あれ……夕飯ってどうやって<br>準備したらいいんだっけ……？」</blockquote>
-    <p style="margin-top:0.8em;max-width:680px">何も思い浮かばない。<br><strong>迷わず、増額ボタンを押す。</strong></p>
+    <p style="margin-top:0.8em;max-width:680px">何も思い浮かばない。<br><strong>何も考えられなくなる。</strong></p>
     <video src="./assets/iphone-phase3.webm" controls loop muted playsinline preload="metadata" style="position:absolute;right:180px;top:50%;transform:translateY(-50%);height:560px;width:auto;animation:fadeIn 0.5s 0.5s ease both"></video>
   </div>
 
   <div class="slide">
     <h2>デザインコンセプト</h2>
     <div class="divider"></div>
-    <p>「キャッシングの即時性」と「ガチャの興奮」を掛け合わせた<strong>スロット</strong>をモチーフ。</p>
-    <p style="margin-top:0.8em">各セリフは<strong>進撃の巨人のリヴァイ兵長</strong>をイメージ。<br>ユーザーから「決定権を奪う」ことを目的とし、<br>「失敗を回避したい」という心情にアプローチ。</p>
+    <p>「キャッシングの即時性」と「ガチャの興奮」<br>を掛け合わせた<strong>スロット</strong>をモチーフ。</p>
+    <p style="margin-top:0.8em">各セリフは<strong>某アニメの兵長</strong>をイメージし、命令口調に。<br>ユーザーから「決定権を奪う」ことを目的とし、<br>「失敗を回避したい」という心情にアプローチ。</p>
   </div>
 
   <!-- ━━ SECTION 03: AI-DLC プロセス ━━ -->
@@ -399,7 +401,7 @@
     <h2>工夫①　ペルソナと設計の1対1対応</h2>
     <div class="divider"></div>
     <p>陽介の3フェーズを先に深く設計した上で、<br>各Unit・各画面・各セリフがどのフェーズに対応するかを明確に紐付け。</p>
-    <blockquote style="margin-top:0.8em">「なぜこのUI、なぜこのセリフか」が<br>全て陽介の感情変遷から導かれているため、設計の軸がぶれない。</blockquote>
+    <blockquote style="margin-top:0.8em;font-size:30px">「なぜこのUI、なぜこのセリフか」が<br>全て陽介の感情変遷から導かれているため、設計の軸がぶれない。</blockquote>
   </div>
 
   <div class="slide">
@@ -417,9 +419,8 @@
   <div class="slide">
     <h2>工夫③　NFRに「ダメ化UX」を独自定義</h2>
     <div class="divider"></div>
-    <p style="color:var(--ink-mid)">一般的なNFRは「3秒以内に返す」「不正アクセスを防ぐ」<br>といった性能・セキュリティ要件。</p>
     <p style="margin-top:0.8em">私たちは<strong>「ダメ化UX」を非機能要件として定義。</strong></p>
-    <p style="margin-top:0.6em;color:var(--ink-mid)">「UI」「セリフ」「サジェスト機能」——これら全てが<br>「意思決定」をAIへ委譲するよう促す体験。<strong>それを要件レベルに。</strong></p>
+    <p style="margin-top:0.6em;color:var(--ink-mid)">「UI」「セリフ」「サジェスト機能」——これら全てが<br>「意思決定」をAIへ委譲するよう促す体験。<br><strong>それを要件レベルに。</strong></p>
   </div>
 
   <!-- ━━ SECTION 04: 技術アーキテクチャ ━━ -->
@@ -443,14 +444,14 @@
       <tr><td>DB / Auth</td><td>DynamoDB &nbsp;/&nbsp; Amazon Cognito</td></tr>
       <tr><td>Scheduler / IaC</td><td>EventBridge Scheduler &nbsp;/&nbsp; Terraform</td></tr>
     </table>
-    <p style="margin-top:0.8em;color:var(--ink-mid)">AIの使い所：<strong>注文時の Delivery Plan 生成</strong> と <strong>先回りサジェスト</strong></p>
+    <p style="margin-top:0.8em;color:var(--ink-mid);font-size:35px">AIの使い所：<strong>注文時の Delivery Plan 生成</strong> と <strong>先回りサジェスト</strong></p>
   </div>
 
   <!-- クロージング -->
   <div class="slide final">
     <h1>ゴロゴロPay</h1>
     <div class="divider"></div>
-    <p>あなたの「めんどくさい」を解消します。</p>
+    <p style="font-size:33px;font-weight:700">あなたの「めんどくさい」を解消します。</p>
     <p style="margin-top:1.4em">ご清聴ありがとうございました。</p>
   </div>
 
@@ -483,13 +484,30 @@
     targets.forEach(t => { t.style.animation = ''; });
   }
 
-  function go(n) {
+  function go(n, revealAll) {
     slides[cur].classList.remove('active');
     cur = (n + slides.length) % slides.length;
     const el = slides[cur];
     resetAnim(el);
+    el.querySelectorAll('.fragment').forEach(f => f.classList.toggle('revealed', !!revealAll));
     el.classList.add('active');
     counter.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+
+  // フラグメント（段階表示）: .fragment を1つずつ revealed にし、全部出たら次スライドへ
+  function nextStep() {
+    const frags = slides[cur].querySelectorAll('.fragment');
+    for (const f of frags) {
+      if (!f.classList.contains('revealed')) { f.classList.add('revealed'); return; }
+    }
+    go(cur + 1, false);
+  }
+  function prevStep() {
+    const frags = slides[cur].querySelectorAll('.fragment');
+    for (let i = frags.length - 1; i >= 0; i--) {
+      if (frags[i].classList.contains('revealed')) { frags[i].classList.remove('revealed'); return; }
+    }
+    go(cur - 1, true);
   }
 
   resetAnim(slides[0]);
@@ -503,11 +521,11 @@
   scaleSlides();
   window.addEventListener('resize', scaleSlides);
 
-  document.getElementById('nextBtn').onclick = () => go(cur + 1);
-  document.getElementById('prevBtn').onclick = () => go(cur - 1);
+  document.getElementById('nextBtn').onclick = () => nextStep();
+  document.getElementById('prevBtn').onclick = () => prevStep();
   document.addEventListener('keydown', e => {
-    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
-    else if (['ArrowLeft','ArrowUp'].includes(e.key))   { e.preventDefault(); go(cur - 1); }
+    if (['ArrowRight','ArrowDown',' ','Enter'].includes(e.key)) { e.preventDefault(); nextStep(); }
+    else if (['ArrowLeft','ArrowUp'].includes(e.key))   { e.preventDefault(); prevStep(); }
     else if (e.key==='f'||e.key==='F') {
       document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
     }
